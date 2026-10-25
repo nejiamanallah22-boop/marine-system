@@ -1,7 +1,7 @@
 <!-- public/pages/notes.html -->
 <div id="page-notes" dir="rtl">
 <style>
-/* كل القواعد محصورة داخل #page-notes (CSS Nesting) حتى لا تتسرب إلى بقية الصفحات */
+/* ================= UI STYLES (الشاشة) ================= */
 #page-notes{
   --gold:#e6b31e;--gold2:#f5d76e;--bg:#0a0e1a;--panel:rgba(255,255,255,.04);--line:rgba(255,255,255,.08);
   --tx:#e8edf5;--mut:rgba(255,255,255,.55);--ok:#22c55e;--ok2:#4ade80;--bad:#f87171;--info:#60a5fa;--warn:#fbbf24;
@@ -9,173 +9,295 @@
   font-family:'Cairo','Tajawal','Segoe UI',system-ui,sans-serif;color:var(--tx);
   background-color:var(--bg);
   background-image:radial-gradient(ellipse at 15% 0%,rgba(230,179,30,.09),transparent 55%),radial-gradient(ellipse at 90% 100%,rgba(167,139,250,.06),transparent 55%);
+}
+#page-notes *, #page-notes *::before, #page-notes *::after { box-sizing: border-box; }
+#page-notes button, #page-notes input, #page-notes select, #page-notes textarea { font-family: inherit; }
+#page-notes select option { background: #121829; color: var(--tx); }
+#page-notes :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+#page-notes [hidden] { display: none !important; }
 
-  *,*::before,*::after{box-sizing:border-box}
-  button,input,select,textarea{font-family:inherit}
-  select option{background:#121829;color:var(--tx)}
-  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  [hidden]{display:none!important}
+/* Header & Tabs */
+.np-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 24px;margin-bottom:18px;border-radius:16px;background:linear-gradient(135deg,rgba(230,179,30,.12),rgba(255,255,255,.03));border:1px solid rgba(230,179,30,.25);box-shadow:0 10px 40px rgba(0,0,0,.28)}
+.np-brand{display:flex;align-items:center;gap:14px}
+.np-logo{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:grid;place-items:center;color:#0a1628;font-size:21px;overflow:hidden;box-shadow:0 0 0 3px rgba(230,179,30,.25),0 0 30px rgba(230,179,30,.25)}
+.np-logo img{width:100%;height:100%;object-fit:cover;display:none}
+.np-logo.has-logo{background:transparent}.np-logo.has-logo img{display:block}.np-logo.has-logo i{display:none}
+.np-brand h2{margin:0;font-size:23px;font-weight:800;background:linear-gradient(135deg,var(--gold2),#fff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.np-brand p{margin:3px 0 0;font-size:12px;color:var(--mut)}
 
-  /* Header */
-  .np-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 24px;margin-bottom:18px;border-radius:16px;
-    background:linear-gradient(135deg,rgba(230,179,30,.12),rgba(255,255,255,.03));border:1px solid rgba(230,179,30,.25);box-shadow:0 10px 40px rgba(0,0,0,.28)}
-  .np-brand{display:flex;align-items:center;gap:14px}
-  .np-logo{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:grid;place-items:center;color:#0a1628;font-size:21px;overflow:hidden;box-shadow:0 0 0 3px rgba(230,179,30,.25),0 0 30px rgba(230,179,30,.25)}
-  .np-logo img{width:100%;height:100%;object-fit:cover;display:none}
-  .np-logo.has-logo{background:transparent}.np-logo.has-logo img{display:block}.np-logo.has-logo i{display:none}
-  .np-brand h2{margin:0;font-size:23px;font-weight:800;background:linear-gradient(135deg,var(--gold2),#fff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .np-brand p{margin:3px 0 0;font-size:12px;color:var(--mut)}
+.np-tabs{display:flex;gap:6px;padding:6px;margin-bottom:18px;border-radius:14px;background:rgba(10,16,32,.65);border:1px solid var(--line);backdrop-filter:blur(12px)}
+.np-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;border:0;border-radius:10px;background:transparent;color:var(--mut);font-size:14px;font-weight:700;cursor:pointer;transition:background .25s,color .25s,box-shadow .25s}
+.np-tab:hover{background:rgba(255,255,255,.05);color:#fff}
+.np-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628;box-shadow:0 6px 22px rgba(230,179,30,.35)}
+.np-badge{background:rgba(0,0,0,.25);padding:1px 9px;border-radius:10px;font-size:11px;font-weight:800}
+.np-panel{display:none}.np-panel.active{display:block}
 
-  /* Tabs */
-  .np-tabs{display:flex;gap:6px;padding:6px;margin-bottom:18px;border-radius:14px;background:rgba(10,16,32,.65);border:1px solid var(--line);backdrop-filter:blur(12px)}
-  .np-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;border:0;border-radius:10px;background:transparent;color:var(--mut);font-size:14px;font-weight:700;cursor:pointer;transition:background .25s,color .25s,box-shadow .25s}
-  .np-tab:hover{background:rgba(255,255,255,.05);color:#fff}
-  .np-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628;box-shadow:0 6px 22px rgba(230,179,30,.35)}
-  .np-badge{background:rgba(0,0,0,.25);padding:1px 9px;border-radius:10px;font-size:11px;font-weight:800}
-  .np-panel{display:none}.np-panel.active{display:block}
+/* Buttons & Cards */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 18px;border:0;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .2s,box-shadow .2s,filter .2s}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628}
+.btn.success{background:linear-gradient(135deg,var(--ok),var(--ok2));color:#0a1628}
+.btn.danger{background:linear-gradient(135deg,#ef4444,var(--bad));color:#fff}
+.btn.secondary{background:var(--panel);border:1px solid var(--line);color:var(--mut)}
+.btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(230,179,30,.2)}
+.btn.secondary:hover{color:#fff}
 
-  /* Buttons */
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 18px;border:0;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .2s,box-shadow .2s,filter .2s}
-  .btn:disabled{opacity:.6;cursor:not-allowed}
-  .btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628}
-  .btn.success{background:linear-gradient(135deg,var(--ok),var(--ok2));color:#0a1628}
-  .btn.danger{background:linear-gradient(135deg,#ef4444,var(--bad));color:#fff}
-  .btn.secondary{background:var(--panel);border:1px solid var(--line);color:var(--mut)}
-  .btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(230,179,30,.2)}
-  .btn.secondary:hover{color:#fff}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;position:relative;overflow:hidden;backdrop-filter:blur(12px);box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.card.top::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.card.green::before{background:linear-gradient(90deg,var(--ok),var(--ok2))}
+.card h3{margin:0 0 16px;font-size:16px;font-weight:700;color:var(--gold2);display:flex;align-items:center;gap:8px}
+.card.green h3{color:var(--ok2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px}
+.fg{display:flex;flex-direction:column;gap:6px}.fg.full{grid-column:1/-1}
+.fg label{font-size:12px;font-weight:600;color:var(--mut)}.req{color:#ef4444}
+.fg input,.fg textarea,.fg select,.np-filter{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:rgba(10,16,32,.6);color:var(--tx);font-size:14px;transition:border-color .2s,box-shadow .2s}
+.fg input:focus,.fg textarea:focus,.fg select:focus,.np-filter:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 4px rgba(230,179,30,.1)}
+.fg textarea{resize:vertical;min-height:80px}
+.counter{font-size:11px;color:var(--mut);text-align:left}
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.hint{margin:-6px 0 16px;font-size:12px;color:var(--mut);display:flex;gap:8px;align-items:center}.hint i{color:var(--gold)}
 
-  /* Cards / forms */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;position:relative;overflow:hidden;backdrop-filter:blur(12px);box-shadow:0 8px 30px rgba(0,0,0,.18)}
-  .card.top::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
-  .card.green::before{background:linear-gradient(90deg,var(--ok),var(--ok2))}
-  .card h3{margin:0 0 16px;font-size:16px;font-weight:700;color:var(--gold2);display:flex;align-items:center;gap:8px}
-  .card.green h3{color:var(--ok2)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px}
-  .fg{display:flex;flex-direction:column;gap:6px}.fg.full{grid-column:1/-1}
-  .fg label{font-size:12px;font-weight:600;color:var(--mut)}.req{color:#ef4444}
-  .fg input,.fg textarea,.fg select,.np-filter{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:rgba(10,16,32,.6);color:var(--tx);font-size:14px;transition:border-color .2s,box-shadow .2s}
-  .fg input:focus,.fg textarea:focus,.fg select:focus,.np-filter:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 4px rgba(230,179,30,.1)}
-  .fg textarea{resize:vertical;min-height:80px}
-  .counter{font-size:11px;color:var(--mut);text-align:left}
-  .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
-  .hint{margin:-6px 0 16px;font-size:12px;color:var(--mut);display:flex;gap:8px;align-items:center}.hint i{color:var(--gold)}
+/* Notes */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:12px 16px;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:12px}
+.np-filter{flex:1;min-width:150px;font-size:13px;padding:8px 14px}
+.note-list{display:flex;flex-direction:column;gap:14px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s}
+.note::before{content:'';position:absolute;inset:0 0 0 auto;width:4px;background:var(--gold)}
+.note.p-important::before{background:var(--warn)}.note.p-urgent::before{background:var(--bad)}
+.note:hover{border-color:rgba(230,179,30,.3);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.note-h{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.note-t{margin:0;font-size:16px;font-weight:700;color:#fff;flex:1;min-width:200px;word-break:break-word}
+.meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--mut)}
+.chip i{color:var(--gold)}
+.chip.urgent{background:rgba(239,68,68,.15);color:var(--bad);font-weight:600}
+.chip.important{background:rgba(245,158,11,.15);color:var(--warn);font-weight:600}
+.note-c{font-size:14px;line-height:1.9;color:rgba(255,255,255,.75);white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
+.note-f{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
+.btn-sm{padding:5px 12px;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;gap:5px;align-items:center;transition:background .2s}
+.btn-sm.edit{background:rgba(96,165,250,.12);color:var(--info)}.btn-sm.edit:hover{background:rgba(96,165,250,.25)}
+.btn-sm.delete{background:rgba(248,113,113,.12);color:var(--bad)}.btn-sm.delete:hover{background:rgba(248,113,113,.25)}
 
-  /* Notes */
-  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:12px 16px;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:12px}
-  .np-filter{flex:1;min-width:150px;font-size:13px;padding:8px 14px}
-  .note-list{display:flex;flex-direction:column;gap:14px}
-  .note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s}
-  .note::before{content:'';position:absolute;inset:0 0 0 auto;width:4px;background:var(--gold)}
-  .note.p-important::before{background:var(--warn)}.note.p-urgent::before{background:var(--bad)}
-  .note:hover{border-color:rgba(230,179,30,.3);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
-  .note-h{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-  .note-t{margin:0;font-size:16px;font-weight:700;color:#fff;flex:1;min-width:200px;word-break:break-word}
-  .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--mut)}
-  .chip i{color:var(--gold)}
-  .chip.urgent{background:rgba(239,68,68,.15);color:var(--bad);font-weight:600}
-  .chip.important{background:rgba(245,158,11,.15);color:var(--warn);font-weight:600}
-  .note-c{font-size:14px;line-height:1.9;color:rgba(255,255,255,.75);white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
-  .note-f{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
-  .btn-sm{padding:5px 12px;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;gap:5px;align-items:center;transition:background .2s}
-  .btn-sm.edit{background:rgba(96,165,250,.12);color:var(--info)}.btn-sm.edit:hover{background:rgba(96,165,250,.25)}
-  .btn-sm.delete{background:rgba(248,113,113,.12);color:var(--bad)}.btn-sm.delete:hover{background:rgba(248,113,113,.25)}
+/* Current report & Upload & Archive */
+.rt-current{background:linear-gradient(135deg,rgba(230,179,30,.09),rgba(10,16,32,.5));border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:22px 24px;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:0 12px 44px rgba(230,179,30,.1)}
+.rt-current::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent)}
+.rt-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.rt-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.nv-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:linear-gradient(135deg,var(--ok),var(--ok2));color:#0a1628;border-radius:20px;font-size:12px;font-weight:800}
+.st{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.st-ok{background:rgba(34,197,94,.15);color:var(--ok2)}.st-warn{background:rgba(245,158,11,.15);color:var(--warn)}.st-late{background:rgba(239,68,68,.15);color:var(--bad)}
+.cycle{margin-bottom:18px}
+.cycle-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;font-weight:700;margin-bottom:8px}
+.cycle-top.sub{margin:8px 0 0;font-weight:500;color:var(--mut);font-size:11px}
+.cycle-bar{height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
+.cycle-fill{height:100%;border-radius:6px;transition:width .6s}
+.cycle-fill.ok{background:linear-gradient(90deg,var(--ok),var(--ok2))}.cycle-fill.warn{background:linear-gradient(90deg,#f59e0b,var(--warn))}.cycle-fill.late{background:linear-gradient(90deg,#ef4444,var(--bad))}
+.nv-empty{border:2px dashed rgba(230,179,30,.3);border-radius:16px;padding:44px 24px;text-align:center;margin-bottom:18px}
+.nv-empty i{font-size:52px;color:rgba(230,179,30,.35);display:block;margin-bottom:12px}
+.nv-empty h3{margin:0 0 6px;font-size:18px;color:rgba(255,255,255,.75)}.nv-empty p{margin:0;font-size:13px;color:var(--mut)}
 
-  /* Current report */
-  .rt-current{background:linear-gradient(135deg,rgba(230,179,30,.09),rgba(10,16,32,.5));border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:22px 24px;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:0 12px 44px rgba(230,179,30,.1)}
-  .rt-current::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent)}
-  .rt-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-  .rt-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .nv-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:linear-gradient(135deg,var(--ok),var(--ok2));color:#0a1628;border-radius:20px;font-size:12px;font-weight:800}
-  .st{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700}
-  .st-ok{background:rgba(34,197,94,.15);color:var(--ok2)}.st-warn{background:rgba(245,158,11,.15);color:var(--warn)}.st-late{background:rgba(239,68,68,.15);color:var(--bad)}
-  .cycle{margin-bottom:18px}
-  .cycle-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;font-weight:700;margin-bottom:8px}
-  .cycle-top.sub{margin:8px 0 0;font-weight:500;color:var(--mut);font-size:11px}
-  .cycle-bar{height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
-  .cycle-fill{height:100%;border-radius:6px;transition:width .6s}
-  .cycle-fill.ok{background:linear-gradient(90deg,var(--ok),var(--ok2))}.cycle-fill.warn{background:linear-gradient(90deg,#f59e0b,var(--warn))}.cycle-fill.late{background:linear-gradient(90deg,#ef4444,var(--bad))}
-  .nv-empty{border:2px dashed rgba(230,179,30,.3);border-radius:16px;padding:44px 24px;text-align:center;margin-bottom:18px}
-  .nv-empty i{font-size:52px;color:rgba(230,179,30,.35);display:block;margin-bottom:12px}
-  .nv-empty h3{margin:0 0 6px;font-size:18px;color:rgba(255,255,255,.75)}.nv-empty p{margin:0;font-size:13px;color:var(--mut)}
+.dropzone{border:2px dashed rgba(255,255,255,.18);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;background:rgba(10,16,32,.4);margin-bottom:16px;transition:border-color .2s,background .2s}
+.dropzone:hover,.dropzone.dragover{border-color:var(--ok);background:rgba(34,197,94,.07)}
+.dropzone i{font-size:40px;color:rgba(34,197,94,.7);display:block;margin-bottom:10px}
+.dropzone h4{margin:0 0 6px;font-size:15px;color:#fff}.dropzone p{margin:0;font-size:12px;color:var(--mut)}
+.preview{display:none;align-items:center;gap:14px;padding:14px 18px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;margin-bottom:16px}
+.preview.show{display:flex}.preview .info{flex:1;min-width:0}
+.fname{font-size:14px;font-weight:700;color:#fff;word-break:break-word}.fsize{font-size:11px;color:var(--mut)}
+.ficon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:18px;flex-shrink:0;background:linear-gradient(135deg,var(--ok),var(--ok2));color:#0a1628}
+.icon-btn{width:34px;height:34px;border:0;border-radius:8px;display:grid;place-items:center;cursor:pointer;background:rgba(239,68,68,.15);color:var(--bad)}
+.progress{display:none;padding:12px 16px;background:rgba(230,179,30,.08);border-radius:10px;margin-bottom:16px}.progress.show{display:block}
+.bar{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .25s}
+.ptext{font-size:11px;text-align:center;color:var(--gold2);font-weight:600}
 
-  /* Upload */
-  .dropzone{border:2px dashed rgba(255,255,255,.18);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;background:rgba(10,16,32,.4);margin-bottom:16px;transition:border-color .2s,background .2s}
-  .dropzone:hover,.dropzone.dragover{border-color:var(--ok);background:rgba(34,197,94,.07)}
-  .dropzone i{font-size:40px;color:rgba(34,197,94,.7);display:block;margin-bottom:10px}
-  .dropzone h4{margin:0 0 6px;font-size:15px;color:#fff}.dropzone p{margin:0;font-size:12px;color:var(--mut)}
-  .preview{display:none;align-items:center;gap:14px;padding:14px 18px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;margin-bottom:16px}
-  .preview.show{display:flex}.preview .info{flex:1;min-width:0}
-  .fname{font-size:14px;font-weight:700;color:#fff;word-break:break-word}.fsize{font-size:11px;color:var(--mut)}
-  .ficon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:18px;flex-shrink:0;background:linear-gradient(135deg,var(--ok),var(--ok2));color:#0a1628}
-  .icon-btn{width:34px;height:34px;border:0;border-radius:8px;display:grid;place-items:center;cursor:pointer;background:rgba(239,68,68,.15);color:var(--bad)}
-  .progress{display:none;padding:12px 16px;background:rgba(230,179,30,.08);border-radius:10px;margin-bottom:16px}.progress.show{display:block}
-  .bar{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:8px}
-  .bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .25s}
-  .ptext{font-size:11px;text-align:center;color:var(--gold2);font-weight:600}
+.arch-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:14px}
+.arch-head h3{margin:0;font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
+.arch-head h3 i{color:var(--gold)}.count{background:rgba(230,179,30,.15);color:var(--gold2);padding:2px 10px;border-radius:20px;font-size:11px;font-weight:800}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel);max-height:70vh;box-shadow:0 10px 36px rgba(0,0,0,.25)}
+.table-wrap.cur{max-height:none;box-shadow:none}
+table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
+.nv-table th{padding:13px 16px;text-align:right;font-size:12px;font-weight:800;color:var(--gold2);white-space:nowrap;position:sticky;top:0;z-index:2;background:#1b1f2c;box-shadow:inset 0 -1px 0 rgba(230,179,30,.35)}
+.nv-table td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--line);vertical-align:middle}
+.nv-table tbody tr{transition:background .2s}
+.nv-table tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
+.nv-table tbody tr:hover{background:rgba(230,179,30,.1)}
+.nv-table tbody tr:last-child td{border-bottom:0}
+.doc-cell{display:flex;align-items:center;gap:12px}
+.doc-cell .ficon{width:38px;height:38px;font-size:16px;border-radius:10px;background:linear-gradient(135deg,#475569,#1e293b);color:var(--gold2);box-shadow:inset 0 0 0 1px rgba(245,215,110,.25)}
+.doc-title{font-weight:700;color:#fff;word-break:break-word}.doc-desc{font-size:11px;color:var(--mut);margin-top:2px}
+.num{color:var(--mut);font-weight:700;text-align:center!important;width:56px}
+.row-actions{display:flex;gap:6px}
+.ab{width:34px;height:34px;border:0;border-radius:9px;display:grid;place-items:center;cursor:pointer;font-size:13px;transition:transform .15s,filter .15s}
+.ab:hover{filter:brightness(1.4);transform:translateY(-2px)}
+.ab:disabled{opacity:.6;cursor:wait;transform:none}
+.ab.view{background:rgba(96,165,250,.12);color:var(--info)}.ab.download{background:rgba(34,197,94,.12);color:var(--ok2)}
+.ab.promote{background:rgba(230,179,30,.12);color:var(--gold2)}.ab.delete{background:rgba(248,113,113,.12);color:var(--bad)}
+.ab.print{background:rgba(167,139,250,.12);color:#a78bfa}
 
-  /* Archive */
-  .arch-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:14px}
-  .arch-head h3{margin:0;font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
-  .arch-head h3 i{color:var(--gold)}.count{background:rgba(230,179,30,.15);color:var(--gold2);padding:2px 10px;border-radius:20px;font-size:11px;font-weight:800}
-  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel);max-height:70vh;box-shadow:0 10px 36px rgba(0,0,0,.25)}
-  .table-wrap.cur{max-height:none;box-shadow:none}
-  table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
-  .nv-table th{padding:13px 16px;text-align:right;font-size:12px;font-weight:800;color:var(--gold2);white-space:nowrap;position:sticky;top:0;z-index:2;background:#1b1f2c;box-shadow:inset 0 -1px 0 rgba(230,179,30,.35)}
-  .nv-table td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--line);vertical-align:middle}
-  .nv-table tbody tr{transition:background .2s}
-  .nv-table tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
-  .nv-table tbody tr:hover{background:rgba(230,179,30,.1)}
-  .nv-table tbody tr:last-child td{border-bottom:0}
-  .doc-cell{display:flex;align-items:center;gap:12px}
-  .doc-cell .ficon{width:38px;height:38px;font-size:16px;border-radius:10px;background:linear-gradient(135deg,#475569,#1e293b);color:var(--gold2);box-shadow:inset 0 0 0 1px rgba(245,215,110,.25)}
-  .doc-title{font-weight:700;color:#fff;word-break:break-word}.doc-desc{font-size:11px;color:var(--mut);margin-top:2px}
-  .num{color:var(--mut);font-weight:700;text-align:center!important;width:56px}
-  .row-actions{display:flex;gap:6px}
-  .ab{width:34px;height:34px;border:0;border-radius:9px;display:grid;place-items:center;cursor:pointer;font-size:13px;transition:transform .15s,filter .15s}
-  .ab:hover{filter:brightness(1.4);transform:translateY(-2px)}
-  .ab:disabled{opacity:.6;cursor:wait;transform:none}
-  .ab.view{background:rgba(96,165,250,.12);color:var(--info)}.ab.download{background:rgba(34,197,94,.12);color:var(--ok2)}
-  .ab.promote{background:rgba(230,179,30,.12);color:var(--gold2)}.ab.delete{background:rgba(248,113,113,.12);color:var(--bad)}
-  .ab.print{background:rgba(167,139,250,.12);color:#a78bfa}
+/* States & Toasts */
+.empty{text-align:center;padding:50px 20px;color:var(--mut)}
+.empty i{font-size:3rem;color:rgba(255,255,255,.12);display:block;margin-bottom:10px}
+.empty h3{margin:0 0 4px;font-size:1rem;color:rgba(255,255,255,.6)}.empty p{margin:0;font-size:.8rem}
+.empty.err h3,.empty.err i{color:var(--bad)}
+.sk{border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:np-sk 1.3s linear infinite}
+.sk-card{height:96px;margin-bottom:14px;border-radius:14px}.sk-row{height:46px;margin:10px 14px}
+@keyframes np-sk{to{background-position:-200% 0}}
+.np-toast{position:fixed;bottom:24px;left:24px;max-width:400px;padding:12px 20px;border-radius:12px;color:#fff;font-size:14px;z-index:99999;display:flex;gap:10px;align-items:center;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.35);animation:np-in .35s ease-out;direction:rtl;background:rgba(18,24,41,.92)}
+.np-toast.success{border:1px solid rgba(34,197,94,.5)}.np-toast.error{border:1px solid rgba(239,68,68,.5)}
+.np-toast.warning{border:1px solid rgba(245,158,11,.5)}.np-toast.info{border:1px solid rgba(96,165,250,.5)}
+.np-toast.out{opacity:0;transform:translateY(16px);transition:all .35s}
+@keyframes np-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.np-overlay{position:fixed;inset:0;background:rgba(5,8,16,.75);backdrop-filter:blur(4px);z-index:99998;display:grid;place-items:center;padding:20px;animation:np-fade .2s}
+@keyframes np-fade{from{opacity:0}to{opacity:1}}
+.np-dialog{width:100%;max-width:420px;background:#121829;border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:26px;text-align:center;direction:rtl;color:var(--tx)}
+.np-dialog .di{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:rgba(230,179,30,.15);color:var(--gold2)}
+.np-dialog.danger .di{background:rgba(239,68,68,.15);color:var(--bad)}
+.np-dialog h4{margin:0 0 8px;font-size:18px}.np-dialog p{margin:0 0 20px;font-size:13px;color:var(--mut);line-height:1.7}
+.np-dialog .actions{justify-content:center}
 
-  /* States */
-  .empty{text-align:center;padding:50px 20px;color:var(--mut)}
-  .empty i{font-size:3rem;color:rgba(255,255,255,.12);display:block;margin-bottom:10px}
-  .empty h3{margin:0 0 4px;font-size:1rem;color:rgba(255,255,255,.6)}.empty p{margin:0;font-size:.8rem}
-  .empty.err h3,.empty.err i{color:var(--bad)}
-  .empty .btn{margin-top:14px}
-  .sk{border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:np-sk 1.3s linear infinite}
-  .sk-card{height:96px;margin-bottom:14px;border-radius:14px}.sk-row{height:46px;margin:10px 14px}
-  @keyframes np-sk{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){#page-notes *{transition:none!important;animation:none!important}}
+@media (max-width:768px){
+  #page-notes{padding:12px}
+  .np-header{padding:12px 16px}.np-brand h2{font-size:18px}
+  .grid{grid-template-columns:1fr}.actions .btn{flex:1}
+  .np-tab{padding:10px;font-size:13px}.np-tab span:not(.np-badge){font-size:12px}
+  .rt-current{padding:16px}
+  .np-toast{left:12px;right:12px;max-width:none}
+}
 
-  /* Toast + dialog */
-  .np-toast{position:fixed;bottom:24px;left:24px;max-width:400px;padding:12px 20px;border-radius:12px;color:#fff;font-size:14px;z-index:99999;display:flex;gap:10px;align-items:center;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.35);animation:np-in .35s ease-out;direction:rtl;background:rgba(18,24,41,.92)}
-  .np-toast.success{border:1px solid rgba(34,197,94,.5)}.np-toast.error{border:1px solid rgba(239,68,68,.5)}
-  .np-toast.warning{border:1px solid rgba(245,158,11,.5)}.np-toast.info{border:1px solid rgba(96,165,250,.5)}
-  .np-toast.out{opacity:0;transform:translateY(16px);transition:all .35s}
-  @keyframes np-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-  .np-overlay{position:fixed;inset:0;background:rgba(5,8,16,.75);backdrop-filter:blur(4px);z-index:99998;display:grid;place-items:center;padding:20px;animation:np-fade .2s}
-  @keyframes np-fade{from{opacity:0}to{opacity:1}}
-  .np-dialog{width:100%;max-width:420px;background:#121829;border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:26px;text-align:center;direction:rtl;color:var(--tx)}
-  .np-dialog .di{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:rgba(230,179,30,.15);color:var(--gold2)}
-  .np-dialog.danger .di{background:rgba(239,68,68,.15);color:var(--bad)}
-  .np-dialog h4{margin:0 0 8px;font-size:18px}.np-dialog p{margin:0 0 20px;font-size:13px;color:var(--mut);line-height:1.7}
-  .np-dialog .actions{justify-content:center}
+/* ================= 🖨️ PRINT STYLES (الطباعة الحقيقية) ================= */
+/* هذه الحاوية مخفية تماماً على الشاشة، وتظهر فقط عند الطباعة */
+#print-container { display: none; }
 
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-  @media (max-width:768px){
-    padding:12px;
-    .np-header{padding:12px 16px}.np-brand h2{font-size:18px}
-    .grid{grid-template-columns:1fr}.actions .btn{flex:1}
-    .np-tab{padding:10px;font-size:13px}.np-tab span:not(.np-badge){font-size:12px}
-    .rt-current{padding:16px}
-    .np-toast{left:12px;right:12px;max-width:none}
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  
+  /* إخفاء واجهة التطبيق بالكامل */
+  body > *:not(#print-container) { display: none !important; }
+  
+  /* إظهار حاوية الطباعة فقط */
+  #print-container { 
+    display: block !important; 
+    position: static !important; 
+    width: 100% !important; 
+    background: #fff !important; 
+    color: #000 !important; 
+    direction: rtl !important;
+    font-family: 'Cairo', 'Tajawal', sans-serif !important;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  #print-container * { box-sizing: border-box; }
+
+  /* الترويسة الرسمية */
+  .p-letterhead {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    color: #000;
+  }
+  .p-letterhead-right {
+    text-align: center;
+    line-height: 1.8;
+    font-size: 14px;
+    font-weight: bold;
+    min-width: 250px;
+  }
+  .p-letterhead-right .a { font-size: 15px; font-weight: 900; }
+  .p-letterhead-right .b { font-size: 13px; font-weight: 700; }
+  .p-letterhead-right .c { font-size: 12px; }
+  
+  .p-letterhead-left {
+    text-align: right;
+    font-size: 13px;
+    line-height: 2;
+    padding-top: 5px;
+  }
+
+  /* عنوان التقرير الرئيسي */
+  .p-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 900;
+    margin: 15px 0 10px;
+    padding: 8px 0;
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+    color: #000;
+  }
+  .p-subtitle {
+    text-align: center;
+    font-size: 12px;
+    margin: 0 0 15px;
+    color: #333;
+  }
+
+  /* الجداول */
+  table.p-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+  }
+  table.p-table th, table.p-table td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    font-size: 11px;
+    text-align: right;
+    vertical-align: top;
+    color: #000;
+  }
+  table.p-table th {
+    background: #eee !important;
+    font-weight: 800;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  table.p-table thead { display: table-header-group; }
+  table.p-table tr { page-break-inside: avoid; break-inside: avoid; }
+
+  /* الصور */
+  .p-img-wrap {
+    text-align: center;
+    margin-top: 10px;
+  }
+  .p-img-wrap img {
+    max-width: 100%;
+    max-height: 190mm;
+    object-fit: contain;
+    border: 1px solid #ccc;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* التذييل والتوقيع */
+  .p-signatures {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    font-size: 12px;
+    font-weight: bold;
+    page-break-inside: avoid;
+  }
+  .p-signatures div { width: 45%; text-align: center; }
+  .p-signatures span { display: block; margin-top: 40px; border-top: 1px dotted #000; }
+  
+  .p-footer {
+    margin-top: 20px;
+    padding-top: 5px;
+    border-top: 1px solid #888;
+    font-size: 10px;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
   }
 }
 </style>
 
-<!-- HEADER -->
+<!-- ================= UI ================= -->
 <div class="np-header">
   <div class="np-brand">
     <div class="np-logo" id="notesHeaderIcon"><i class="fas fa-sticky-note"></i><img id="globalLogo" src="" alt="شعار"></div>
@@ -183,7 +305,6 @@
   </div>
 </div>
 
-<!-- TABS -->
 <div class="np-tabs" role="tablist" aria-label="أقسام الصفحة">
   <button class="np-tab active" id="tab-notes" data-tab="notes" role="tab" aria-selected="true" aria-controls="panel-notes"><i class="fas fa-sticky-note"></i><span>الملاحظات</span><span class="np-badge" id="tabNotesCount">0</span></button>
   <button class="np-tab" id="tab-verbale" data-tab="verbale" role="tab" aria-selected="false" aria-controls="panel-verbale" tabindex="-1"><i class="fas fa-file-alt"></i><span>التقرير الفني الأسبوعي</span><span class="np-badge" id="tabVerbaleCount">0</span></button>
@@ -262,14 +383,17 @@
   </div>
 </div>
 
+<!-- ================= 🖨️ PRINT CONTAINER (Hidden on screen, Visible on print) ================= -->
+<div id="print-container">
+  <!-- سيتم حقن محتوى الطباعة هنا ديناميكياً بواسطة JavaScript -->
+</div>
+
 <script>
 (function () {
   'use strict';
   var root = document.getElementById('page-notes');
+  var printContainer = document.getElementById('print-container');
   var destroyed = false, timeouts = [], listeners = [], activeXhr = null;
-
-  /* ملاحظة مهمة: لا تكتب وسوم html/head/body/title/style/!DOCTYPE حرفياً داخل هذا السكربت؛
-     محمّل الصفحات قد يلتقطها ويكسر السكربت. نستخدم LT بدل المحرف < في تلك الحالات. */
   var LT = '\x3C';
 
   function cleanup() {
@@ -280,14 +404,13 @@
     timeouts = []; listeners = [];
     try { if (activeXhr) activeXhr.abort(); } catch (e) {}
     try { window.removeEventListener('storage', onStorage); } catch (e) {}
-    try { closePrint(); } catch (e) {}
     try { if (root && root.parentNode) root.parentNode.removeChild(root); } catch (e) {}
-    ['saveNote', 'loadNotes', 'editNote', 'deleteNote', 'switchNotesTab'].forEach(function (k) { try { delete window[k]; } catch (e) {} });
+    try { if (printContainer && printContainer.parentNode) printContainer.parentNode.removeChild(printContainer); } catch (e) {}
   }
   window._pageCleanup = window._pageCleanup || [];
   window._pageCleanup.push(cleanup);
 
-  /* ================= Helpers ================= */
+  /* Helpers */
   function $(id) { return document.getElementById(id); }
   function escapeHtml(s) {
     if (s === null || s === undefined) return '';
@@ -351,9 +474,9 @@
   function confirmDialog(opts) {
     return new Promise(function (resolve) {
       var ov = document.createElement('div'); ov.className = 'np-overlay';
-      ov.innerHTML = '<div class="np-dialog ' + (opts.danger ? 'danger' : '') + '" role="alertdialog" aria-modal="true" aria-labelledby="npDlgT" aria-describedby="npDlgD">' +
+      ov.innerHTML = '<div class="np-dialog ' + (opts.danger ? 'danger' : '') + '" role="alertdialog" aria-modal="true">' +
         '<div class="di"><i class="fas ' + (opts.icon || 'fa-question') + '"></i></div>' +
-        '<h4 id="npDlgT">' + escapeHtml(opts.title) + '</h4><p id="npDlgD">' + escapeHtml(opts.text || '') + '</p>' +
+        '<h4>' + escapeHtml(opts.title) + '</h4><p>' + escapeHtml(opts.text || '') + '</p>' +
         '<div class="actions"><button class="btn secondary" data-r="0">إلغاء</button>' +
         '<button class="btn ' + (opts.danger ? 'danger' : 'primary') + '" data-r="1">' + escapeHtml(opts.ok || 'تأكيد') + '</button></div></div>';
       var prev = document.activeElement;
@@ -389,7 +512,7 @@
     else { if (btn.dataset.html) btn.innerHTML = btn.dataset.html; btn.disabled = false; }
   }
 
-  /* ================= Logo ================= */
+  /* Logo */
   function applyLogo() {
     try {
       var c = localStorage.getItem('marine_logo'); if (!c) return;
@@ -410,7 +533,7 @@
   function onStorage(e) { if (e.key === 'marine_logo' && e.newValue) applyLogo(); }
   window.addEventListener('storage', onStorage);
 
-  /* ================= Permissions ================= */
+  /* Permissions */
   var LEGACY = { super_admin: 'admin', 'مسؤول': 'admin', 'مدير': 'manager', 'محرر': 'editor', 'مشغل': 'maintenance_unit', operator: 'maintenance_unit', user: 'viewer', 'مشاهد': 'viewer' };
   var ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
   function normalizeRole(r) { if (!r) return 'viewer'; r = String(r).trim(); return ROLES.indexOf(r) !== -1 ? r : (LEGACY[r] || 'viewer'); }
@@ -432,12 +555,12 @@
     })();
   }
 
-  /* ================= State ================= */
+  /* State */
   var notesData = [], editingId = null, notesLoaded = false;
   var verbaleCurrentLoaded = false, verbaleArchiveLoaded = false;
   var nvSelectedFile = null, nvArchiveAll = [], nvArchiveView = [], nvHasCurrent = false, nvDocs = {}, nvUploading = false;
 
-  /* ================= Tabs ================= */
+  /* Tabs */
   function switchNotesTab(tab) {
     if (tab !== 'notes' && tab !== 'verbale') return;
     root.querySelectorAll('.np-tab').forEach(function (b) {
@@ -450,7 +573,7 @@
     else { if (!verbaleCurrentLoaded) loadNoteVerbaleCurrent(); if (!verbaleArchiveLoaded) loadNoteVerbaleArchive(); }
   }
 
-  /* ================= Notes ================= */
+  /* Notes */
   async function loadNotes() {
     if (destroyed) return;
     var box = $('notesList'); if (!box) return;
@@ -571,12 +694,12 @@
     $('saveNoteBtn').innerHTML = '<i class="fas fa-save"></i> حفظ';
   }
 
-  /* ================= Weekly report: current ================= */
+  /* Weekly report */
   function docBtns(id) {
     var i = escapeHtml(id);
-    return '<button class="ab view" data-action="view" data-id="' + i + '" title="عرض" aria-label="عرض"><i class="fas fa-eye"></i></button>' +
-      '<button class="ab download" data-action="download" data-id="' + i + '" title="تحميل" aria-label="تحميل"><i class="fas fa-download"></i></button>' +
-      '<button class="ab print" data-action="print" data-id="' + i + '" title="طباعة الوثيقة" aria-label="طباعة الوثيقة"><i class="fas fa-print"></i></button>';
+    return '<button class="ab view" data-action="view" data-id="' + i + '" title="عرض"><i class="fas fa-eye"></i></button>' +
+      '<button class="ab download" data-action="download" data-id="' + i + '" title="تحميل"><i class="fas fa-download"></i></button>' +
+      '<button class="ab print" data-action="print" data-id="' + i + '" title="طباعة الوثيقة"><i class="fas fa-print"></i></button>';
   }
 
   async function loadNoteVerbaleCurrent() {
@@ -611,11 +734,11 @@
     var cls = late ? 'late' : (days >= 5 ? 'warn' : 'ok');
     var stTxt = late ? 'متأخر — مضى أكثر من 7 أيام' : (days >= 5 ? 'يقترب موعد التحديث' : 'محدّث');
     var remain = late ? ('تجاوز الموعد بـ ' + (days - 7) + ' يوم') : ('متبقٍّ ' + Math.max(0, 7 - days) + ' يوم للتقرير القادم');
-    box.innerHTML = '<section class="rt-current" aria-label="التقرير الحالي"><div class="rt-head"><div class="rt-title"><span class="nv-badge"><i class="fas fa-circle" style="font-size:8px"></i> التقرير الحالي</span>' +
+    box.innerHTML = '<section class="rt-current"><div class="rt-head"><div class="rt-title"><span class="nv-badge"><i class="fas fa-circle" style="font-size:8px"></i> التقرير الحالي</span>' +
       '<span class="st st-' + cls + '"><i class="fas ' + (late ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + stTxt + '</span></div>' +
       '<div class="meta"><span class="chip"><i class="fas fa-calendar-week"></i> ' + escapeHtml(weekTxt) + '</span></div></div>' +
       '<div class="cycle"><div class="cycle-top"><span>دورة التقرير الأسبوعية</span><span>' + escapeHtml(remain) + '</span></div>' +
-      '<div class="cycle-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><div class="cycle-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="cycle-bar"><div class="cycle-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
       '<div class="cycle-top sub"><span>تاريخ الرفع: ' + escapeHtml(formatDate(up)) + '</span><span>الموعد القادم: ' + escapeHtml(formatDate(due)) + '</span></div></div>' +
       '<div class="table-wrap cur"><table class="nv-table"><thead><tr><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>تاريخ الرفع</th><th>الحجم</th><th>الإجراءات</th></tr></thead><tbody><tr>' +
       '<td><div class="doc-cell"><div class="ficon"><i class="fas ' + getFileIcon(f.mimetype, f.originalName) + '"></i></div><div><div class="doc-title">' + escapeHtml(n.title || 'بدون عنوان') + '</div>' +
@@ -630,7 +753,6 @@
     box.innerHTML = '<div class="nv-empty"><i class="fas fa-folder-open"></i><h3>لم يُرفع تقرير لهذا الأسبوع بعد</h3><p>ارفع التقرير الفني للوسائل البحرية ليظهر هنا حتى يتم استبداله بتقرير الأسبوع التالي</p></div>';
   }
 
-  /* ================= Weekly report: archive ================= */
   async function loadNoteVerbaleArchive() {
     if (destroyed) return;
     var body = $('nvArchiveList'); if (!body) return;
@@ -689,8 +811,8 @@
       var id = n.id || n._id, f = n.file || {};
       nvDocs[id] = n;
       var acts = docBtns(id);
-      if (cp) acts += '<button class="ab promote" data-action="promote" data-id="' + escapeHtml(id) + '" title="تعيين كحالية" aria-label="تعيين كحالية"><i class="fas fa-star"></i></button>' +
-        '<button class="ab delete" data-action="delete" data-id="' + escapeHtml(id) + '" title="حذف" aria-label="حذف"><i class="fas fa-trash"></i></button>';
+      if (cp) acts += '<button class="ab promote" data-action="promote" data-id="' + escapeHtml(id) + '" title="تعيين كحالية"><i class="fas fa-star"></i></button>' +
+        '<button class="ab delete" data-action="delete" data-id="' + escapeHtml(id) + '" title="حذف"><i class="fas fa-trash"></i></button>';
       html += '<tr><td class="num">' + (i + 1) + '</td>' +
         '<td><div class="doc-cell"><div class="ficon"><i class="fas ' + getFileIcon(f.mimetype, f.originalName) + '"></i></div><div><div class="doc-title">' + escapeHtml(n.title || 'ملف') + '</div>' +
         (n.description ? '<div class="doc-desc">' + escapeHtml(n.description) + '</div>' : '') + '</div></div></td>' +
@@ -700,7 +822,7 @@
     body.innerHTML = html;
   }
 
-  /* ================= Upload ================= */
+  /* Upload */
   function handleFileSelected(file) {
     if (!file || nvUploading) return;
     if (file.size > 25 * 1024 * 1024) { showToast('حجم الملف كبير جداً (الحد 25 MB)', 'error'); return; }
@@ -780,7 +902,7 @@
     await Promise.all([loadNoteVerbaleCurrent(), loadNoteVerbaleArchive()]);
   }
 
-  /* ================= Authenticated document actions ================= */
+  /* Document Actions (View/Download/Print) */
   function guessType(name, type) {
     var n = (name || '').toLowerCase(), t = (type || '').toLowerCase();
     if (t && t !== 'application/octet-stream') return t;
@@ -820,108 +942,42 @@
     });
   }
 
-  /* ---- Printing ----
-     طريقة موثوقة على الهاتف والحاسوب: لا نوافذ منبثقة ولا iframe مخفي.
-     تُبنى ورقة الطباعة داخل نفس الصفحة كطبقة كاملة الشاشة (معاينة)، ثم تُستدعى window.print()،
-     وتخفي قواعد @media print كل ما عدا الورقة. */
-  var PP_ID = 'npPrintRoot', PP_STYLE = 'npPrintStyle', ppKey = null, ppAfter = null;
-
-  /* ترويسة الوثيقة الرسمية: عدّل النصوص هنا فقط (السطر الأول كبير، الأخير صغير، والبقية متوسطة) */
-  var LETTERHEAD = {
-    lines: ['الجمهورية التونسية', 'وزارة الداخلية', 'الإدارة العامة للحرس الوطني', 'إدارة إسناد الوحدات البحرية'],
-    place: 'العوينة'
-  };
-
+  /* ================= PRINT LOGIC ================= */
   function lhDate() { return new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
   function currentUserName() { var u = window.currentUser || {}; return u.name || u.fullName || u.username || ''; }
-  function letterheadHtml() {
-    var logo = ''; try { logo = localStorage.getItem('marine_logo') || ''; } catch (e) {}
-    var L = LETTERHEAD.lines, rows = '';
-    L.forEach(function (t, i) { rows += '<div class="' + (i === 0 ? 'a' : (i === L.length - 1 ? 'c' : 'b')) + '">' + escapeHtml(t) + '</div>'; });
-    return '<div class="lh"><div class="lh-r">' + (logo ? '<img class="lh-logo" src="' + escapeHtml(logo) + '" alt="">' : '') + rows + '</div>' +
-      '<div class="lh-l"><div>' + escapeHtml(LETTERHEAD.place) + ' في: ' + escapeHtml(lhDate()) + '</div><div>عدد: <span class="lh-num">&nbsp;</span></div></div></div>';
+
+  function buildLetterhead() {
+    return '<div class="p-letterhead">' +
+      '<div class="p-letterhead-right">' +
+        '<div class="a">الجمهورية التونسية</div>' +
+        '<div class="b">وزارة الداخلية</div>' +
+        '<div class="b">الإدارة العامة للحرس الوطني</div>' +
+        '<div class="c">إدارة إسناد الوحدات البحرية</div>' +
+      '</div>' +
+      '<div class="p-letterhead-left">' +
+        '<div>العوينة في: ' + escapeHtml(lhDate()) + '</div>' +
+        '<div>عدد: ....................</div>' +
+      '</div>' +
+    '</div>';
   }
-  function footerHtml() {
+
+  function buildFooter() {
     var by = currentUserName();
-    return '<div class="foot"><span>طُبعت بتاريخ ' + escapeHtml(lhDate()) + (by ? ' — بواسطة ' + escapeHtml(by) : '') + '</span>' +
-      '<span>' + escapeHtml(LETTERHEAD.lines.slice(-2).join(' — ')) + '</span></div>';
+    return '<div class="p-footer"><span>طُبع بتاريخ ' + escapeHtml(lhDate()) + (by ? ' — بواسطة ' + escapeHtml(by) : '') + '</span><span>منظومة الوسائل البحرية</span></div>';
   }
 
-  var PP_CSS = (function () {
-    var R = '#' + PP_ID;
-    return '@page{size:A4;margin:12mm}' +
-      R + '{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;overflow:auto;-webkit-overflow-scrolling:touch;background:#e9ecf1;direction:rtl;color:#000;' +
-      'font-family:"Cairo","Tajawal","Segoe UI",Tahoma,sans-serif;font-size:12px;line-height:1.7;text-align:right;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
-      R + ',' + R + ' *{box-sizing:border-box;visibility:visible}' +
-      R + ' .pp-bar{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 14px;background:#0f172a;color:#fff;font-size:13px}' +
-      R + ' .pp-bar button{border:0;border-radius:22px;padding:9px 22px;font:inherit;font-weight:700;cursor:pointer;margin-inline-start:8px}' +
-      R + ' .pp-bar .p{background:#e6b31e;color:#0a1628}' + R + ' .pp-bar .x{background:rgba(255,255,255,.16);color:#fff}' +
-      R + ' .pp-sheet{width:210mm;max-width:100%;margin:14px auto;background:#fff;padding:12mm;box-shadow:0 4px 24px rgba(0,0,0,.25)}' +
-      R + ' .lh{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px}' +
-      R + ' .lh-r{text-align:center;min-width:220px;line-height:1.9}' + R + ' .lh-r .a{font-size:15px;font-weight:800}' + R + ' .lh-r .b{font-size:14px;font-weight:700}' + R + ' .lh-r .c{font-size:13px}' +
-      R + ' .lh-logo{display:block;margin:0 auto 4px;width:62px;height:62px;object-fit:contain}' +
-      R + ' .lh-l{text-align:right;font-size:13px;padding-top:4px;line-height:2}' + R + ' .lh-num{display:inline-block;min-width:110px;border-bottom:1px dotted #000}' +
-      R + ' .lh-title{font-size:19px;font-weight:800;text-align:center;margin:12px 0 10px;padding:8px 0;border-top:2px solid #000;border-bottom:2px solid #000}' +
-      R + ' .sub{text-align:center;font-size:11px;margin:0 0 10px}' +
-      R + ' table{border-collapse:collapse;width:100%}' +
-      R + ' table.m{margin:0 0 12px}' + R + ' table.m td{border:1px solid #000;padding:5px 8px;font-size:11px;vertical-align:top;text-align:right}' +
-      R + ' table.m td.k{background:#ececec;font-weight:800;width:17%;white-space:nowrap}' +
-      R + ' table.t{border:1.5px solid #000}' + R + ' table.t thead{display:table-header-group}' + R + ' table.t tr{break-inside:avoid;page-break-inside:avoid}' +
-      R + ' table.t th,' + R + ' table.t td{border:1px solid #000;padding:6px 8px;font-size:11px;text-align:right;vertical-align:top}' + R + ' table.t th{background:#e5e5e5;font-weight:800}' +
-      R + ' .c{text-align:center}' + R + ' .d{font-size:10px;color:#333}' +
-      R + ' .pp-img{text-align:center;margin-top:6px;break-inside:avoid;page-break-inside:avoid}' +
-      R + ' .pp-img img{max-width:100%;max-height:185mm;object-fit:contain;border:1px solid #bbb}' +
-      R + ' .sign{display:flex;justify-content:space-between;gap:20px;margin-top:20px;font-size:12px;font-weight:700;break-inside:avoid}' +
-      R + ' .sign div{width:42%;text-align:center}' + R + ' .sign span{display:block;margin-top:46px;border-top:1px dotted #000}' +
-      R + ' .foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:5px;border-top:1px solid #888;font-size:10px;color:#333}' +
-      '@media screen and (max-width:700px){' + R + ' .pp-sheet{padding:14px;margin:0;box-shadow:none}' + R + ' .lh-r{min-width:0}}' +
-      '@media print{' +
-      'html,body{height:auto!important;min-height:0!important;overflow:visible!important;background:#fff!important}' +
-      'body>*:not(' + R + '){display:none!important}' +
-      R + '{position:static!important;overflow:visible!important;background:#fff!important;display:block!important}' +
-      R + ',' + R + ' *{visibility:visible!important}' +
-      R + ' .pp-bar{display:none!important}' +
-      R + ' .pp-sheet{width:auto!important;max-width:none!important;margin:0!important;padding:0!important;box-shadow:none!important}}';
-  })();
-
-  function closePrint() {
-    var r = document.getElementById(PP_ID); if (r && r.parentNode) r.parentNode.removeChild(r);
-    var s = document.getElementById(PP_STYLE); if (s && s.parentNode) s.parentNode.removeChild(s);
-    if (ppKey) { document.removeEventListener('keydown', ppKey, true); ppKey = null; }
-    if (ppAfter) { window.removeEventListener('afterprint', ppAfter); ppAfter = null; }
-  }
-
-  function doPrint() {
-    try { window.focus(); window.print(); }
-    catch (e) { showToast('تعذّرت الطباعة من هذا المتصفح، استعمل قائمة المتصفح ← طباعة', 'error'); }
-  }
-
-  /* يعرض ورقة المعاينة داخل الصفحة. autoPrint=true يفتح حوار الطباعة تلقائياً بعد تحميل الصور */
-  function openPrintOverlay(title, bodyHtml, autoPrint) {
+  function doPrint(htmlContent) {
     if (destroyed) return;
-    closePrint();
-    var st = document.createElement('style'); st.id = PP_STYLE; st.textContent = PP_CSS; document.head.appendChild(st);
-    var ov = document.createElement('div'); ov.id = PP_ID; ov.setAttribute('dir', 'rtl'); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', title);
-    ov.innerHTML = '<div class="pp-bar"><span>' + escapeHtml(title) + '</span><span>' +
-      '<button type="button" class="p" data-pp="print">🖨 طباعة / حفظ PDF</button>' +
-      '<button type="button" class="x" data-pp="close">إغلاق</button></span></div>' +
-      '<div class="pp-sheet">' + bodyHtml + '</div>';
-    document.body.appendChild(ov);
-    ov.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-pp]'); if (!b) return;
-      if (b.getAttribute('data-pp') === 'print') doPrint(); else closePrint();
-    });
-    ppKey = function (e) { if (e.key === 'Escape') { e.stopPropagation(); closePrint(); } };
-    document.addEventListener('keydown', ppKey, true);
-    if (autoPrint) {
-      var imgs = Array.prototype.slice.call(ov.querySelectorAll('img')), pending = imgs.filter(function (i) { return !i.complete; }).length, fired = false;
-      function fire() { if (fired || destroyed) return; fired = true; if (document.getElementById(PP_ID)) doPrint(); }
-      if (!pending) later(fire, 350);
-      else {
-        imgs.forEach(function (i) { if (!i.complete) { var h = function () { if (--pending <= 0) later(fire, 250); }; i.addEventListener('load', h); i.addEventListener('error', h); } });
-        later(fire, 5000);
+    printContainer.innerHTML = htmlContent;
+    // ننتظر قليلاً لضمان تحميل الصور إن وجدت
+    setTimeout(function() {
+      try {
+        window.focus();
+        window.print();
+      } catch (e) {
+        showToast('تعذّرت الطباعة، يرجى المحاولة من متصفح آخر.', 'error');
       }
-    }
+    }, 500);
   }
 
   function printRegister() {
@@ -932,68 +988,91 @@
     var rows = '';
     nvArchiveView.forEach(function (n, i) {
       var f = n.file || {};
-      rows += '<tr><td class="c">' + (i + 1) + '</td><td><b>' + escapeHtml(n.title || 'ملف') + '</b>' + (n.description ? '<div class="d">' + escapeHtml(n.description) + '</div>' : '') + '</td>' +
+      rows += '<tr><td style="text-align:center">' + (i + 1) + '</td><td><b>' + escapeHtml(n.title || 'ملف') + '</b>' + (n.description ? '<br><small style="color:#555">' + escapeHtml(n.description) + '</small>' : '') + '</td>' +
         '<td>' + escapeHtml(weekLabel(n)) + '</td><td>' + escapeHtml(uploaderName(n)) + '</td><td>' + escapeHtml(formatDate(n.createdAt || n.archivedAt)) + '</td>' +
         '<td>' + escapeHtml(f.sizeFormatted || formatFileSize(f.size)) + '</td></tr>';
     });
-    var body = letterheadHtml() + '<div class="lh-title">سجل التقارير الفنية</div>' + (bits.length ? '<p class="sub">' + escapeHtml(bits.join(' — ')) + '</p>' : '') +
-      '<table class="t"><thead><tr><th class="c" style="width:36px">#</th><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>التاريخ</th><th>الحجم</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div class="sign"><div>عدد التقارير: ' + nvArchiveView.length + '</div><div>الإمضاء والختم<span></span></div></div>' + footerHtml();
-    openPrintOverlay('سجل التقارير الفنية', body, true);
+    
+    var html = buildLetterhead() + 
+      '<div class="p-title">Rapport Technique</div>' + 
+      (bits.length ? '<div class="p-subtitle">' + escapeHtml(bits.join(' — ')) + '</div>' : '') +
+      '<table class="p-table"><thead><tr><th style="width:30px;text-align:center">#</th><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>التاريخ</th><th>الحجم</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="p-signatures"><div>عدد التقارير: ' + nvArchiveView.length + '</div><div>الإمضاء والختم<span></span></div></div>' + buildFooter();
+    
+    doPrint(html);
   }
 
-  function documentPrintBody(meta, f, name, imgSrc) {
-    var title = meta.title || name;
-    return letterheadHtml() + '<div class="lh-title">' + escapeHtml(title) + '</div>' +
-      '<table class="m"><tbody>' +
-      '<tr><td class="k">الأسبوع</td><td>' + escapeHtml(weekLabel(meta)) + '</td><td class="k">الرافع</td><td>' + escapeHtml(uploaderName(meta)) + '</td></tr>' +
-      '<tr><td class="k">تاريخ الرفع</td><td>' + escapeHtml(formatDate(meta.createdAt || meta.archivedAt)) + '</td><td class="k">الحجم</td><td>' + escapeHtml(f.sizeFormatted || formatFileSize(f.size)) + '</td></tr>' +
-      '<tr><td class="k">اسم الملف</td><td colspan="3">' + escapeHtml(name) + '</td></tr>' +
-      (meta.description ? '<tr><td class="k">الوصف</td><td colspan="3">' + escapeHtml(meta.description) + '</td></tr>' : '') +
-      '</tbody></table>' +
-      '<div class="pp-img"><img src="' + imgSrc + '" alt=""></div>' +
-      '<div class="sign"><div>المُعدّ<span></span></div><div>الإمضاء والختم<span></span></div></div>' + footerHtml();
-  }
-
-  async function docAction(action, id, btn) {
+  async function printDocument(id) {
     if (destroyed || !id) return;
     var meta = nvDocs[id] || {}, f = meta.file || {}, name = f.originalName || 'document';
-    var kind = guessType(name, f.mimetype), isImg = kind.indexOf('image/') === 0, isPdf = /pdf/.test(kind), previewable = isImg || isPdf;
-    var win = null;
-    /* PDF يُفتح في عارض المتصفح: تُفتح النافذة الآن (متزامنة مع النقر) كي لا تُحجب */
-    if ((action === 'view' || action === 'print') && isPdf) { try { win = window.open('', '_blank'); } catch (e) { win = null; } }
+    var kind = guessType(name, f.mimetype);
+    if (!kind.startsWith('image/')) {
+      showToast('طباعة الترويسة متاحة حالياً للصور فقط. لملفات PDF استخدم زر التحميل.', 'info');
+      return;
+    }
+    var btn = document.querySelector('[data-action="print"][data-id="' + id + '"]');
     setBusy(btn, true);
     try {
       var raw = await fetchDocBlob(id);
       var type = guessType(name, raw.type);
       var blob = raw.type === type ? raw : new Blob([raw], { type: type });
+      var data = await blobToDataUrl(blob);
+      
+      var html = buildLetterhead() + 
+        '<div class="p-title">Rapport Technique</div>' +
+        '<div class="p-subtitle">' + escapeHtml(meta.title || name) + '</div>' +
+        '<table class="p-table"><tbody>' +
+          '<tr><td style="width:15%;font-weight:bold;background:#eee">الأسبوع</td><td>' + escapeHtml(weekLabel(meta)) + '</td><td style="width:15%;font-weight:bold;background:#eee">الرافع</td><td>' + escapeHtml(uploaderName(meta)) + '</td></tr>' +
+          '<tr><td style="font-weight:bold;background:#eee">تاريخ الرفع</td><td>' + escapeHtml(formatDate(meta.createdAt || meta.archivedAt)) + '</td><td style="font-weight:bold;background:#eee">الحجم</td><td>' + escapeHtml(f.sizeFormatted || formatFileSize(f.size)) + '</td></tr>' +
+        '</tbody></table>' +
+        '<div class="p-img-wrap"><img src="' + data + '" alt="الوثيقة"></div>' +
+        '<div class="p-signatures"><div>المُعدّ<span></span></div><div>الإمضاء والختم<span></span></div></div>' + buildFooter();
 
-      if (action === 'download' || !previewable) {
+      doPrint(html);
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      if (!destroyed) setBusy(btn, false);
+    }
+  }
+
+  /* ================= INIT ================= */
+  function handleDocClick(e) {
+    var b = e.target.closest('[data-action]'); if (!b) return;
+    var a = b.getAttribute('data-action'), id = b.getAttribute('data-id');
+    if (a === 'view' || a === 'download') docAction(a, id, b);
+    else if (a === 'print') printDocument(id);
+    else if (a === 'promote') promoteArchiveItem(id);
+    else if (a === 'delete') deleteArchiveItem(id);
+  }
+  
+  async function docAction(action, id, btn) {
+    if (destroyed || !id) return;
+    var meta = nvDocs[id] || {}, f = meta.file || {}, name = f.originalName || 'document';
+    var kind = guessType(name, f.mimetype), isPdf = /pdf/.test(kind);
+    var win = null;
+    if ((action === 'view') && isPdf) { try { win = window.open('', '_blank'); } catch (e) {} }
+    setBusy(btn, true);
+    try {
+      var raw = await fetchDocBlob(id);
+      var type = guessType(name, raw.type);
+      var blob = raw.type === type ? raw : new Blob([raw], { type: type });
+      
+      if (action === 'download' || !(/pdf|image\//.test(type))) {
         if (win) win.close();
         saveBlob(blob, name);
-        if (action !== 'download') showToast('هذا النوع من الملفات لا يُعرض ولا يُطبع مباشرة، تم تحميله', 'info');
+        if (action !== 'download') showToast('تم التحميل', 'info');
         return;
       }
-      if (type.indexOf('image/') === 0) {
-        var data = await blobToDataUrl(blob);
-        if (action === 'print') openPrintOverlay(meta.title || name, documentPrintBody(meta, f, name, data), true);
-        else openPrintOverlay(meta.title || name, '<div class="pp-img"><img src="' + data + '" alt=""></div>', false);
-        return;
-      }
+      
       var url = URL.createObjectURL(blob);
       setTimeout(function () { URL.revokeObjectURL(url); }, 300000);
-      if (win) win.location.href = url;
-      else { var a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
-      if (action === 'print') showToast('ملف PDF: اختر «طباعة» من قائمة عارض المتصفح', 'info');
-    } catch (err) {
-      if (err.network) {
-        var direct = f.url || ('/api/notes/verbale/' + encodeURIComponent(id) + '/download');
-        if (action === 'download') { var b = document.createElement('a'); b.href = direct; b.target = '_blank'; b.rel = 'noopener'; b.download = name; document.body.appendChild(b); b.click(); b.remove(); }
-        else if (win) win.location.href = direct;
-        else window.open(direct, '_blank');
-        showToast('تعذّر الجلب المباشر، فُتح الرابط مباشرة', 'warning');
-        return;
+      
+      if (action === 'view') {
+        if (win) win.location.href = url;
+        else { var a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
       }
+    } catch (err) {
       if (win) win.close();
       showToast(err.message, 'error');
     } finally { if (!destroyed) setBusy(btn, false); }
@@ -1009,6 +1088,7 @@
       showToast('تم التعيين كوثيقة حالية', 'success'); await reloadVerbale();
     } catch (err) { showToast(err.message, 'error'); }
   }
+  
   async function deleteArchiveItem(id) {
     if (!canDeleteVerbale()) { showToast('ليس لديك صلاحية', 'error'); return; }
     var ok = await confirmDialog({ title: 'حذف الوثيقة', text: 'سيتم حذف هذه الوثيقة نهائياً ولا يمكن التراجع.', ok: 'حذف نهائي', icon: 'fa-trash', danger: true });
@@ -1020,14 +1100,6 @@
     } catch (err) { showToast(err.message, 'error'); }
   }
 
-  /* ================= Init ================= */
-  function handleDocClick(e) {
-    var b = e.target.closest('[data-action]'); if (!b) return;
-    var a = b.getAttribute('data-action'), id = b.getAttribute('data-id');
-    if (a === 'view' || a === 'download' || a === 'print') docAction(a, id, b);
-    else if (a === 'promote') promoteArchiveItem(id);
-    else if (a === 'delete') deleteArchiveItem(id);
-  }
   function handleRetry(e) {
     var b = e.target.closest('[data-retry]'); if (!b) return;
     var k = b.getAttribute('data-retry');
