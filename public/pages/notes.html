@@ -170,6 +170,18 @@ body{background:#0a0e1a}
 .ab{transition:transform .15s,filter .15s}.ab:hover{transform:translateY(-2px)}
 .nv-current{box-shadow:0 12px 44px rgba(230,179,30,.12)}
 .nv-current::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent)}
+.lh{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;color:#000;line-height:1.9;margin-bottom:10px}
+.lh-r{text-align:center;min-width:240px}.lh-r .a{font-size:15px;font-weight:800}.lh-r .b{font-size:14px;font-weight:700}.lh-r .c{font-size:13px}
+.lh-l{text-align:right;font-size:13px;padding-top:4px}.lh-num{display:inline-block;min-width:90px;border-bottom:1px dotted #000;outline:0}
+.lh-title{font-size:19px;font-weight:800;text-align:center;margin:12px 0 16px;padding:8px 0;border-top:2px solid #000;border-bottom:2px solid #000;color:#000}
+.np-overlay.vw{padding:14px;align-items:stretch}
+.vw-box{width:100%;max-width:980px;margin:0 auto;background:#121829;border:1px solid rgba(230,179,30,.3);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;direction:rtl}
+.vw-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line);background:rgba(230,179,30,.08)}
+.vw-t{font-weight:800;color:var(--gold2);font-size:14px;word-break:break-word;flex:1;min-width:180px}.vw-acts{display:flex;gap:8px;flex-wrap:wrap}
+.vw-body{flex:1;overflow:auto;padding:20px;background:#2a2f3d}
+.vw-sheet{background:#fff;color:#000;max-width:820px;margin:0 auto;padding:30px 34px;border-radius:4px;box-shadow:0 10px 40px rgba(0,0,0,.45);min-height:400px}
+.vw-doc img,.vw-doc canvas{display:block;width:100%;height:auto;margin:0 auto 10px}.vw-frame{width:100%;height:70vh;border:1px solid #ccc}
+.vw-msg{text-align:center;color:#444;padding:40px 10px;font-size:14px}.vw-note{font-size:11px;color:#666;margin-top:8px;text-align:center}
 @media (prefers-reduced-motion:reduce){#page-notes *{transition:none!important;animation:none!important}}
 @media (max-width:768px){
 #page-notes{padding:12px}.np-header{padding:12px 16px}.np-brand h2{font-size:17px}
@@ -182,6 +194,12 @@ body{background:#0a0e1a}
 @page{size:A4;margin:14mm}
 body *{visibility:hidden!important}
 #nvPrintArea,#nvPrintArea *{visibility:visible!important}
+body.np-viewing #nvPrintArea{display:none!important}
+body.np-viewing .vw-sheet,body.np-viewing .vw-sheet *{visibility:visible!important}
+body.np-viewing .np-overlay.vw,body.np-viewing .vw-box,body.np-viewing .vw-body{position:static!important;display:block!important;overflow:visible!important;height:auto!important;max-height:none!important;padding:0!important;background:#fff!important;border:0!important;backdrop-filter:none!important;animation:none!important}
+body.np-viewing .vw-bar,body.np-viewing .vw-note{display:none!important}
+body.np-viewing .vw-sheet{position:absolute;inset:0 0 auto 0;max-width:none;box-shadow:none;padding:0;min-height:0}
+.lh-num{border-bottom:1px dotted #000}
 #nvPrintArea{position:absolute;inset:0 0 auto 0;width:100%;background:#fff!important;color:#000!important}
 #nvPrintArea .print-only{display:block!important}
 #nvPrintArea .table-wrap{overflow:visible;max-height:none;border:0;background:#fff;box-shadow:none}
@@ -275,14 +293,7 @@ table.nv-table{min-width:0;border:1.5px solid #000}
   </div>
 
   <div id="nvPrintArea">
-    <div class="print-only letterhead">
-      <div class="l1">الجمهورية التونسية</div>
-      <div class="l2">وزارة الداخلية</div>
-      <div class="l2">الإدارة العامة للحرس الوطني</div>
-      <div class="l3">إدارة إسناد الوحدات البحرية</div>
-      <h1>سجل التقارير الفنية للوسائل البحرية</h1>
-      <div class="pd" id="nvPrintDate"></div>
-    </div>
+    <div class="print-only" id="nvLetterhead"></div>
     <div class="table-wrap">
       <table class="nv-table">
         <thead><tr><th class="num">#</th><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>التاريخ</th><th>الحجم</th><th class="col-act">الإجراءات</th></tr></thead>
@@ -576,7 +587,7 @@ table.nv-table{min-width:0;border:1.5px solid #000}
     } catch (err) { if (!_isDestroyed) box.innerHTML = errorBlock(err.message); }
   }
 
-  var nvHasCurrent = false;
+  var nvHasCurrent = false, nvCurrentNote = null;
   function isoWeek(d) {
     var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     var day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
@@ -586,7 +597,7 @@ table.nv-table{min-width:0;border:1.5px solid #000}
 
   function renderCurrentDocument(n) {
     var box = $('nvCurrentSection'); if (!box) return;
-    nvHasCurrent = true;
+    nvHasCurrent = true; nvCurrentNote = n;
     var f = n.file || {}, id = n.id || n._id;
     var up = new Date(n.createdAt || n.archivedAt || Date.now());
     var days = Math.max(0, Math.floor((Date.now() - up.getTime()) / 86400000)); if (isNaN(days)) days = 0;
@@ -607,7 +618,7 @@ table.nv-table{min-width:0;border:1.5px solid #000}
       '<td><div class="doc-cell"><div class="ficon"><i class="fas ' + getFileIcon(f.mimetype, f.originalName) + '"></i></div><div><div class="doc-title">' + escapeHtml(n.title || 'بدون عنوان') + '</div>' +
       '<div class="doc-desc">' + escapeHtml(n.description || f.originalName || '') + '</div></div></div></td>' +
       '<td><span class="chip">' + escapeHtml(weekTxt) + '</span></td><td>' + escapeHtml(uploader) + '</td><td>' + escapeHtml(formatDate(up)) + '</td><td>' + escapeHtml(f.sizeFormatted || '0 B') + '</td>' +
-      '<td><div class="row-actions"><a class="ab view" href="' + escapeHtml(f.url || '#') + '" target="_blank" rel="noopener" title="عرض"><i class="fas fa-eye"></i></a>' +
+      '<td><div class="row-actions"><button class="ab view" data-action="view-current" title="عرض"><i class="fas fa-eye"></i></button>' +
       '<a class="ab download" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener" title="تحميل"><i class="fas fa-download"></i></a></div></td></tr></tbody></table></div></section>';
   }
 
@@ -670,7 +681,7 @@ table.nv-table{min-width:0;border:1.5px solid #000}
       var id = n.id || n._id, f = n.file || {};
       var uploader = n.uploadedBy && n.uploadedBy.name ? n.uploadedBy.name : (n.createdByName || 'مستخدم');
       var acts = '<button class="ab download" data-action="download" data-id="' + escapeHtml(id) + '" title="تحميل"><i class="fas fa-download"></i></button>';
-      if (f.url) acts = '<a class="ab view" href="' + escapeHtml(f.url) + '" target="_blank" rel="noopener" title="عرض"><i class="fas fa-eye"></i></a>' + acts;
+      acts = '<button class="ab view" data-action="view" data-id="' + escapeHtml(id) + '" title="عرض"><i class="fas fa-eye"></i></button>' + acts;
       if (cp) acts += '<button class="ab promote" data-action="promote" data-id="' + escapeHtml(id) + '" title="تعيين كحالية"><i class="fas fa-star"></i></button>' +
         '<button class="ab delete" data-action="delete" data-id="' + escapeHtml(id) + '" title="حذف"><i class="fas fa-trash"></i></button>';
       html += '<tr><td class="num">' + (i + 1) + '</td>' +
@@ -777,13 +788,97 @@ table.nv-table{min-width:0;border:1.5px solid #000}
   }
 
   // ---------- Print ----------
-  function printRegister() {
-    $('nvPrintDate').textContent = 'التاريخ: ' + new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' });
-    window.print();
+  // ---------- Letterhead + document viewer ----------
+  function lhDate() { return new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
+  function letterheadHtml(title, editable) {
+    return '<div class="lh"><div class="lh-r"><div class="a">الجمهورية التونسية</div><div class="b">وزارة الداخلية</div><div class="b">الإدارة العامة للحرس الوطني</div><div class="c">إدارة إسناد الوحدات البحرية</div></div>' +
+      '<div class="lh-l"><div>العوينة في: <span class="lh-date">' + escapeHtml(lhDate()) + '</span></div><div>عدد: <span class="lh-num"' + (editable ? ' contenteditable="true" title="اكتب رقم العدد"' : '') + '>&nbsp;</span></div></div></div>' +
+      (title ? '<div class="lh-title">' + escapeHtml(title) + '</div>' : '');
   }
-  function onBeforePrint() { var el = $('nvPrintDate'); if (el) el.textContent = 'التاريخ: ' + new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
+  function updateLhDates() { document.querySelectorAll('#page-notes .lh-date,.np-overlay .lh-date').forEach(function (e) { e.textContent = lhDate(); }); }
+  function printRegister() { updateLhDates(); window.print(); }
+  function onBeforePrint() { updateLhDates(); }
   window.addEventListener('beforeprint', onBeforePrint);
   _eventListeners.push({ el: window, type: 'beforeprint', fn: onBeforePrint });
+
+  var pdfJsPromise = null;
+  function loadPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (pdfJsPromise) return pdfJsPromise;
+    var base = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+    pdfJsPromise = new Promise(function (res, rej) {
+      var sc = document.createElement('script'); sc.src = base + 'pdf.min.js';
+      sc.onload = function () {
+        try {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob(["importScripts('" + base + "pdf.worker.min.js');"], { type: 'text/javascript' }));
+          res(window.pdfjsLib);
+        } catch (e) { rej(e); }
+      };
+      sc.onerror = function () { rej(new Error('pdfjs')); };
+      document.head.appendChild(sc);
+    });
+    return pdfJsPromise;
+  }
+
+  async function openViewer(note) {
+    if (_isDestroyed || !note) return;
+    var f = note.file || {}, id = note.id || note._id;
+    var url = f.url || ('/api/notes/verbale/' + encodeURIComponent(id) + '/download');
+    var name = (f.originalName || '').toLowerCase(), mt = (f.mimetype || '').toLowerCase();
+    var isPdf = mt.indexOf('pdf') !== -1 || /\.pdf$/.test(name);
+    var isImg = mt.indexOf('image') !== -1 || /\.(jpg|jpeg|png|webp|gif|bmp)$/.test(name);
+    var ov = document.createElement('div'); ov.className = 'np-overlay vw';
+    ov.innerHTML = '<div class="vw-box"><div class="vw-bar"><div class="vw-t">' + escapeHtml(note.title || f.originalName || 'التقرير') + '</div><div class="vw-acts">' +
+      '<button class="btn primary" id="vwPrint" disabled><i class="fas fa-print"></i> طباعة مع الترويسة</button>' +
+      '<a class="btn secondary" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener"><i class="fas fa-download"></i> تحميل</a>' +
+      '<button class="btn secondary" id="vwClose"><i class="fas fa-times"></i> إغلاق</button></div></div>' +
+      '<div class="vw-body"><div class="vw-sheet">' + letterheadHtml(note.title || 'التقرير الفني للوسائل البحرية', true) +
+      '<div class="vw-doc" id="vwDoc"><div class="sk" style="height:300px"></div></div></div>' +
+      '<div class="vw-note">يمكنك كتابة رقم العدد في الترويسة قبل الطباعة</div></div></div>';
+    document.body.appendChild(ov); document.body.classList.add('np-viewing');
+    var blobUrl = null, fallbackFrame = null;
+    function close() { document.removeEventListener('keydown', onKey); if (blobUrl) URL.revokeObjectURL(blobUrl); ov.remove(); document.body.classList.remove('np-viewing'); }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+    ov.querySelector('#vwClose').addEventListener('click', close);
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    var doc = ov.querySelector('#vwDoc'), pbtn = ov.querySelector('#vwPrint');
+    pbtn.addEventListener('click', function () {
+      if (fallbackFrame) { try { fallbackFrame.contentWindow.focus(); fallbackFrame.contentWindow.print(); showToast('تعذّر دمج الترويسة مع هذا الملف، طُبع الملف مباشرة', 'warning'); } catch (e) { showToast('تعذّرت الطباعة', 'error'); } return; }
+      updateLhDates(); window.print();
+    });
+    try {
+      var res = await fetcher(url, { method: 'GET' });
+      if (!res.ok) throw new Error('تعذّر فتح الملف (' + res.status + ')');
+      var buf = await res.arrayBuffer();
+      if (isPdf) {
+        try {
+          var lib = await loadPdfJs();
+          var pdf = await lib.getDocument({ data: buf.slice(0) }).promise;
+          doc.innerHTML = '';
+          for (var i = 1; i <= pdf.numPages; i++) {
+            var pg = await pdf.getPage(i), vp = pg.getViewport({ scale: 1.6 });
+            var cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+            await pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+            doc.appendChild(cv);
+          }
+        } catch (e) {
+          blobUrl = URL.createObjectURL(new Blob([buf], { type: 'application/pdf' }));
+          doc.innerHTML = '<iframe class="vw-frame" id="vwFrame" src="' + blobUrl + '" title="الوثيقة"></iframe>';
+          fallbackFrame = doc.querySelector('#vwFrame');
+        }
+      } else if (isImg) {
+        blobUrl = URL.createObjectURL(new Blob([buf], { type: mt || 'image/*' }));
+        doc.innerHTML = '<img src="' + blobUrl + '" alt="الوثيقة">';
+      } else {
+        doc.innerHTML = '<div class="vw-msg"><i class="fas fa-file" style="font-size:40px;display:block;margin-bottom:10px"></i>لا يمكن عرض هذا النوع من الملفات داخل الصفحة.<br>استخدم زر «تحميل» لفتحه.</div>';
+        return;
+      }
+      pbtn.disabled = false;
+    } catch (err) {
+      doc.innerHTML = '<div class="vw-msg">' + escapeHtml(err.message) + '</div>';
+    }
+  }
 
   // ---------- Init ----------
   function init() {
@@ -834,11 +929,16 @@ table.nv-table{min-width:0;border:1.5px solid #000}
     addSafeListener($('nvArchiveList'), 'click', function (e) {
       var b = e.target.closest('[data-action]'); if (!b) return;
       var a = b.getAttribute('data-action'), id = b.getAttribute('data-id');
-      if (a === 'download') downloadArchiveItem(id);
+      if (a === 'view') { var vn = nvArchiveData.find(function (x) { return String(x.id || x._id) === String(id); }); if (vn) openViewer(vn); }
+      else if (a === 'download') downloadArchiveItem(id);
       else if (a === 'promote') promoteArchiveItem(id);
       else if (a === 'delete') deleteArchiveItem(id);
     });
 
+    $('nvLetterhead').innerHTML = letterheadHtml('سجل التقارير الفنية للوسائل البحرية');
+    addSafeListener($('nvCurrentSection'), 'click', function (e) {
+      if (e.target.closest('[data-action="view-current"]') && nvCurrentNote) openViewer(nvCurrentNote);
+    });
     loadNotes();
   }
 
