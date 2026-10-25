@@ -1,4 +1,4 @@
-<!-- public/pages/notes.html — v12.1 -->
+<!-- public/pages/notes.html — v13.0 (Final Fixed) -->
 <div id="page-notes" dir="rtl">
 <style>
 #page-notes{--gold:#e6b31e;--gold2:#f5d76e;--bg:#0a0e1a;--panel:rgba(255,255,255,.035);--line:rgba(255,255,255,.07);--tx:#e8edf5;--mut:rgba(255,255,255,.5);--ok:#22c55e;--bad:#f87171;--info:#60a5fa;
@@ -139,7 +139,7 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
 .np-dialog h4{margin:0 0 8px;font-size:18px}.np-dialog p{margin:0 0 20px;font-size:13px;color:var(--mut);line-height:1.7}
 .np-dialog .actions{justify-content:center}
 
-/* ===== v11.1 design refinements ===== */
+/* ===== Design refinements ===== */
 body{background:#0a0e1a}
 #page-notes{background:radial-gradient(ellipse at 15% 0%,rgba(230,179,30,.08),transparent 55%),radial-gradient(ellipse at 90% 100%,rgba(167,139,250,.05),transparent 55%)}
 .np-header{background:linear-gradient(135deg,rgba(230,179,30,.1),rgba(255,255,255,.03));border-color:rgba(230,179,30,.22);box-shadow:0 10px 40px rgba(0,0,0,.25)}
@@ -187,13 +187,10 @@ body{background:#0a0e1a}
 @page{size:A4;margin:14mm}
 body{background:#fff!important}
 body *{visibility:hidden!important}
-#nvLetterhead,#nvLetterhead *{background:none!important;color:#000!important;box-shadow:none!important}
-#nvLetterhead .lh-title{border-top:2px solid #000;border-bottom:2px solid #000}
-#nvPrintArea,#nvPrintArea *{visibility:visible!important}
-#page-notes{position:static!important;padding:0!important;margin:0!important;width:auto!important;min-height:0!important;background:#fff!important}
-#nvPrintArea{position:absolute;top:0;left:0;right:0;width:auto;background:#fff!important;color:#000!important;direction:rtl}
-#nvPrintArea .print-only{display:block!important}
-#nvPrintArea .table-wrap{overflow:visible;max-height:none;border:0;background:#fff;box-shadow:none}
+#nvPrintWrapper, #nvPrintWrapper *{visibility:visible!important}
+#nvPrintWrapper{position:absolute;inset:0 0 auto 0;width:100%;background:#fff!important;color:#000!important;direction:rtl}
+#nvPrintWrapper .print-only{display:block!important}
+#nvPrintWrapper .table-wrap{overflow:visible;max-height:none;border:0;background:#fff;box-shadow:none}
 table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:collapse}
 .nv-table thead{display:table-header-group}
 .nv-table thead th{position:static;box-shadow:none}
@@ -203,6 +200,7 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
 .nv-table .col-act,.ficon{display:none!important}
 .chip{background:none!important;color:#000!important;padding:0}.chip i{display:none}
 .doc-title,.doc-desc{color:#000!important}
+.lh,.lh *{color:#000!important}
 }
 </style>
 
@@ -279,7 +277,8 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     <select class="nv-filter" id="nvFilterUploader" aria-label="الرافع"><option value="all">كل الرافعين</option></select>
   </div>
 
-  <div id="nvPrintArea">
+  <!-- حاوية الطباعة (تشمل الترويسة + الجدول) -->
+  <div id="nvPrintWrapper">
     <div class="print-only" id="nvLetterhead"></div>
     <div class="table-wrap">
       <table class="nv-table">
@@ -857,7 +856,6 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
   }
 
   // ---------- Print ----------
-  // ---------- Letterhead + document viewer ----------
   function lhDate() { return new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
   function letterheadHtml(title, editable) {
     return '<div class="lh"><div class="lh-r"><div class="a">الجمهورية التونسية</div><div class="b">وزارة الداخلية</div><div class="b">الإدارة العامة للحرس الوطني</div><div class="c">إدارة إسناد الوحدات البحرية</div></div>' +
