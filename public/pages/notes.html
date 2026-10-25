@@ -268,6 +268,10 @@
   var root = document.getElementById('page-notes');
   var destroyed = false, timeouts = [], listeners = [], activeXhr = null;
 
+  /* ملاحظة مهمة: لا تكتب وسوم html/head/body/title/style/!DOCTYPE حرفياً داخل هذا السكربت؛
+     محمّل الصفحات قد يلتقطها ويكسر السكربت. نستخدم LT بدل المحرف < في تلك الحالات. */
+  var LT = '\x3C';
+
   function cleanup() {
     if (destroyed) return;
     destroyed = true;
@@ -835,8 +839,18 @@
     'th,td{border:1px solid #000;padding:6px 8px;font-size:11px;text-align:right;vertical-align:top}th{background:#e5e5e5;font-weight:800}' +
     '.c{text-align:center}.d{font-size:10px;color:#333}.foot{margin-top:10px;font-size:11px;text-align:left}' +
     '.img{text-align:center;margin-top:14px}.img img{max-width:100%;max-height:235mm;object-fit:contain;break-inside:avoid}';
+
+  /* بناء مستند الطباعة: كل وسوم المستند مكتوبة عبر LT كي لا يلتقطها محمّل الصفحات */
   function printDocument(title, bodyHtml) {
-    return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>' + escapeHtml(title) + '</title><style>' + PRINT_CSS + '</style></head><body>' + bodyHtml + '</body></html>';
+    return LT + '!DOCTYPE html>' +
+      LT + 'html lang="ar" dir="rtl">' +
+      LT + 'head>' +
+      LT + 'meta charset="utf-8">' +
+      LT + 'title>' + escapeHtml(title) + LT + '/title>' +
+      LT + 'style>' + PRINT_CSS + LT + '/style>' +
+      LT + '/head>' +
+      LT + 'body>' + bodyHtml + LT + '/body>' +
+      LT + '/html>';
   }
   function printInFrame(srcHtml, srcUrl) {
     var fr = document.createElement('iframe');
@@ -883,7 +897,12 @@
     var win = null;
     if (action === 'view' && previewable) {
       win = window.open('', '_blank');
-      if (win) { try { win.opener = null; win.document.write('<title>جارٍ التحضير</title><div style="font-family:sans-serif;text-align:center;margin-top:50px;color:#333">جارٍ تحضير الوثيقة...</div>'); } catch (e) {} }
+      if (win) {
+        try {
+          win.opener = null;
+          win.document.write(LT + 'title>جارٍ التحضير' + LT + '/title>' + LT + 'div style="font-family:sans-serif;text-align:center;margin-top:50px;color:#333">جارٍ تحضير الوثيقة...' + LT + '/div>');
+        } catch (e) {}
+      }
     }
     setBusy(btn, true);
     try {
