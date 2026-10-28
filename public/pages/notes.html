@@ -842,6 +842,12 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
   }
 
+  function blobToDataUrl(blob) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader(); r.onload = function () { resolve(r.result); }; r.onerror = function () { reject(new Error('تعذّرت قراءة الملف')); }; r.readAsDataURL(blob);
+    });
+  }
+
   /* ================= PRINT LOGIC ================= */
   function lhDate() { return new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
   function currentUserName() { var u = window.currentUser || {}; return u.name || u.fullName || u.username || ''; }
@@ -901,8 +907,8 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     doPrint(html);
   }
 
-  /* الطباعة المحدثة: بدون fetch، باستخدام رابط الصورة المباشر */
-  function printDocument(id) {
+  // الطباعة المحدثة (تستخدم Blob لضمان عمل الصورة 100%)
+  async function printDocument(id) {
     if (destroyed || !id) return;
     var meta = nvDocs[id] || {}, f = meta.file || {}, name = f.originalName || 'document';
     var kind = guessType(name, f.mimetype);
@@ -912,64 +918,73 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
       return;
     }
 
-    var imgUrl = f.url;
-    if (!imgUrl) {
-      showToast('لا يوجد رابط مباشر للصورة لطباعتها.', 'error');
-      return;
+    var btn = document.querySelector('[data-action="print"][data-id="' + id + '"]');
+    setBusy(btn, true);
+
+    try {
+      // جلب الصورة كـ Blob لضمان عدم حدوث خطأ CORS أو المصادقة
+      var raw = await fetchDocBlob(id);
+      var type = guessType(name, raw.type);
+      var blob = raw.type === type ? raw : new Blob([raw], { type: type });
+      var base64Data = await blobToDataUrl(blob);
+
+      // فتح نافذة جديدة
+      var win = window.open('', '_blank');
+      if (!win) {
+        showToast('الرجاء السماح بالنوافذ المنبثقة (Pop-ups) لهذا الموقع.', 'error');
+        return;
+      }
+
+      var html = `
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head>
+            <title>طباعة الوثيقة - ${escapeHtml(meta.title || name)}</title>
+            <style>
+                @page { size: A4 portrait; margin: 15mm; }
+                body { font-family: 'Cairo', 'Tajawal', sans-serif; background: #fff; color: #000; margin: 0; padding: 0; }
+                .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+                .header-right { text-align: center; line-height: 1.6; font-size: 14px; font-weight: bold; }
+                .header-left { text-align: right; font-size: 13px; line-height: 1.8; }
+                .title { text-align: center; font-size: 18px; font-weight: 900; margin: 15px 0; padding: 8px 0; border-top: 2px solid #000; border-bottom: 2px solid #000; }
+                .image-container { width: 100%; text-align: center; margin-top: 20px; }
+                .image-container img { max-width: 100%; max-height: 240mm; object-fit: contain; display: block; margin: 0 auto; page-break-inside: avoid; }
+                .footer { margin-top: 20px; padding-top: 5px; border-top: 1px solid #888; font-size: 10px; color: #555; display: flex; justify-content: space-between; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="header-right">
+                    الجمهورية التونسية<br>
+                    وزارة الداخلية<br>
+                    الإدارة العامة للحرس الوطني<br>
+                    إدارة إسناد الوحدات البحرية
+                </div>
+                <div class="header-left">
+                    العوينة في: ${new Date().toLocaleDateString('ar-TN')}<br>
+                    عدد: ....................
+                </div>
+            </div>
+            <div class="title">Rapport Technique</div>
+            <div class="image-container">
+                <img src="${base64Data}" alt="الوثيقة" onload="setTimeout(function(){ window.print(); }, 500);" onerror="alert('تعذر تحميل الصورة.');">
+            </div>
+            <div class="footer">
+                <span>منظومة الوسائل البحرية</span>
+                <span>${escapeHtml(meta.title || name)}</span>
+            </div>
+        </body>
+        </html>
+      `;
+
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      if (!destroyed) setBusy(btn, false);
     }
-
-    // نفتح نافذة جديدة متزامنة مع النقر لتجنب حظر النوافذ المنبثقة
-    var win = window.open('', '_blank');
-    if (!win) {
-      showToast('الرجاء السماح بالنوافذ المنبثقة (Pop-ups) لهذا الموقع.', 'error');
-      return;
-    }
-
-    var html = `
-      <!DOCTYPE html>
-      <html dir="rtl">
-      <head>
-          <title>طباعة الوثيقة - ${escapeHtml(meta.title || name)}</title>
-          <style>
-              @page { size: A4 portrait; margin: 15mm; }
-              body { font-family: 'Cairo', 'Tajawal', sans-serif; background: #fff; color: #000; margin: 0; padding: 0; }
-              .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-              .header-right { text-align: center; line-height: 1.6; font-size: 14px; font-weight: bold; }
-              .header-left { text-align: right; font-size: 13px; line-height: 1.8; }
-              .title { text-align: center; font-size: 18px; font-weight: 900; margin: 15px 0; padding: 8px 0; border-top: 2px solid #000; border-bottom: 2px solid #000; }
-              .image-container { width: 100%; text-align: center; margin-top: 20px; }
-              .image-container img { max-width: 100%; max-height: 240mm; object-fit: contain; display: block; margin: 0 auto; page-break-inside: avoid; }
-              .footer { margin-top: 20px; padding-top: 5px; border-top: 1px solid #888; font-size: 10px; color: #555; display: flex; justify-content: space-between; }
-          </style>
-      </head>
-      <body>
-          <div class="header">
-              <div class="header-right">
-                  الجمهورية التونسية<br>
-                  وزارة الداخلية<br>
-                  الإدارة العامة للحرس الوطني<br>
-                  إدارة إسناد الوحدات البحرية
-              </div>
-              <div class="header-left">
-                  العوينة في: ${new Date().toLocaleDateString('ar-TN')}<br>
-                  عدد: ....................
-              </div>
-          </div>
-          <div class="title">Rapport Technique</div>
-          <div class="image-container">
-              <img src="${escapeHtml(imgUrl)}" alt="الوثيقة" onload="setTimeout(function(){ window.print(); }, 500);" onerror="alert('تعذر تحميل الصورة للطباعة، قد يكون الرابط محمياً.');">
-          </div>
-          <div class="footer">
-              <span>منظومة الوسائل البحرية</span>
-              <span>${escapeHtml(meta.title || name)}</span>
-          </div>
-      </body>
-      </html>
-    `;
-
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
   }
 
   /* ================= INIT ================= */
