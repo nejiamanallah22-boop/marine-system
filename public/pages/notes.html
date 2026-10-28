@@ -1,7 +1,6 @@
 <!-- public/pages/notes.html -->
 <div id="page-notes" dir="rtl">
 <style>
-/* ================= UI STYLES (الشاشة) ================= */
 #page-notes{
   --gold:#e6b31e;--gold2:#f5d76e;--bg:#0a0e1a;--panel:rgba(255,255,255,.04);--line:rgba(255,255,255,.08);
   --tx:#e8edf5;--mut:rgba(255,255,255,.55);--ok:#22c55e;--ok2:#4ade80;--bad:#f87171;--info:#60a5fa;--warn:#fbbf24;
@@ -16,7 +15,6 @@
 #page-notes :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 #page-notes [hidden] { display: none !important; }
 
-/* Header & Tabs */
 .np-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 24px;margin-bottom:18px;border-radius:16px;background:linear-gradient(135deg,rgba(230,179,30,.12),rgba(255,255,255,.03));border:1px solid rgba(230,179,30,.25);box-shadow:0 10px 40px rgba(0,0,0,.28)}
 .np-brand{display:flex;align-items:center;gap:14px}
 .np-logo{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:grid;place-items:center;color:#0a1628;font-size:21px;overflow:hidden;box-shadow:0 0 0 3px rgba(230,179,30,.25),0 0 30px rgba(230,179,30,.25)}
@@ -32,7 +30,6 @@
 .np-badge{background:rgba(0,0,0,.25);padding:1px 9px;border-radius:10px;font-size:11px;font-weight:800}
 .np-panel{display:none}.np-panel.active{display:block}
 
-/* Buttons & Cards */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 18px;border:0;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .2s,box-shadow .2s,filter .2s}
 .btn:disabled{opacity:.6;cursor:not-allowed}
 .btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628}
@@ -57,7 +54,6 @@
 .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .hint{margin:-6px 0 16px;font-size:12px;color:var(--mut);display:flex;gap:8px;align-items:center}.hint i{color:var(--gold)}
 
-/* Notes */
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:12px 16px;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:12px}
 .np-filter{flex:1;min-width:150px;font-size:13px;padding:8px 14px}
 .note-list{display:flex;flex-direction:column;gap:14px}
@@ -78,7 +74,6 @@
 .btn-sm.edit{background:rgba(96,165,250,.12);color:var(--info)}.btn-sm.edit:hover{background:rgba(96,165,250,.25)}
 .btn-sm.delete{background:rgba(248,113,113,.12);color:var(--bad)}.btn-sm.delete:hover{background:rgba(248,113,113,.25)}
 
-/* Current report & Upload & Archive */
 .rt-current{background:linear-gradient(135deg,rgba(230,179,30,.09),rgba(10,16,32,.5));border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:22px 24px;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:0 12px 44px rgba(230,179,30,.1)}
 .rt-current::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent)}
 .rt-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
@@ -134,7 +129,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
 .ab.promote{background:rgba(230,179,30,.12);color:var(--gold2)}.ab.delete{background:rgba(248,113,113,.12);color:var(--bad)}
 .ab.print{background:rgba(167,139,250,.12);color:#a78bfa}
 
-/* States & Toasts */
 .empty{text-align:center;padding:50px 20px;color:var(--mut)}
 .empty i{font-size:3rem;color:rgba(255,255,255,.12);display:block;margin-bottom:10px}
 .empty h3{margin:0 0 4px;font-size:1rem;color:rgba(255,255,255,.6)}.empty p{margin:0;font-size:.8rem}
@@ -297,7 +291,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
   var root = document.getElementById('page-notes');
   var printContainer = document.getElementById('print-container');
   var destroyed = false, timeouts = [], listeners = [], activeXhr = null;
-  var LT = '\x3C';
 
   function cleanup() {
     if (destroyed) return;
@@ -313,7 +306,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
   window._pageCleanup = window._pageCleanup || [];
   window._pageCleanup.push(cleanup);
 
-  /* Helpers */
   function $(id) { return document.getElementById(id); }
   function escapeHtml(s) {
     if (s === null || s === undefined) return '';
@@ -415,7 +407,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     else { if (btn.dataset.html) btn.innerHTML = btn.dataset.html; btn.disabled = false; }
   }
 
-  /* Logo */
   function applyLogo() {
     try {
       var c = localStorage.getItem('marine_logo'); if (!c) return;
@@ -436,7 +427,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
   function onStorage(e) { if (e.key === 'marine_logo' && e.newValue) applyLogo(); }
   window.addEventListener('storage', onStorage);
 
-  /* Permissions */
   var LEGACY = { super_admin: 'admin', 'مسؤول': 'admin', 'مدير': 'manager', 'محرر': 'editor', 'مشغل': 'maintenance_unit', operator: 'maintenance_unit', user: 'viewer', 'مشاهد': 'viewer' };
   var ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
   function normalizeRole(r) { if (!r) return 'viewer'; r = String(r).trim(); return ROLES.indexOf(r) !== -1 ? r : (LEGACY[r] || 'viewer'); }
@@ -458,12 +448,10 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     })();
   }
 
-  /* State */
   var notesData = [], editingId = null, notesLoaded = false;
   var verbaleCurrentLoaded = false, verbaleArchiveLoaded = false;
   var nvSelectedFile = null, nvArchiveAll = [], nvArchiveView = [], nvHasCurrent = false, nvDocs = {}, nvUploading = false;
 
-  /* Tabs */
   function switchNotesTab(tab) {
     if (tab !== 'notes' && tab !== 'verbale') return;
     root.querySelectorAll('.np-tab').forEach(function (b) {
@@ -476,7 +464,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     else { if (!verbaleCurrentLoaded) loadNoteVerbaleCurrent(); if (!verbaleArchiveLoaded) loadNoteVerbaleArchive(); }
   }
 
-  /* Notes */
   async function loadNotes() {
     if (destroyed) return;
     var box = $('notesList'); if (!box) return;
@@ -597,7 +584,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     $('saveNoteBtn').innerHTML = '<i class="fas fa-save"></i> حفظ';
   }
 
-  /* Weekly report */
   function docBtns(id) {
     var i = escapeHtml(id);
     return '<button class="ab view" data-action="view" data-id="' + i + '" title="عرض"><i class="fas fa-eye"></i></button>' +
@@ -725,7 +711,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     body.innerHTML = html;
   }
 
-  /* Upload */
   function handleFileSelected(file) {
     if (!file || nvUploading) return;
     if (file.size > 25 * 1024 * 1024) { showToast('حجم الملف كبير جداً (الحد 25 MB)', 'error'); return; }
@@ -805,7 +790,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     await Promise.all([loadNoteVerbaleCurrent(), loadNoteVerbaleArchive()]);
   }
 
-  /* Document Actions */
   function guessType(name, type) {
     var n = (name || '').toLowerCase(), t = (type || '').toLowerCase();
     if (t && t !== 'application/octet-stream') return t;
@@ -848,7 +832,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     });
   }
 
-  /* ================= PRINT LOGIC ================= */
   function lhDate() { return new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
   function currentUserName() { var u = window.currentUser || {}; return u.name || u.fullName || u.username || ''; }
 
@@ -907,7 +890,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     doPrint(html);
   }
 
-  // الطباعة المحدثة (تستخدم Blob لضمان عمل الصورة 100%)
   async function printDocument(id) {
     if (destroyed || !id) return;
     var meta = nvDocs[id] || {}, f = meta.file || {}, name = f.originalName || 'document';
@@ -922,13 +904,11 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     setBusy(btn, true);
 
     try {
-      // جلب الصورة كـ Blob لضمان عدم حدوث خطأ CORS أو المصادقة
       var raw = await fetchDocBlob(id);
       var type = guessType(name, raw.type);
       var blob = raw.type === type ? raw : new Blob([raw], { type: type });
       var base64Data = await blobToDataUrl(blob);
 
-      // فتح نافذة جديدة
       var win = window.open('', '_blank');
       if (!win) {
         showToast('الرجاء السماح بالنوافذ المنبثقة (Pop-ups) لهذا الموقع.', 'error');
@@ -987,7 +967,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     }
   }
 
-  /* ================= INIT ================= */
   async function docAction(action, id, btn) {
     if (destroyed || !id) return;
     var meta = nvDocs[id] || {}, f = meta.file || {}, name = f.originalName || 'document';
