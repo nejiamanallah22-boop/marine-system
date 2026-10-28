@@ -852,7 +852,7 @@
     var R = '#' + PP_ID;
     return '@page{size:A4;margin:12mm}' +
       R + '{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;overflow:auto;-webkit-overflow-scrolling:touch;background:#e9ecf1;direction:rtl;color:#000;' +
-      'font-family:"Cairo","Tajawal","Segoe UI",Tahoma,sans-serif;font-size:12px;line-height:1.7;text-align:right;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      'font-family:"Cairo","Tajawal","Segoe UI",Tahoma,sans-serif;font-size:12px;line-height:1.7;text-align:right;-webkit-text-size-adjust:100%;text-size-adjust:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
       R + ',' + R + ' *{box-sizing:border-box;visibility:visible}' +
       R + ' .pp-bar{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 14px;background:#0f172a;color:#fff;font-size:13px}' +
       R + ' .pp-bar button{border:0;border-radius:22px;padding:9px 22px;font:inherit;font-weight:700;cursor:pointer;margin-inline-start:8px}' +
@@ -867,8 +867,11 @@
       R + ' table{border-collapse:collapse;width:100%}' +
       R + ' table.m{margin:0 0 12px}' + R + ' table.m td{border:1px solid #000;padding:5px 8px;font-size:11px;vertical-align:top;text-align:right}' +
       R + ' table.m td.k{background:#ececec;font-weight:800;width:17%;white-space:nowrap}' +
-      R + ' table.t{border:1.5px solid #000}' + R + ' table.t thead{display:table-header-group}' + R + ' table.t tr{break-inside:avoid;page-break-inside:avoid}' +
-      R + ' table.t th,' + R + ' table.t td{border:1px solid #000;padding:6px 8px;font-size:11px;text-align:right;vertical-align:top}' + R + ' table.t th{background:#e5e5e5;font-weight:800}' +
+      R + ' table.t{border:1.5px solid #000;table-layout:fixed}' + R + ' table.t thead{display:table-header-group}' + R + ' table.t tr{break-inside:avoid;page-break-inside:avoid}' +
+      R + ' table.t th,' + R + ' table.t td{border:1px solid #333;padding:8px 9px;font-size:12px;line-height:1.55;text-align:right;vertical-align:middle;word-break:break-word}' +
+      R + ' table.t th{background:#d9dde3;font-weight:800;font-size:12px;text-align:center}' +
+      R + ' table.t tbody tr:nth-child(even) td{background:#f4f5f7}' +
+      R + ' table.t col.c1{width:7%}' + R + ' table.t col.c2{width:33%}' + R + ' table.t col.c3{width:15%}' + R + ' table.t col.c4{width:16%}' + R + ' table.t col.c5{width:17%}' + R + ' table.t col.c6{width:12%}' +
       R + ' .c{text-align:center}' + R + ' .d{font-size:10px;color:#333}' +
       R + ' .pp-img{text-align:center;margin-top:6px;break-inside:avoid;page-break-inside:avoid}' +
       R + ' .pp-img img{max-width:100%;max-height:185mm;object-fit:contain;border:1px solid #bbb}' +
@@ -877,8 +880,7 @@
       R + ' .foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:5px;border-top:1px solid #888;font-size:10px;color:#333}' +
       R + ' .lh-title.fr{direction:ltr;font-family:Georgia,"Times New Roman",serif;font-size:23px;letter-spacing:.6px;margin-top:10px}' +
       R + ' .pp-page{text-align:center;break-inside:avoid;page-break-inside:avoid}' +
-      R + ' .pp-page img{display:block;margin:0 auto;max-width:100%;height:auto;object-fit:contain;border:1px solid #bbb}' +
-      R + ' .pp-page.first img{max-height:200mm}' + R + ' .pp-page.next img{max-height:268mm}' +
+      R + ' .pp-page img{display:block;margin:0 auto;height:auto;border:1px solid #bbb}' +
       R + ' .pp-page.next{margin-top:14px;break-before:page;page-break-before:always}' +
       '@media screen and (max-width:700px){' + R + ' .pp-sheet{padding:14px;margin:0;box-shadow:none}' + R + ' .lh-r{min-width:0}}' +
       '@media print{' +
@@ -945,18 +947,41 @@
     /* الترتيب: الترويسة الرسمية ← Rapport Technique ← الجدول */
     var body = letterheadHtml() + '<div class="lh-title fr">Rapport Technique</div>' +
       '<p class="sub"><b>سجل التقارير الفنية</b>' + (bits.length ? ' — ' + escapeHtml(bits.join(' — ')) : '') + '</p>' +
-      '<table class="t"><thead><tr><th class="c" style="width:36px">#</th><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>التاريخ</th><th>الحجم</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<table class="t"><colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"></colgroup><thead><tr><th class="c">#</th><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>التاريخ</th><th>الحجم</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<div class="sign"><div>عدد التقارير: ' + nvArchiveView.length + '</div><div>الإمضاء والختم<span></span></div></div>' + footerHtml();
     openPrintOverlay('سجل التقارير الفنية', body, true);
   }
 
+  /* تحميل الصورة والتأكد منها (onload / onerror) قبل بناء الورقة */
+  function loadImg(src) {
+    return new Promise(function (resolve, reject) {
+      var im = new Image();
+      im.onload = function () { (im.naturalWidth > 0 && im.naturalHeight > 0) ? resolve({ src: src, w: im.naturalWidth, h: im.naturalHeight }) : reject(new Error('bad image')); };
+      im.onerror = function () { reject(new Error('bad image')); };
+      im.src = src;
+    });
+  }
+  /* عرض الصورة بالملّيمتر بحيث تتسع داخل المساحة المتبقية من الورقة (A4 = 186 × 273 مم صالحة) */
+  var IMG_MAX_W = 184, IMG_MAX_H_FIRST = 160, IMG_MAX_H_NEXT = 255;
+  function imgStyle(p, maxH) { var w = Math.min(IMG_MAX_W, maxH * p.w / p.h); return 'width:' + w.toFixed(1) + 'mm'; }
+
   /* الترتيب: الترويسة الرسمية ← Rapport Technique ← الوثيقة (كل صفحة منها صورة) */
   function documentPrintBody(pages) {
     var h = letterheadHtml() + '<div class="lh-title fr">Rapport Technique</div>';
-    pages.forEach(function (src, i) {
-      h += '<div class="pp-page ' + (i === 0 ? 'first' : 'next') + '"><img src="' + src + '" alt=""></div>';
+    pages.forEach(function (p, i) {
+      h += '<div class="pp-page ' + (i === 0 ? 'first' : 'next') + '"><img src="' + p.src + '" style="' + imgStyle(p, i === 0 ? IMG_MAX_H_FIRST : IMG_MAX_H_NEXT) + '" alt=""></div>';
     });
     return h + footerHtml();
+  }
+
+  /* طباعة وثيقة: تتأكد أن كل الصور حُمّلت أولاً (onload)، ثم تبني الورقة وتستدعي الطباعة */
+  async function printDocument(title, srcs) {
+    var pages;
+    try { pages = await Promise.all(srcs.map(loadImg)); }
+    catch (e) { showToast('تعذّر تحميل صورة الوثيقة، لا يمكن طباعتها', 'error'); return false; }
+    if (destroyed) return false;
+    openPrintOverlay(title, documentPrintBody(pages), true);
+    return true;
   }
 
   /* ---- تحويل PDF إلى صور (pdf.js يُحمَّل عند الحاجة فقط) ---- */
@@ -1045,12 +1070,12 @@
           }
         }
         if (destroyed) return;
-        openPrintOverlay(meta.title || name, documentPrintBody(pages), true);
+        await printDocument(meta.title || name, pages);
         return;
       }
       if (type.indexOf('image/') === 0) {
         var data = await blobToDataUrl(blob);
-        openPrintOverlay(meta.title || name, '<div class="pp-page first"><img src="' + data + '" alt=""></div>', false);
+        openPrintOverlay(meta.title || name, '<div class="pp-page first"><img src="' + data + '" style="width:100%;max-width:184mm" alt=""></div>', false);
         return;
       }
       var url = URL.createObjectURL(blob);
