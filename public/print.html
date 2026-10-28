@@ -80,6 +80,26 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 
 .letterhead { page-break-inside: avoid; break-inside: avoid; }
 
+/* ═══ الترويسة الاحترافية ═══ */
+.lh-band {
+    height: 3.2mm;
+    background: linear-gradient(90deg,#0f2744 0%,#1e3a5f 55%,#c9a227 100%);
+    box-shadow: inset 0 0 0 9999px transparent;
+}
+.lh-band-thin { height: .8mm; background: #c9a227; box-shadow: inset 0 0 0 9999px #c9a227; }
+.lh-title-box {
+    position: relative; align-self: center; text-align: center; min-width: 92mm;
+    padding: 3.2mm 10mm 3.6mm;
+    border: 1.6px solid #0f2744; outline: 1px solid #c9a227; outline-offset: 1.2mm;
+    background: #ffffff;
+}
+.lh-sys { font-size: 7.5pt; color: #8a6d12; font-weight: 800; letter-spacing: .3mm; margin-bottom: 1mm; }
+.lh-title { font-size: 14.5pt; font-weight: 900; color: #0f2744; margin: 0; line-height: 1.35; }
+.lh-rule { width: 22mm; height: .7mm; margin: 2mm auto 0; background: #c9a227; box-shadow: inset 0 0 0 9999px #c9a227; border-radius: 1mm; }
+.lh-divider { display: flex; align-items: center; gap: 3mm; margin-top: 3.5mm; }
+.lh-divider::before, .lh-divider::after { content: ""; flex: 1; height: .5mm; background: #0f2744; box-shadow: inset 0 0 0 9999px #0f2744; }
+.lh-divider span { width: 2.4mm; height: 2.4mm; background: #c9a227; box-shadow: inset 0 0 0 9999px #c9a227; transform: rotate(45deg); }
+
 .print-table,
 .snapshot-body table {
     width: 100% !important;
@@ -96,15 +116,16 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 
 .print-table th,
 .snapshot-body thead th {
-    background: #e8edf5 !important;
-    box-shadow: inset 0 0 0 9999px #e8edf5 !important;
-    color: #0f2744 !important;
-    -webkit-text-fill-color: #0f2744 !important;
-    font-size: 7.5pt !important;
+    background: #0f2744 !important;
+    box-shadow: inset 0 0 0 9999px #0f2744 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-size: 7.8pt !important;
     font-weight: 800 !important;
-    padding: 1.2mm 0.6mm !important;
+    padding: 1.8mm 0.6mm !important;
     text-align: center !important;
-    border-bottom: 2px solid #0f2744 !important;
+    border-bottom: 2.5px solid #c9a227 !important;
+    border-left: 1px solid #2c4a72 !important;
     white-space: normal !important;
     position: static !important;
     vertical-align: middle !important;
@@ -133,8 +154,8 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 
 .print-table tbody tr:nth-child(even) td,
 .snapshot-body tbody tr:nth-child(even) td {
-    background: #f8fafc !important;
-    box-shadow: inset 0 0 0 9999px #f8fafc !important;
+    background: #f4f7fb !important;
+    box-shadow: inset 0 0 0 9999px #f4f7fb !important;
 }
 
 .snapshot-body table td img,
@@ -402,39 +423,50 @@ body.exporting .snapshot-body { width: 1600px !important; }
     const fill = c => 'background:' + c + ';box-shadow:inset 0 0 0 9999px ' + c + ';';
 
     function buildLetterhead(title) {
+        const sys = 'منظومة الوسائل البحرية';
         return `
-        <header class="letterhead" style="padding:5mm 12mm 3.5mm;margin-bottom:4mm;border-bottom:3px double #0f2744;">
-            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8mm;align-items:start;">
-                <div style="text-align:right;font-size:8.5pt;line-height:1.55;color:#0f2744;font-weight:600;">
-                    <div style="font-weight:900;font-size:10pt;margin-bottom:1mm;">الجمهورية التونسية</div>
-                    وزارة الداخلية<br>
-                    كتابة الدولة للأمن<br>
-                    الإدارة العامة للحرس الوطني<br>
-                    الإدارة العامة لحرس الحدود<br>
-                    إدارة إسناد الوحدات البحرية
-                    <div style="margin-top:2.5mm;font-size:9pt;font-weight:800;">ع/ ________ /دد</div>
+        <header class="letterhead" style="margin-bottom:4mm;">
+            <div class="lh-band"></div>
+            <div class="lh-band-thin" style="margin-top:.6mm;"></div>
+            <div style="padding:5mm 12mm 0;">
+                <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8mm;align-items:start;">
+                    <div style="text-align:right;font-size:8.5pt;line-height:1.6;color:#0f2744;font-weight:600;">
+                        <div style="font-weight:900;font-size:10.5pt;margin-bottom:1mm;color:#0f2744;">الجمهورية التونسية</div>
+                        وزارة الداخلية<br>
+                        كتابة الدولة للأمن<br>
+                        الإدارة العامة للحرس الوطني<br>
+                        الإدارة العامة لحرس الحدود<br>
+                        إدارة إسناد الوحدات البحرية
+                        <div style="margin-top:2.5mm;font-size:9pt;font-weight:800;">ع/ ________ /دد</div>
+                    </div>
+                    <div class="lh-title-box">
+                        <div class="lh-sys">${sys}</div>
+                        <h1 class="lh-title">${esc(title)}</h1>
+                        <div class="lh-rule"></div>
+                    </div>
+                    <div style="text-align:left;font-size:8.5pt;color:#0f2744;font-weight:700;">
+                        العوينة في: __________
+                    </div>
                 </div>
-                <div style="align-self:center;text-align:center;min-width:80mm;border:1.5px solid #0f2744;padding:3mm 8mm;">
-                    <div style="font-size:7.5pt;color:#64748b;font-weight:700;margin-bottom:1mm;">منظومة الوسائل البحرية</div>
-                    <h1 style="font-size:13pt;font-weight:900;color:#0f2744;margin:0;">${esc(title)}</h1>
-                </div>
-                <div style="text-align:left;font-size:8.5pt;color:#0f2744;font-weight:600;">
-                    العوينة في: __________
-                </div>
+                <div class="lh-divider"><span></span></div>
             </div>
         </header>`;
     }
 
+    // التذييل: سطر واحد فقط — حقوق المطور
     function buildFooter() {
-        const dateStr = new Date().toLocaleDateString('ar-TN', {
-            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
+        const year = new Date().getFullYear();
         return `
-        <footer style="margin:5mm 0 0;padding-top:2.5mm;border-top:1.5px solid #0f2744;display:grid;grid-template-columns:1fr auto 1fr;gap:4mm;align-items:center;font-size:7.5pt;color:#475569;font-weight:600;page-break-inside:avoid;break-inside:avoid;">
-            <div style="text-align:right;">منظومة الوسائل البحرية v11.2.0</div>
-            <div style="text-align:center;font-weight:800;color:#0f2744;">إدارة إسناد الوحدات البحرية</div>
-            <div style="text-align:left;">${dateStr}</div>
-        </footer>`;
+        <footer style="margin:6mm 0 0;display:flex;align-items:center;gap:4mm;page-break-inside:avoid;break-inside:avoid;">
+            <div style="flex:1;height:.5mm;${fill('#0f2744')}"></div>
+            <div style="display:flex;align-items:center;gap:2.5mm;font-size:8.5pt;font-weight:800;color:#0f2744;white-space:nowrap;">
+                <span style="width:2mm;height:2mm;transform:rotate(45deg);${fill('#c9a227')}"></span>
+                <span>جميع الحقوق محفوظة © ${year} — المطور أمان الله ناجي</span>
+                <span style="width:2mm;height:2mm;transform:rotate(45deg);${fill('#c9a227')}"></span>
+            </div>
+            <div style="flex:1;height:.5mm;${fill('#0f2744')}"></div>
+        </footer>
+        <div style="height:1.2mm;margin-top:2mm;background:linear-gradient(90deg,#c9a227 0%,#1e3a5f 45%,#0f2744 100%);"></div>`;
     }
 
     const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]/gu;
@@ -584,7 +616,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
         return buildLetterhead(title) +
             `<div class="snapshot-body" style="padding:0 4mm;">${innerHTML}</div>` +
             (charts || '') +
-            `<div style="padding:0 4mm;">${buildFooter()}</div>`;
+            `<div style="padding:0 4mm 3mm;">${buildFooter()}</div>`;
     }
 
     function buildFromData(data) {
@@ -617,12 +649,12 @@ body.exporting .snapshot-body { width: 1600px !important; }
         let html = buildLetterhead(title);
 
         if (stats.length) {
-            html += '<section style="display:grid;grid-template-columns:repeat(' + stats.length + ',1fr);gap:4mm;padding:4mm 12mm 3mm;">';
+            html += '<section style="display:grid;grid-template-columns:repeat(' + stats.length + ',1fr);gap:4mm;padding:3mm 12mm 3mm;">';
             const colors = ['#0f2744', '#059669', '#2563eb', '#dc2626', '#b8860b'];
             stats.forEach((s, i) => {
                 const color = colors[i] || '#0f2744';
                 html += `
-                <div style="padding:3mm 2mm;border:1px solid #cbd5e1;border-top:3px solid ${color};border-radius:1.5mm;text-align:center;break-inside:avoid;">
+                <div style="padding:3mm 2mm;border:1px solid #cbd5e1;border-top:3.5px solid ${color};border-radius:1.8mm;text-align:center;break-inside:avoid;${fill('#f8fafc')}">
                     <div style="font-size:20pt;font-weight:900;color:${color};line-height:1.1;margin-bottom:1.5mm;">${esc(s.value || '0')}</div>
                     <div style="font-size:8pt;color:#475569;font-weight:700;">${esc(s.label || '')}</div>
                 </div>`;
@@ -630,7 +662,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
             html += '</section>';
         }
 
-        html += `<div style="padding:2.5mm 5mm;${fill('#0f2744')}color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2px solid #c9a227;margin:0 12mm;break-after:avoid;">${esc(section)}</div>`;
+        html += `<div style="padding:2.5mm 5mm;${fill('#0f2744')}color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2.5px solid #c9a227;margin:0 12mm;break-after:avoid;">${esc(section)}</div>`;
 
         html += '<div style="margin:0 4mm 4mm;border:1px solid #cbd5e1;border-top:none;">';
         html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:auto;font-size:7.5pt;">';
@@ -641,7 +673,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
         if (columns.length) {
             html += '<tr>';
             columns.forEach((c, i) => {
-                html += `<th style="${imgCols.has(i) ? 'width:' + IMG_COL + ';' : ''}padding:1.2mm 0.6mm;${fill('#e8edf5')}color:#0f2744;font-weight:800;font-size:7.5pt;text-align:center;border-bottom:2px solid #0f2744;border-left:1px solid #cbd5e1;white-space:normal;">${esc(labelOf(c))}</th>`;
+                html += `<th style="${imgCols.has(i) ? 'width:' + IMG_COL + ';' : ''}padding:1.8mm 0.6mm;${fill('#0f2744')}color:#ffffff;font-weight:800;font-size:7.8pt;text-align:center;border-bottom:2.5px solid #c9a227;border-left:1px solid #2c4a72;white-space:normal;">${esc(labelOf(c))}</th>`;
             });
             html += '</tr>';
         }
@@ -679,7 +711,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
             html += '</tr>';
         });
         html += '</tbody></table></div>';
-        html += buildFooter().replace('margin:5mm 0 0', 'margin:5mm 4mm 0');
+        html += '<div style="padding:0 4mm 3mm;">' + buildFooter() + '</div>';
         return html;
     }
 
