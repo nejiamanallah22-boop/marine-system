@@ -817,28 +817,34 @@
 
   /* ---- Printing: نافذة جديدة (window.open) تُكتب فيها صفحة HTML كاملة ----
      1) تُفتح النافذة داخل حدث النقر مباشرة (قبل أي await) كي لا يحجبها المتصفح.
-     2) تُكتب الترويسة + Rapport Technique + (الوثيقة أو الجدول) + التذييل.
+     2) تُكتب الترويسة (فيها عنوان الوثيقة داخل المستطيل) + (الوثيقة أو الجدول) + التذييل.
      3) لا تُستدعى window.print() إلا بعد تأكد تحميل الصورة (onload). */
 
   /* ترويسة الوثيقة الرسمية: عدّل النصوص هنا فقط (السطر الأول كبير، الأخير صغير، والبقية متوسطة) */
   var LETTERHEAD = {
-    lines: ['الجمهورية التونسية', 'وزارة الداخلية', 'الإدارة العامة للحرس الوطني', 'إدارة إسناد الوحدات البحرية'],
-    place: 'العوينة'
+    lines: ['الجمهورية التونسية', 'وزارة الداخلية', 'كتابة الدولة للأمن', 'الإدارة العامة للحرس الوطني', 'الإدارة العامة لحرس الحدود', 'إدارة إسناد الوحدات البحرية'],
+    ref: 'ع/ .................. /دد',
+    system: 'منظومة الوسائل البحرية',
+    place: 'العوينة',
+    credit: 'جميع الحقوق محفوظة — المطور أمان الله ناجي'
   };
 
   function lhDate() { return new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
   function currentUserName() { var u = window.currentUser || {}; return u.name || u.fullName || u.username || ''; }
-  function letterheadHtml() {
+  /* الترويسة: يمين = النصوص الرسمية، وسط = مستطيل بإطار (اسم المنظومة + عنوان الوثيقة)، يسار = التاريخ */
+  function letterheadHtml(titleText) {
     var logo = ''; try { logo = localStorage.getItem('marine_logo') || ''; } catch (e) {}
     var L = LETTERHEAD.lines, rows = '';
-    L.forEach(function (t, i) { rows += '<div class="' + (i === 0 ? 'a' : (i === L.length - 1 ? 'c' : 'b')) + '">' + escapeHtml(t) + '</div>'; });
-    return '<div class="lh"><div class="lh-r">' + (logo ? '<img class="lh-logo" src="' + escapeHtml(logo) + '" alt="">' : '') + rows + '</div>' +
-      '<div class="lh-l"><div>' + escapeHtml(LETTERHEAD.place) + ' في: ' + escapeHtml(lhDate()) + '</div><div>عدد: <span class="lh-num">&nbsp;</span></div></div></div>';
+    L.forEach(function (t, i) { rows += '<div class="' + (i === 0 ? 'a' : 'b') + '">' + escapeHtml(t) + '</div>'; });
+    return '<div class="lh">' +
+      '<div class="lh-r">' + (logo ? '<img class="lh-logo" src="' + escapeHtml(logo) + '" alt="">' : '') + rows + '<div class="ref">' + escapeHtml(LETTERHEAD.ref) + '</div></div>' +
+      '<div class="lh-c"><div class="lh-box"><div class="lh-sys">' + escapeHtml(LETTERHEAD.system) + '</div><div class="lh-doc">' + escapeHtml(titleText || 'وثيقة رسمية') + '</div></div></div>' +
+      '<div class="lh-l">' + escapeHtml(LETTERHEAD.place) + ' في: <span class="lh-date">' + escapeHtml(lhDate()) + '</span></div></div>';
   }
   function footerHtml() {
     var by = currentUserName();
-    return '<div class="foot"><span>طُبعت بتاريخ ' + escapeHtml(lhDate()) + (by ? ' — بواسطة ' + escapeHtml(by) : '') + '</span>' +
-      '<span>' + escapeHtml(LETTERHEAD.lines.slice(-2).join(' — ')) + '</span></div>';
+    return '<div class="foot"><span>تمت الطباعة بتاريخ ' + escapeHtml(lhDate()) + (by ? ' — بواسطة ' + escapeHtml(by) : '') + '</span>' +
+      '<span>' + escapeHtml(LETTERHEAD.credit) + '</span></div>';
   }
 
   var PRINT_CSS = '@page{size:A4;margin:12mm}' +
@@ -849,12 +855,14 @@
     '.bar button{border:0;border-radius:22px;padding:9px 22px;font:inherit;font-weight:700;cursor:pointer;margin-inline-start:8px}' +
     '.bar .p{background:#e6b31e;color:#0a1628}.bar .x{background:rgba(255,255,255,.16);color:#fff}' +
     '.sheet{width:210mm;max-width:100%;margin:14px auto;background:#fff;padding:12mm;box-shadow:0 4px 24px rgba(0,0,0,.25)}' +
-    '.lh{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px}' +
-    '.lh-r{text-align:center;min-width:220px;line-height:1.9}.lh-r .a{font-size:15px;font-weight:800}.lh-r .b{font-size:14px;font-weight:700}.lh-r .c{font-size:13px}' +
-    '.lh-logo{display:block;margin:0 auto 4px;width:62px;height:62px;object-fit:contain}' +
-    '.lh-l{text-align:right;font-size:13px;padding-top:4px;line-height:2}.lh-num{display:inline-block;min-width:110px;border-bottom:1px dotted #000}' +
-    '.lh-title{font-size:19px;font-weight:800;text-align:center;margin:12px 0 10px;padding:8px 0;border-top:2px solid #000;border-bottom:2px solid #000}' +
-    '.lh-title.fr{direction:ltr;font-family:Georgia,"Times New Roman",serif;font-size:23px;letter-spacing:.6px;margin-top:10px}' +
+    '.lh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:14px;color:#000}' +
+    '.lh-r{text-align:center;line-height:1.75;width:56mm;flex:0 0 auto;font-weight:700;font-size:12px}.lh-r .a{font-size:14px;font-weight:900}.lh-r .ref{margin-top:5px;font-size:11px;font-weight:600}' +
+    '.lh-logo{display:block;margin:0 auto 4px;width:60px;height:60px;object-fit:contain}' +
+    '.lh-c{flex:1 1 55mm;text-align:center;padding:0 4px}' +
+    '.lh-box{display:inline-block;min-width:52mm;max-width:100%;border:2px solid #000;border-radius:4px;padding:8px 14px}' +
+    '.lh-sys{font-size:12px;font-weight:700;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid #000}' +
+    '.lh-doc{font-size:17px;font-weight:900;line-height:1.4}' +
+    '.lh-l{flex:0 0 auto;width:42mm;text-align:right;font-size:12px;line-height:2;padding-top:4px}.lh-date{display:inline-block;direction:rtl;unicode-bidi:isolate}' +
     '.sub{text-align:center;font-size:12px;margin:0 0 10px}' +
     'table{border-collapse:collapse;width:100%}' +
     'table.t{border:1.5px solid #000;table-layout:fixed}table.t thead{display:table-header-group}table.t tr{break-inside:avoid;page-break-inside:avoid}' +
@@ -867,8 +875,8 @@
     '.msg{text-align:center;padding:40px 10px;font-size:14px;color:#a00;font-weight:700}' +
     '.sign{display:flex;justify-content:space-between;gap:20px;margin-top:20px;font-size:12px;font-weight:700;break-inside:avoid}.sign div{width:42%;text-align:center}.sign span{display:block;margin-top:46px;border-top:1px dotted #000}' +
     '.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:5px;border-top:1px solid #888;font-size:10px;color:#333}' +
-    '@media screen and (max-width:700px){.sheet{padding:14px;margin:0;box-shadow:none}.lh-r{min-width:0}}' +
-    '@media print{body{background:#fff}.bar{display:none!important}.sheet{width:auto;max-width:none;margin:0;padding:0;box-shadow:none}}';
+    '@media screen and (max-width:700px){.sheet{padding:14px;margin:0;box-shadow:none}.lh-r,.lh-l{width:auto;flex:1 1 40%}}' +
+    '@media print{body{background:#fff}.bar{display:none!important}.sheet{width:auto;max-width:none;margin:0;padding:0;box-shadow:none}.lh{flex-wrap:nowrap}}';
 
   /* صفحة HTML كاملة. وسوم المستند تُكتب عبر LT كي لا يلتقطها محمّل الصفحات */
   function printPageHtml(title, bodyHtml) {
@@ -945,7 +953,7 @@
         '<td>' + escapeHtml(f.sizeFormatted || formatFileSize(f.size)) + '</td></tr>';
     });
     /* الترتيب: الترويسة الرسمية ← Rapport Technique ← الجدول */
-    var body = letterheadHtml() + '<div class="lh-title fr">Rapport Technique</div>' +
+    var body = letterheadHtml('السجل العام للأسطول') +
       '<p class="sub"><b>سجل التقارير الفنية</b>' + (bits.length ? ' — ' + escapeHtml(bits.join(' — ')) : '') + '</p>' +
       '<table class="t"><colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"></colgroup><thead><tr><th class="c">#</th><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>التاريخ</th><th>الحجم</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<div class="sign"><div>عدد التقارير: ' + nvArchiveView.length + '</div><div>الإمضاء والختم<span></span></div></div>' + footerHtml();
@@ -957,7 +965,7 @@
      الصورة تُحمَّل برابطها المباشر (f.url) أولاً، وإن فشل فبمسار التحميل، وإن فشل فبرابط blob محلي. */
   async function printDocument(w, id, meta, f, name) {
     var title = meta.title || name;
-    var body = letterheadHtml() + '<div class="lh-title fr">Rapport Technique</div>' +
+    var body = letterheadHtml('Rapport Technique') +
       '<div class="doc-wrap"><img id="docimg" class="doc-img" alt=""></div>' + footerHtml();
     writePrintWindow(w, title, body);
     var im = w.document.getElementById('docimg'), ok = false;
