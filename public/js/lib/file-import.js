@@ -1,6 +1,19 @@
 // ============================================================
-// استيراد الملفات - file-import.js
+// استيراد الملفات - file-import.js (مُصلح ضد XSS)
 // ============================================================
+
+// ✅ دالة تنقية النصوص (مضافة محلياً لضمان الأمان)
+function escapeHTML(text) {
+    if (text === null || text === undefined) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
 
 // ===== استيراد المراكب =====
 
@@ -160,14 +173,16 @@ function handleImportedData(data, fileName) {
         let html = '<table><thead><tr>';
         const headers = Object.keys(data[0]);
         headers.forEach(h => {
-            html += `<th>${h}</th>`;
+            // ✅ إصلاح: تنقية اسم العمود
+            html += `<th>${escapeHTML(h)}</th>`;
         });
         html += '</tr></thead><tbody>';
         
         data.slice(0, 10).forEach(row => {
             html += '<tr>';
             headers.forEach(h => {
-                html += `<td>${row[h] || '-'}</td>`;
+                // ✅ إصلاح: تنقية قيمة الخلية
+                html += `<td>${escapeHTML(row[h] || '-')}</td>`;
             });
             html += '</tr>';
         });
@@ -186,7 +201,8 @@ function handleImportedData(data, fileName) {
     
     showUploadStatus(`✅ تم استيراد ${data.length} سجل من ${fileName}`, 'success');
     
-    addMessage('ai', `📂 تم استيراد <strong>${data.length}</strong> سجل من ملف <strong>${fileName}</strong><br><br>🔍 البيانات جاهزة للتسجيل. اضغط "تأكيد وتسجيل" لإضافتها إلى قاعدة البيانات.`);
+    // ✅ إصلاح: تنقية fileName
+    addMessage('ai', `📂 تم استيراد <strong>${data.length}</strong> سجل من ملف <strong>${escapeHTML(fileName)}</strong><br><br>🔍 البيانات جاهزة للتسجيل. اضغط "تأكيد وتسجيل" لإضافتها إلى قاعدة البيانات.`);
 }
 
 function showUploadStatus(message, type = 'info') {
@@ -544,6 +560,7 @@ function handleImportedNotes(data, fileName) {
             const date = note['التاريخ'] || note['Date'] || note['date'] || note['تاريخ'] || new Date().toISOString().split('T')[0];
             const createdBy = note['المرسل'] || note['From'] || note['from'] || note['createdBy'] || note['من'] || currentUser?.name || 'مجهول';
             
+            // ✅ إصلاح: تنقية جميع القيم
             html += `
                 <div style="
                     background: rgba(255,255,255,0.02);
@@ -552,11 +569,11 @@ function handleImportedNotes(data, fileName) {
                     border-radius: 8px;
                     border-right: 3px solid #60a5fa;
                 ">
-                    <h4 style="color:rgba(255,255,255,0.8); margin:0; font-size:14px;">${title}</h4>
-                    <p style="color:rgba(255,255,255,0.5); margin:5px 0; font-size:13px;">${content}</p>
+                    <h4 style="color:rgba(255,255,255,0.8); margin:0; font-size:14px;">${escapeHTML(title)}</h4>
+                    <p style="color:rgba(255,255,255,0.5); margin:5px 0; font-size:13px;">${escapeHTML(content)}</p>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-                        <span style="font-size:11px; color:rgba(255,255,255,0.2);">👤 ${createdBy}</span>
-                        <span style="font-size:11px; color:rgba(255,255,255,0.15);">📅 ${date}</span>
+                        <span style="font-size:11px; color:rgba(255,255,255,0.2);">👤 ${escapeHTML(createdBy)}</span>
+                        <span style="font-size:11px; color:rgba(255,255,255,0.15);">📅 ${escapeHTML(date)}</span>
                     </div>
                 </div>
             `;
@@ -680,4 +697,4 @@ function cancelNotesImport() {
     }, 3000);
 }
 
-console.log('✅ file-import.js loaded');
+console.log('✅ file-import.js loaded (XSS-fixed)');
