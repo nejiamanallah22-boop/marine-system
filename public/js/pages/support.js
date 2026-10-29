@@ -1,6 +1,19 @@
 // ============================================================
-// الدعم - support.js
+// الدعم - support.js (مُصلح ضد XSS)
 // ============================================================
+
+// ✅ دالة تنقية النصوص (مضافة محلياً لضمان الأمان)
+function escapeHTML(text) {
+    if (text === null || text === undefined) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
 
 function loadTickets() {
     const token = getToken();
@@ -23,12 +36,13 @@ function renderTickets() {
         container.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">🚫 لا توجد تذاكر</div>';
         return;
     }
+    // ✅ إصلاح: تنقية جميع القيم قبل إضافتها إلى HTML
     container.innerHTML = allTickets.map(t => `
         <div style="background:rgba(255,255,255,0.02); padding:12px; margin:8px 0; border-radius:8px; border-right:3px solid ${t.status === 'مغلقة' ? '#4ade80' : '#fbbf24'};">
-            <h4 style="color:rgba(255,255,255,0.8); margin:0;">${t.subject}</h4>
-            <p style="color:rgba(255,255,255,0.5); margin:5px 0; font-size:13px;">${t.message}</p>
-            <small style="color:rgba(255,255,255,0.3);">${t.date || ''} | ${t.userName || 'مجهول'}</small>
-            <span style="background:rgba(251,191,36,0.1); color:#fbbf24; padding:2px 12px; border-radius:10px; font-size:11px; margin-right:10px;">${t.status || 'قيد المعالجة'}</span>
+            <h4 style="color:rgba(255,255,255,0.8); margin:0;">${escapeHTML(t.subject)}</h4>
+            <p style="color:rgba(255,255,255,0.5); margin:5px 0; font-size:13px;">${escapeHTML(t.message)}</p>
+            <small style="color:rgba(255,255,255,0.3);">${escapeHTML(t.date || '')} | ${escapeHTML(t.userName || 'مجهول')}</small>
+            <span style="background:rgba(251,191,36,0.1); color:#fbbf24; padding:2px 12px; border-radius:10px; font-size:11px; margin-right:10px;">${escapeHTML(t.status || 'قيد المعالجة')}</span>
         </div>
     `).join('');
 }
@@ -102,4 +116,4 @@ function sendTicket(event) {
     });
 }
 
-console.log('✅ support.js loaded');
+console.log('✅ support.js loaded (XSS-fixed)');
