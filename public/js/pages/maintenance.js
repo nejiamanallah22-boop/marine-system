@@ -1,6 +1,19 @@
 // ============================================================
-// الصيانة - maintenance.js
+// الصيانة - maintenance.js (مُصلح ضد XSS)
 // ============================================================
+
+// ✅ دالة تنقية النصوص (مضافة محلياً لضمان الأمان)
+function escapeHTML(text) {
+    if (text === null || text === undefined) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
 
 function loadMaintenance() {
     const token = getToken();
@@ -51,7 +64,8 @@ function updateMaintenanceVessels() {
     if (!select) return;
     select.innerHTML = '<option value="">اختر المركب</option>';
     allVessels.forEach(v => {
-        select.innerHTML += `<option value="${v.id}">${v.name} (${v.num || 'بدون رقم'})</option>`;
+        // ✅ إصلاح: تنقية v.name و v.num
+        select.innerHTML += `<option value="${escapeHTML(v.id)}">${escapeHTML(v.name)} (${escapeHTML(v.num || 'بدون رقم')})</option>`;
     });
 }
 
@@ -196,15 +210,16 @@ function renderGeneralMaintenance() {
     }
     let html = '<div class="scrollable-table"><table><thead><tr><th>المركب</th><th>الفئة</th><th>الحالة</th><th>العطل</th><th>المسؤول</th><th>إجراءات</th></tr></thead><tbody>';
     vessels.forEach(v => {
+        // ✅ إصلاح: تنقية جميع القيم قبل إضافتها إلى HTML
         html += `<tr>
-            <td><strong>${v.name}</strong></td>
-            <td>${v.cat || '-'}</td>
-            <td><span class="status-badge status-broken">${v.stat}</span></td>
-            <td>${v.break || '-'}</td>
-            <td>${v.repairer || '-'}</td>
+            <td><strong>${escapeHTML(v.name)}</strong></td>
+            <td>${escapeHTML(v.cat || '-')}</td>
+            <td><span class="status-badge status-broken">${escapeHTML(v.stat)}</span></td>
+            <td>${escapeHTML(v.break || '-')}</td>
+            <td>${escapeHTML(v.repairer || '-')}</td>
             <td>
-                <button class="btn-sm btn-primary" onclick="openMaintenanceFile(${v.id})">📂 فتح</button>
-                <button class="btn-sm btn-success" onclick="fixVessel(${v.id})">✅ إصلاح</button>
+                <button class="btn-sm btn-primary" onclick="openMaintenanceFile(${escapeHTML(v.id)})">📂 فتح</button>
+                <button class="btn-sm btn-success" onclick="fixVessel(${escapeHTML(v.id)})">✅ إصلاح</button>
             </td>
         </tr>`;
     });
@@ -245,7 +260,8 @@ function fixVessel(vesselId) {
 function openMaintenanceFile(vesselId) {
     const vessel = allVessels.find(v => v.id === vesselId);
     if (!vessel) return;
-    showAlert(`📂 فتح ملف المركب: ${vessel.name}`, 'info');
+    // ✅ إصلاح: تنقية vessel.name
+    showAlert(`📂 فتح ملف المركب: ${escapeHTML(vessel.name)}`, 'info');
 }
 
 function renderHistoryMaintenance() {
@@ -259,13 +275,14 @@ function renderHistoryMaintenance() {
     let html = '<div class="scrollable-table"><table><thead><tr><th>التاريخ</th><th>المركب</th><th>نوع الصيانة</th><th>العطل</th><th>التكلفة</th><th>الحالة</th></tr></thead><tbody>';
     records.slice().reverse().forEach(r => {
         const vesselName = r.vesselName || allVessels.find(v => v.id === r.vesselId)?.name || '-';
+        // ✅ إصلاح: تنقية جميع القيم
         html += `<tr>
-            <td>${r.date || '-'}</td>
-            <td><strong>${vesselName}</strong></td>
-            <td>${r.type || '-'}</td>
-            <td>${r.description || '-'}</td>
-            <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
-            <td><span class="status-badge status-closed">✅ ${r.status}</span></td>
+            <td>${escapeHTML(r.date || '-')}</td>
+            <td><strong>${escapeHTML(vesselName)}</strong></td>
+            <td>${escapeHTML(r.type || '-')}</td>
+            <td>${escapeHTML(r.description || '-')}</td>
+            <td>${r.cost ? escapeHTML(r.cost) + ' د.ت' : '-'}</td>
+            <td><span class="status-badge status-closed">✅ ${escapeHTML(r.status)}</span></td>
         </tr>`;
     });
     html += '</tbody></table></div>';
@@ -279,7 +296,8 @@ function updateYearFilter() {
     allMaintenance.forEach(r => { if (r.date) years.add(r.date.split('-')[0]); });
     select.innerHTML = '<option value="">الكل</option>';
     Array.from(years).sort().reverse().forEach(year => {
-        select.innerHTML += `<option value="${year}">${year}</option>`;
+        // ✅ إصلاح: تنقية year
+        select.innerHTML += `<option value="${escapeHTML(year)}">${escapeHTML(year)}</option>`;
     });
 }
 
@@ -306,13 +324,14 @@ function renderMaintenanceUnits() {
     let html = '';
     units.forEach(unit => {
         const records = allMaintenance.filter(r => r.unit === unit);
+        // ✅ إصلاح: تنقية جميع القيم
         html += `
             <div class="region-table-card">
-                <div class="region-table-header">🏭 ${unit} <span style="font-size:12px; color:rgba(255,255,255,0.3);">📊 ${records.length} سجل</span></div>
+                <div class="region-table-header">🏭 ${escapeHTML(unit)} <span style="font-size:12px; color:rgba(255,255,255,0.3);">📊 ${records.length} سجل</span></div>
                 ${records.length === 0 ? '<div style="text-align:center; padding:10px; color:rgba(255,255,255,0.2);">🚫 لا توجد سجلات</div>' :
                 `<div class="scrollable-table"><table><thead><tr><th>المركب</th><th>الفني</th><th>التكلفة</th><th>الحالة</th></tr></thead><tbody>
                 ${records.slice().reverse().map(r => `
-                    <tr><td>${r.vesselName || '-'}</td><td>${r.technician || '-'}</td><td>${r.cost ? r.cost + ' د.ت' : '-'}</td><td>${r.status || '-'}</td></tr>
+                    <tr><td>${escapeHTML(r.vesselName || '-')}</td><td>${escapeHTML(r.technician || '-')}</td><td>${r.cost ? escapeHTML(r.cost) + ' د.ت' : '-'}</td><td>${escapeHTML(r.status || '-')}</td></tr>
                 `).join('')}</tbody></table></div>`}
             </div>
         `;
@@ -344,4 +363,4 @@ function getDemoMaintenance() {
     ];
 }
 
-console.log('✅ maintenance.js loaded');
+console.log('✅ maintenance.js loaded (XSS-fixed)');
