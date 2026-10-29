@@ -121,7 +121,7 @@ function applied(marker) { return src.includes(marker); }
 {
     if (applied('function isBlockedPath(')) report.push('2+3 ✔ مطبّق مسبقاً');
     else {
-        const marker = "const DEV_ENABLED = process.env.DEV_TOOLS === 'true';";
+        const marker = "if (process.env.DEV_TOOLS === 'true') return next();";
         const mi = src.indexOf(marker);
         if (mi === -1) throw new Error('لم أجد DEV TOOLS BLOCKER (2+3)');
         const start = src.lastIndexOf('app.use((req, res, next) => {', mi);
