@@ -1,6 +1,19 @@
 // ============================================================
-// دوال مساعدة
+// دوال مساعدة (مُصلح ضد XSS)
 // ============================================================
+
+// ✅ دالة تنقية النصوص (مضافة محلياً لضمان الأمان)
+function escapeHTML(text) {
+    if (text === null || text === undefined) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
 
 function showAlert(message, type = 'info') {
     const colors = {
@@ -23,10 +36,11 @@ function showAlert(message, type = 'info') {
         z-index: 999999;
         border-right: 4px solid ${colors[type]};
     `;
+    // ✅ إصلاح: تنقية message قبل إضافتها إلى innerHTML
     alertDiv.innerHTML = `
         <div style="display:flex; align-items:center; gap:10px;">
             <span style="color:${colors[type]}">${type === 'success' ? '✅' : type === 'danger' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}</span>
-            <span>${message}</span>
+            <span>${escapeHTML(message)}</span>
         </div>
     `;
     document.body.appendChild(alertDiv);
