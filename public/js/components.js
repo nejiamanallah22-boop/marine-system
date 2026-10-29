@@ -4,6 +4,16 @@
  */
 
 // ============================================================
+// 🛡️ دالة تنقية النصوص (مضافة محلياً لضمان الأمان)
+// ============================================================
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
+// ============================================================
 // 📊 DATA TABLE - جدول بيانات تفاعلي
 // ============================================================
 
@@ -78,7 +88,7 @@ class DataTable {
                 <div style="flex:1;min-width:200px;">
                     <div class="input-wrapper" style="max-width:300px;">
                         <i class="fas fa-search input-icon"></i>
-                        <input type="text" id="tableSearch" placeholder="بحث..." value="${this.searchQuery}">
+                        <input type="text" id="tableSearch" placeholder="بحث..." value="${escapeHtml(this.searchQuery)}">
                     </div>
                 </div>
                 <div style="display:flex;gap:8px;">
@@ -133,7 +143,7 @@ class DataTable {
                 maintenance: '<span class="status-badge maintenance">🔧 صيانة</span>',
                 reserve: '<span class="status-badge reserve">📋 احتياطي</span>'
             };
-            return statusMap[value] || value;
+            return statusMap[value] || escapeHtml(value);
         }
         
         if (col.type === 'date') {
@@ -141,10 +151,11 @@ class DataTable {
         }
         
         if (col.type === 'currency') {
-            return value + ' د.ت';
+            return escapeHtml(value) + ' د.ت';
         }
         
-        return value || '-';
+        // ✅ الإصلاح: تنقية القيمة قبل إرجاعها
+        return escapeHtml(value) || '-';
     }
     
     renderEmpty() {
