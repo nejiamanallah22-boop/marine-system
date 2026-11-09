@@ -23,9 +23,9 @@
             --radius-sm: 8px;
             --transition: .3s cubic-bezier(.4,0,.2,1);
             --font: 'Cairo','Segoe UI',system-ui,sans-serif;
+            --app-logo-size: 60px;
         }
 
-        /* ✅ body يحمل اللون المعتم الأساسي */
         body { background: var(--app-bg); }
 
         #page-settings {
@@ -33,7 +33,6 @@
             padding:20px; margin:0; box-sizing:border-box;
             position:relative; z-index:2;
             font-family:var(--font); color:#e8edf5;
-            /* ✅ شفاف ليظهر خلفه الـ div الديناميكي */
             background: transparent;
             overflow-x:hidden;
         }
@@ -50,6 +49,7 @@
                 radial-gradient(ellipse at 80% 50%, rgba(96,165,250,.03) 0%, transparent 60%);
             z-index:-1; pointer-events:none;
             animation:settingsBgPulse 18s ease-in-out infinite;
+            will-change: transform;
         }
 
         @keyframes settingsBgPulse {
@@ -72,7 +72,6 @@
 
         .settings-header-left { display:flex; align-items:center; gap:14px; min-width:0; }
 
-        /* ✅ الشعار الديناميكي */
         .settings-header-left .icon {
             width:44px; height:44px; flex:0 0 44px;
             display:flex; align-items:center; justify-content:center;
@@ -82,7 +81,6 @@
             overflow: hidden;
         }
 
-        /* ✅ دعم صورة الشعار */
         .settings-header-left .icon img {
             width: 100%;
             height: 100%;
@@ -90,16 +88,12 @@
             border-radius: 50%;
             display: none;
         }
-        .settings-header-left .icon.has-logo img {
-            display: block;
-        }
+        .settings-header-left .icon.has-logo img { display: block; }
         .settings-header-left .icon.has-logo {
             background: transparent;
             box-shadow: 0 0 20px rgba(230,179,30,0.3);
         }
-        .settings-header-left .icon.has-logo span {
-            display: none;
-        }
+        .settings-header-left .icon.has-logo span { display: none; }
 
         .settings-header-left h2 {
             margin:0; font-size:22px; font-weight:800;
@@ -256,6 +250,10 @@
             right:25px; background:#fff;
         }
 
+        .toggle-switch input:focus-visible + .toggle-track {
+            box-shadow: 0 0 0 3px rgba(230,179,30,.4);
+        }
+
         .toggle-label { color:rgba(255,255,255,.55); font-size:13px; }
 
         .btn-save {
@@ -273,6 +271,17 @@
             transform:translateY(-2px);
             box-shadow:0 8px 30px rgba(230,179,30,.25);
         }
+
+        .btn-save.loading {
+            pointer-events:none; opacity:.7;
+        }
+        .btn-save.loading::after {
+            content:""; width:14px; height:14px;
+            border:2px solid rgba(10,22,40,.3);
+            border-top-color:#0a1628; border-radius:50%;
+            animation:spin .6s linear infinite; margin-right:8px;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
 
         .theme-preview {
             display:flex; align-items:center; flex-wrap:wrap;
@@ -302,6 +311,12 @@
         .logo-upload-area:hover,
         .logo-upload-area.dragover {
             border-color:rgba(230,179,30,.5); background:rgba(230,179,30,.05);
+        }
+
+        .logo-upload-area.uploading {
+            pointer-events:none; opacity:.6;
+            border-color:var(--gold);
+            background:rgba(230,179,30,.08);
         }
 
         .logo-preview { display:flex; flex-direction:column; align-items:center; gap:10px; }
@@ -392,6 +407,15 @@
             to { opacity:1; transform:translateY(0); }
         }
 
+        .access-denied {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .access-denied .icon-lock { font-size: 64px; margin-bottom: 16px; }
+        .access-denied h3 { color:#fff; font-size:20px; font-weight:800; margin-bottom:8px; }
+        .access-denied p { color:rgba(255,255,255,.4); font-size:14px; }
+
         @media (max-width:992px) { .settings-grid { grid-template-columns:1fr; } }
 
         @media (max-width:768px) {
@@ -422,8 +446,7 @@
 
     <div class="settings-header">
         <div class="settings-header-left">
-            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
-            <div class="icon" id="settingsHeaderIcon">
+            <div class="icon" id="settingsHeaderIcon" aria-label="شعار التطبيق">
                 <span>⚙️</span>
                 <img id="globalLogo" src="" alt="شعار" style="display:none;">
             </div>
@@ -448,23 +471,23 @@
             <div class="form-group">
                 <label>🎨 الألوان الأساسية</label>
                 <div class="color-picker" id="colorPicker">
-                    <button type="button" class="color-option active" style="background:linear-gradient(135deg,#0a1628,#1a2a4a)" data-primary="#0a1628" data-secondary="#1a2a4a"></button>
-                    <button type="button" class="color-option" style="background:linear-gradient(135deg,#1a0a28,#2a1a4a)" data-primary="#1a0a28" data-secondary="#2a1a4a"></button>
-                    <button type="button" class="color-option" style="background:linear-gradient(135deg,#001a2a,#002a4a)" data-primary="#001a2a" data-secondary="#002a4a"></button>
-                    <button type="button" class="color-option" style="background:linear-gradient(135deg,#2a1a0a,#4a2a1a)" data-primary="#2a1a0a" data-secondary="#4a2a1a"></button>
-                    <button type="button" class="color-option" style="background:linear-gradient(135deg,#0a2a1a,#1a4a2a)" data-primary="#0a2a1a" data-secondary="#1a4a2a"></button>
+                    <button type="button" class="color-option active" aria-label="أزرق داكن" style="background:linear-gradient(135deg,#0a1628,#1a2a4a)" data-primary="#0a1628" data-secondary="#1a2a4a"></button>
+                    <button type="button" class="color-option" aria-label="بنفسجي" style="background:linear-gradient(135deg,#1a0a28,#2a1a4a)" data-primary="#1a0a28" data-secondary="#2a1a4a"></button>
+                    <button type="button" class="color-option" aria-label="أزرق سماوي" style="background:linear-gradient(135deg,#001a2a,#002a4a)" data-primary="#001a2a" data-secondary="#002a4a"></button>
+                    <button type="button" class="color-option" aria-label="بني" style="background:linear-gradient(135deg,#2a1a0a,#4a2a1a)" data-primary="#2a1a0a" data-secondary="#4a2a1a"></button>
+                    <button type="button" class="color-option" aria-label="أخضر" style="background:linear-gradient(135deg,#0a2a1a,#1a4a2a)" data-primary="#0a2a1a" data-secondary="#1a4a2a"></button>
                 </div>
             </div>
 
             <div class="form-group">
                 <label>🌟 اللون الرئيسي</label>
                 <div class="color-picker" id="goldColorPicker">
-                    <button type="button" class="color-option active" style="background:#e6b31e" data-gold="#e6b31e"></button>
-                    <button type="button" class="color-option" style="background:#f5d76e" data-gold="#f5d76e"></button>
-                    <button type="button" class="color-option" style="background:#c99a0e" data-gold="#c99a0e"></button>
-                    <button type="button" class="color-option" style="background:#ff6b6b" data-gold="#ff6b6b"></button>
-                    <button type="button" class="color-option" style="background:#00b894" data-gold="#00b894"></button>
-                    <button type="button" class="color-option" style="background:#6c5ce7" data-gold="#6c5ce7"></button>
+                    <button type="button" class="color-option active" aria-label="ذهبي" style="background:#e6b31e" data-gold="#e6b31e"></button>
+                    <button type="button" class="color-option" aria-label="ذهبي فاتح" style="background:#f5d76e" data-gold="#f5d76e"></button>
+                    <button type="button" class="color-option" aria-label="ذهبي داكن" style="background:#c99a0e" data-gold="#c99a0e"></button>
+                    <button type="button" class="color-option" aria-label="أحمر" style="background:#ff6b6b" data-gold="#ff6b6b"></button>
+                    <button type="button" class="color-option" aria-label="أخضر" style="background:#00b894" data-gold="#00b894"></button>
+                    <button type="button" class="color-option" aria-label="بنفسجي" style="background:#6c5ce7" data-gold="#6c5ce7"></button>
                 </div>
             </div>
 
@@ -498,7 +521,7 @@
                 <label>🖼️ صورة الشعار</label>
                 <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp" style="display:none;">
 
-                <div class="logo-upload-area" id="logoDropZone">
+                <div class="logo-upload-area" id="logoDropZone" role="button" tabindex="0" aria-label="رفع شعار التطبيق">
                     <div class="logo-placeholder" id="logoPlaceholder">
                         <div class="placeholder-icon">🖼️</div>
                         <div class="placeholder-text">اضغط لاختيار صورة</div>
@@ -509,8 +532,8 @@
                         <img id="logoPreviewImg" src="" alt="شعار التطبيق">
                         <div class="logo-name" id="logoName"></div>
                         <div class="logo-actions">
-                            <button type="button" class="btn-sm upload" onclick="event.stopPropagation();document.getElementById('logoFileInput').click()">🔄 تغيير</button>
-                            <button type="button" class="btn-sm delete" onclick="event.stopPropagation();window._deleteLogo(event)">🗑️ حذف</button>
+                            <button type="button" class="btn-sm upload" data-action="change-logo">🔄 تغيير</button>
+                            <button type="button" class="btn-sm delete" data-action="delete-logo">🗑️ حذف</button>
                         </div>
                     </div>
                 </div>
@@ -536,7 +559,7 @@
                 <label>🖼️ الصورة</label>
                 <input type="file" id="bgFileInput" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;">
 
-                <div class="logo-upload-area" id="bgDropZone">
+                <div class="logo-upload-area" id="bgDropZone" role="button" tabindex="0" aria-label="رفع صورة خلفية">
                     <div class="logo-placeholder" id="bgPlaceholder">
                         <div class="placeholder-icon">🎨</div>
                         <div class="placeholder-text">اضغط لاختيار صورة خلفية</div>
@@ -547,21 +570,21 @@
                         <img id="bgPreviewImg" src="" alt="خلفية" style="max-width:200px;max-height:120px;">
                         <div class="logo-name" id="bgName"></div>
                         <div class="logo-actions">
-                            <button type="button" class="btn-sm upload" onclick="event.stopPropagation();document.getElementById('bgFileInput').click()">🔄 تغيير</button>
-                            <button type="button" class="btn-sm delete" onclick="event.stopPropagation();window._deleteBg(event)">🗑️ حذف</button>
+                            <button type="button" class="btn-sm upload" data-action="change-bg">🔄 تغيير</button>
+                            <button type="button" class="btn-sm delete" data-action="delete-bg">🗑️ حذف</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label>💧 مستوى الشفافية (Opacity): <span id="bgOpacityVal" style="color:var(--gold);">15%</span></label>
+                <label for="bgOpacity">💧 مستوى الشفافية (Opacity): <span id="bgOpacityVal" style="color:var(--gold);">15%</span></label>
                 <input type="range" id="bgOpacity" min="5" max="80" value="15" step="5">
                 <div class="form-hint">كلما قلّت القيمة، كانت الصورة أكثر شفافية</div>
             </div>
 
             <div class="form-group">
-                <label>🌫️ التمويه (Blur): <span id="bgBlurVal" style="color:var(--gold);">0px</span></label>
+                <label for="bgBlur">🌫️ التمويه (Blur): <span id="bgBlurVal" style="color:var(--gold);">0px</span></label>
                 <input type="range" id="bgBlur" min="0" max="20" value="0" step="1">
             </div>
 
@@ -578,7 +601,7 @@
             <div class="form-group">
                 <label>🌙 الوضع الليلي</label>
                 <div class="toggle-switch">
-                    <input type="checkbox" id="darkMode" checked>
+                    <input type="checkbox" id="darkMode" checked role="switch" aria-label="تفعيل الوضع الليلي">
                     <label class="toggle-track" for="darkMode"></label>
                     <span class="toggle-label">تفعيل الوضع الليلي</span>
                 </div>
@@ -604,7 +627,7 @@
             <div class="form-group">
                 <label>📊 عرض الإحصائيات</label>
                 <div class="toggle-switch">
-                    <input type="checkbox" id="showStats" checked>
+                    <input type="checkbox" id="showStats" checked role="switch" aria-label="إظهار بطاقات الإحصائيات">
                     <label class="toggle-track" for="showStats"></label>
                     <span class="toggle-label">إظهار بطاقات الإحصائيات</span>
                 </div>
@@ -620,7 +643,7 @@
             <div class="form-group">
                 <label>📧 إشعارات البريد الإلكتروني</label>
                 <div class="toggle-switch">
-                    <input type="checkbox" id="emailNotifications" checked>
+                    <input type="checkbox" id="emailNotifications" checked role="switch" aria-label="إشعارات البريد">
                     <label class="toggle-track" for="emailNotifications"></label>
                     <span class="toggle-label">استقبال إشعارات عبر البريد</span>
                 </div>
@@ -629,7 +652,7 @@
             <div class="form-group">
                 <label>📱 إشعارات SMS</label>
                 <div class="toggle-switch">
-                    <input type="checkbox" id="smsNotifications">
+                    <input type="checkbox" id="smsNotifications" role="switch" aria-label="إشعارات SMS">
                     <label class="toggle-track" for="smsNotifications"></label>
                     <span class="toggle-label">استقبال إشعارات عبر SMS</span>
                 </div>
@@ -651,7 +674,7 @@
             <div class="form-group">
                 <label>🚨 تنبيهات الطوارئ</label>
                 <div class="toggle-switch">
-                    <input type="checkbox" id="emergencyAlerts" checked>
+                    <input type="checkbox" id="emergencyAlerts" checked role="switch" aria-label="تنبيهات الطوارئ">
                     <label class="toggle-track" for="emergencyAlerts"></label>
                     <span class="toggle-label">تفعيل تنبيهات الطوارئ</span>
                 </div>
@@ -660,7 +683,7 @@
             <div class="form-group">
                 <label>🔧 تنبيهات الصيانة</label>
                 <div class="toggle-switch">
-                    <input type="checkbox" id="maintenanceAlerts" checked>
+                    <input type="checkbox" id="maintenanceAlerts" checked role="switch" aria-label="تنبيهات الصيانة">
                     <label class="toggle-track" for="maintenanceAlerts"></label>
                     <span class="toggle-label">تفعيل تنبيهات الصيانة</span>
                 </div>
@@ -704,6 +727,9 @@
     (function() {
         'use strict';
 
+        // ══════════════════════════════════════════════════════════
+        // 🔧 STATE & CLEANUP
+        // ══════════════════════════════════════════════════════════
         var _isDestroyed = false;
         var _pageTimeouts = [];
         var _eventListeners = [];
@@ -724,54 +750,87 @@
         window.addEventListener('beforeunload', _settingsCleanup);
         window.addEventListener('pagehide', _settingsCleanup);
 
-        // ============================================================
-        // 🎨 LOGO APPLY (Dynamic)
-        // ============================================================
-        function applyLogo() {
-            try {
-                var cachedLogo = localStorage.getItem('marine_logo');
-                if (!cachedLogo) return;
-
-                var iconDiv = document.getElementById('settingsHeaderIcon');
-                var img = document.getElementById('globalLogo');
-                if (img) {
-                    img.src = cachedLogo;
-                    img.style.display = 'block';
-                }
-                if (iconDiv) {
-                    iconDiv.classList.add('has-logo');
-                }
-            } catch (e) {}
+        function $(id) { return document.getElementById(id); }
+        function addSafeListener(el, type, fn) {
+            if (!el) return;
+            el.addEventListener(type, fn);
+            _eventListeners.push({ el: el, type: type, fn: fn });
+        }
+        function safeTimeout(fn, ms) {
+            var id = setTimeout(fn, ms);
+            _pageTimeouts.push(id);
+            return id;
         }
 
-        function syncLogoFromServer() {
-            var token = localStorage.getItem('marine_token') ||
-                        localStorage.getItem('token') ||
-                        localStorage.getItem('authToken') || null;
-            var headers = { 'Accept': 'application/json' };
+        // ══════════════════════════════════════════════════════════
+        // 🔑 TOKEN & FETCH
+        // ══════════════════════════════════════════════════════════
+        function getToken() {
+            return localStorage.getItem('marine_token') ||
+                   localStorage.getItem('token') ||
+                   localStorage.getItem('authToken') || null;
+        }
+
+        function getCsrfToken() {
+            var match = document.cookie.match(/(?:^|;\s*)(?:marine_csrf|csrf_token|csrfToken|XSRF-TOKEN)=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : null;
+        }
+
+        function buildHeaders(extra) {
+            var headers = Object.assign({ 'Accept': 'application/json' }, extra || {});
+            var token = getToken();
             if (token) headers['Authorization'] = 'Bearer ' + token;
-
-            fetch('/api/logo', { headers: headers, credentials: 'include' })
-                .then(function(r) { return r.ok ? r.json() : null; })
-                .then(function(data) {
-                    if (data && data.success && data.logo && data.logo.dataUrl) {
-                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
-                        applyLogo();
-                    }
-                }).catch(function() {});
+            var csrf = getCsrfToken();
+            if (csrf) headers['X-CSRF-Token'] = csrf;
+            return headers;
         }
 
-        // ✅ شغّل فوراً
-        applyLogo();
-        syncLogoFromServer();
+        function fetcher(url, options) {
+            options = options || {};
+            // دمج آمن للـ headers
+            var merged = Object.assign({}, options, {
+                headers: buildHeaders(options.headers || {}),
+                credentials: 'include'
+            });
+            return fetch(url, merged);
+        }
 
-        // ✅ استمع للتغييرات بين التبويبات
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'marine_logo' && e.newValue) {
-                applyLogo();
-            }
-        });
+        // ══════════════════════════════════════════════════════════
+        // 🔔 TOAST
+        // ══════════════════════════════════════════════════════════
+        function showToast(message, type, duration) {
+            if (_isDestroyed) return;
+            type = type || 'info';
+            duration = duration || 3500;
+            var existing = document.querySelector('.settings-toast');
+            if (existing) existing.remove();
 
+            var toast = document.createElement('div');
+            toast.className = 'settings-toast ' + type;
+            var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+
+            var iconSpan = document.createElement('span');
+            iconSpan.textContent = icons[type] || icons.info;
+            var msgSpan = document.createElement('span');
+            msgSpan.textContent = String(message || '');
+
+            toast.appendChild(iconSpan);
+            toast.appendChild(msgSpan);
+            document.body.appendChild(toast);
+
+            safeTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all .25s ease';
+                safeTimeout(function() {
+                    if (toast.parentNode) toast.remove();
+                }, 250);
+            }, duration);
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // 👤 ROLES
+        // ══════════════════════════════════════════════════════════
         var LEGACY_ROLE_MAP = {
             'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager',
             'محرر': 'editor', 'مشغل': 'maintenance_unit', 'operator': 'maintenance_unit',
@@ -792,179 +851,239 @@
             return normalizeRole(u.role) === 'admin';
         }
 
-        function $(id) { return document.getElementById(id); }
-
-        function getToken() {
-            return localStorage.getItem('marine_token') ||
-                   localStorage.getItem('token') ||
-                   localStorage.getItem('authToken') || null;
-        }
-
-        function fetcher(url, options) {
-            if (typeof window.apiFetch === 'function') {
-                return window.apiFetch(url, options || {});
-            }
-            var token = getToken();
-            var headers = Object.assign({ 'Accept': 'application/json' }, (options && options.headers) || {});
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            return fetch(url, Object.assign({}, options || {}, {
-                headers: headers, credentials: 'include'
-            }));
-        }
-
-        function addSafeListener(el, type, fn) {
-            if (!el) return;
-            el.addEventListener(type, fn);
-            _eventListeners.push({ el: el, type: type, fn: fn });
-        }
-
-        function showToast(message, type, duration) {
-            if (_isDestroyed) return;
-            type = type || 'info';
-            duration = duration || 3500;
-            var existing = document.querySelector('.settings-toast');
-            if (existing) existing.remove();
-            var toast = document.createElement('div');
-            toast.className = 'settings-toast ' + type;
-            var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-            toast.innerHTML = '<span>' + (icons[type] || icons.info) + '</span><span>' + String(message || '') + '</span>';
-            document.body.appendChild(toast);
-            var id = setTimeout(function() {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(10px)';
-                toast.style.transition = 'all .25s ease';
-                var id2 = setTimeout(function() { if (toast.parentNode) toast.remove(); }, 250);
-                _pageTimeouts.push(id2);
-            }, duration);
-            _pageTimeouts.push(id);
-        }
-
-        function applyCardVisibility() {
-            if (_isDestroyed) return;
-            if (!isAdmin()) {
-                document.querySelectorAll('.settings-card').forEach(function(card) {
-                    card.classList.add('hidden');
-                });
-                var aboutCard = $('aboutCard');
-                if (aboutCard) aboutCard.classList.remove('hidden');
-                var saveAllBtn = $('saveAllBtn');
-                var resetBtn = $('resetDefaultsBtn');
-                if (saveAllBtn) { saveAllBtn.disabled = true; }
-                if (resetBtn) { resetBtn.disabled = true; }
-            }
-        }
-
-        function applyThemeGlobally(theme) {
-            if (!theme) return;
-            try {
-                localStorage.setItem('marine_theme', JSON.stringify({
-                    primary: theme.primary, secondary: theme.secondary, gold: theme.gold
-                }));
-            } catch (e) {}
-            if (theme.primary) document.documentElement.style.setProperty('--primary-dark', theme.primary);
-            if (theme.secondary) document.documentElement.style.setProperty('--secondary', theme.secondary);
-            if (theme.gold) {
-                document.documentElement.style.setProperty('--gold', theme.gold);
-                document.documentElement.style.setProperty('--gold-light', theme.gold);
-            }
-        }
-
-        // ============ LOGO ============
-        function setLogoPreview(dataUrl, fileName) {
-            var placeholder = $('logoPlaceholder');
-            var preview = $('logoPreview');
-            var img = $('logoPreviewImg');
-            var nameEl = $('logoName');
+        // ══════════════════════════════════════════════════════════
+        // 🖼️ LOGO - إدارة كاملة (محسّنة)
+        // ══════════════════════════════════════════════════════════
+        function applyLogoToUI(dataUrl) {
+            var iconDiv = $('settingsHeaderIcon');
+            var img = $('globalLogo');
             var appImg = $('appLogoImg');
             var appFallback = $('appLogoFallback');
+            var previewPlaceholder = $('logoPlaceholder');
+            var preview = $('logoPreview');
+            var previewImg = $('logoPreviewImg');
 
             if (dataUrl) {
-                if (placeholder) placeholder.style.display = 'none';
-                if (preview) preview.style.display = 'flex';
-                if (img) img.src = dataUrl;
-                if (nameEl && fileName) nameEl.textContent = fileName;
+                if (img) { img.src = dataUrl; img.style.display = 'block'; }
+                if (iconDiv) iconDiv.classList.add('has-logo');
                 if (appImg) { appImg.src = dataUrl; appImg.style.display = 'block'; }
                 if (appFallback) appFallback.style.display = 'none';
-                try { localStorage.setItem('marine_logo', dataUrl); } catch (e) {}
-
-                // ✅ تحديث الأيقونة في الهيدر مباشرة
-                applyLogo();
+                if (previewPlaceholder) previewPlaceholder.style.display = 'none';
+                if (preview) preview.style.display = 'flex';
+                if (previewImg) previewImg.src = dataUrl;
             } else {
-                if (placeholder) placeholder.style.display = 'flex';
-                if (preview) preview.style.display = 'none';
-                if (img) img.src = '';
+                if (img) { img.src = ''; img.style.display = 'none'; }
+                if (iconDiv) iconDiv.classList.remove('has-logo');
                 if (appImg) { appImg.src = ''; appImg.style.display = 'none'; }
                 if (appFallback) appFallback.style.display = 'inline';
-                try { localStorage.removeItem('marine_logo'); } catch (e) {}
-
-                // ✅ إزالة الشعار من الأيقونة
-                var iconDiv = $('settingsHeaderIcon');
-                var globalImg = $('globalLogo');
-                if (iconDiv) iconDiv.classList.remove('has-logo');
-                if (globalImg) { globalImg.src = ''; globalImg.style.display = 'none'; }
+                if (previewPlaceholder) previewPlaceholder.style.display = 'flex';
+                if (preview) preview.style.display = 'none';
+                if (previewImg) previewImg.src = '';
             }
         }
 
-        async function loadLogo() {
+        function setLogoPreview(dataUrl, fileName) {
+            var nameEl = $('logoName');
+            if (nameEl) nameEl.textContent = fileName || '';
+
+            applyLogoToUI(dataUrl);
+
+            // حفظ محلي
             try {
-                var response = await fetcher('/api/logo', { method: 'GET' });
-                if (!response.ok) return;
-                var data = await response.json();
-                if (data.success && data.logo && data.logo.dataUrl) {
-                    setLogoPreview(data.logo.dataUrl, '');
+                if (dataUrl) {
+                    localStorage.setItem('marine_logo', dataUrl);
                 } else {
-                    try {
-                        var cached = localStorage.getItem('marine_logo');
-                        if (cached) setLogoPreview(cached, '');
-                    } catch (e) {}
+                    localStorage.removeItem('marine_logo');
                 }
+            } catch (e) {
+                console.warn('localStorage quota exceeded for logo');
+            }
+
+            // تحديث favicon
+            updateFavicon(dataUrl);
+        }
+
+        function updateFavicon(dataUrl) {
+            try {
+                var link = document.querySelector('link[rel="icon"]');
+                if (!link) {
+                    link = document.createElement('link');
+                    link.rel = 'icon';
+                    document.head.appendChild(link);
+                }
+                link.href = dataUrl || '/favicon.ico';
             } catch (e) {}
         }
 
         async function uploadLogo(file) {
             if (!file) return;
-            if (file.size > 2 * 1024 * 1024) { showToast('❌ الصورة أكبر من 2 MB', 'error'); return; }
+
+            // ✅ التحقق
             var allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'];
-            if (allowed.indexOf(file.type) === -1) { showToast('❌ نوع الصورة غير مدعوم', 'error'); return; }
+            if (allowed.indexOf(file.type) === -1) {
+                showToast('❌ نوع الملف غير مدعوم (PNG/JPG/SVG/WebP فقط)', 'error');
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('❌ الصورة أكبر من 2 MB', 'error');
+                return;
+            }
+
+            var dropZone = $('logoDropZone');
+            if (dropZone) dropZone.classList.add('uploading');
             showToast('⏳ جاري رفع الشعار...', 'info');
+
+            try {
+                // ✅ قراءة محلية أولاً (للمعاينة الفورية)
+                var localDataUrl = await readFileAsDataURL(file);
+
+                // ✅ محاولة الرفع للسيرفر
+                var serverDataUrl = await tryUploadToServer('/api/logo/upload', 'logo', file);
+
+                // ✅ استخدام النتيجة (سيرفر أو محلي)
+                var finalDataUrl = serverDataUrl || localDataUrl;
+                setLogoPreview(finalDataUrl, file.name);
+
+                if (serverDataUrl) {
+                    showToast('✅ تم رفع الشعار بنجاح', 'success');
+                } else {
+                    showToast('⚠️ تم الحفظ محلياً (السيرفر غير متاح)', 'warning');
+                }
+            } catch (error) {
+                console.error('Logo upload error:', error);
+                showToast('❌ ' + (error.message || 'فشل رفع الشعار'), 'error');
+            } finally {
+                if (dropZone) dropZone.classList.remove('uploading');
+            }
+        }
+
+        async function tryUploadToServer(endpoint, fieldName, file) {
             try {
                 var formData = new FormData();
-                formData.append('logo', file);
-                var token = getToken();
-                var headers = {};
-                if (token) headers['Authorization'] = 'Bearer ' + token;
-                var csrfMatch = document.cookie.match(/marine_csrf=([^;]+)/);
-                if (csrfMatch) headers['X-CSRF-Token'] = csrfMatch[1];
-                var response = await fetch('/api/logo/upload', {
-                    method: 'POST', headers: headers, credentials: 'include', body: formData
+                formData.append(fieldName, file, file.name);
+
+                // ⚠️ لا نضع Content-Type - المتصفح يضعها تلقائياً مع boundary
+                var response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: buildHeaders(), // بدون Content-Type
+                    credentials: 'include',
+                    body: formData
                 });
+
+                if (!response.ok) {
+                    var errText = '';
+                    try {
+                        var errJson = await response.json();
+                        errText = errJson.error || errJson.message || '';
+                    } catch (_) {}
+                    console.warn('Server upload failed:', response.status, errText);
+                    return null;
+                }
+
                 var data = await response.json().catch(function() { return {}; });
-                if (!response.ok || !data.success) throw new Error(data.error || ('خطأ ' + response.status));
-                setLogoPreview(data.logo.dataUrl, file.name);
-                showToast('✅ تم رفع الشعار بنجاح', 'success');
-            } catch (error) {
-                showToast('❌ ' + error.message, 'error');
+
+                // استخراج الـ dataUrl من استجابات مختلفة
+                if (data && data.success) {
+                    return data.logo && data.logo.dataUrl ? data.logo.dataUrl :
+                           data.dataUrl ? data.dataUrl :
+                           data.url ? data.url : null;
+                }
+                return null;
+            } catch (e) {
+                console.warn('tryUploadToServer failed:', e);
+                return null;
             }
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function(e) { resolve(e.target.result); };
+                reader.onerror = function() { reject(new Error('فشل قراءة الملف')); };
+                reader.readAsDataURL(file);
+            });
         }
 
         async function deleteLogo(event) {
             if (event) { event.preventDefault(); event.stopPropagation(); }
             if (!confirm('هل تريد حذف الشعار الحالي؟')) return;
+
             try {
-                var response = await fetcher('/api/logo', { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
-                if (!response.ok) {
-                    var err = await response.json().catch(function() { return {}; });
-                    throw new Error(err.error || 'فشل الحذف');
-                }
+                await fetcher('/api/logo', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                }).catch(function() { /* تجاهل فشل السيرفر */ });
+
                 setLogoPreview(null, null);
                 showToast('✅ تم حذف الشعار', 'success');
             } catch (error) {
-                showToast('❌ ' + error.message, 'error');
+                showToast('❌ ' + (error.message || 'فشل الحذف'), 'error');
             }
         }
-        window._deleteLogo = deleteLogo;
 
-        // ============ BACKGROUND ============
+        async function loadLogo() {
+            // 1) جرّب السيرفر
+            try {
+                var response = await fetcher('/api/logo', { method: 'GET' });
+                if (response.ok) {
+                    var data = await response.json();
+                    if (data.success && data.logo && data.logo.dataUrl) {
+                        setLogoPreview(data.logo.dataUrl, '');
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            // 2) fallback من localStorage
+            try {
+                var cached = localStorage.getItem('marine_logo');
+                if (cached) setLogoPreview(cached, '');
+            } catch (e) {}
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // 🎨 BACKGROUND - إدارة كاملة (محسّنة)
+        // ══════════════════════════════════════════════════════════
+        function applyBackground(dataUrl, opacity, blur) {
+            var existing = document.getElementById('marine-dynamic-bg');
+            if (existing) existing.remove();
+
+            if (!dataUrl) {
+                try { localStorage.removeItem('marine_background_config'); } catch (e) {}
+                return;
+            }
+
+            opacity = typeof opacity === 'number' ? opacity : 0.15;
+            blur = typeof blur === 'number' ? blur : 0;
+
+            try {
+                localStorage.setItem('marine_background_config', JSON.stringify({
+                    dataUrl: dataUrl, opacity: opacity, blur: blur
+                }));
+            } catch (e) {}
+
+            var bg = document.createElement('div');
+            bg.id = 'marine-dynamic-bg';
+            bg.style.cssText = 'position:fixed !important;' +
+                'top:0 !important;left:0 !important;' +
+                'width:100vw !important;height:100vh !important;' +
+                'background-image:url("' + dataUrl + '") !important;' +
+                'background-size:cover !important;' +
+                'background-position:center !important;' +
+                'background-repeat:no-repeat !important;' +
+                'opacity:' + opacity + ' !important;' +
+                'filter:' + (blur > 0 ? 'blur(' + blur + 'px)' : 'none') + ' !important;' +
+                'pointer-events:none !important;' +
+                'z-index:0 !important;' +
+                'will-change: opacity, filter;';
+
+            if (document.body.firstChild) {
+                document.body.insertBefore(bg, document.body.firstChild);
+            } else {
+                document.body.appendChild(bg);
+            }
+        }
+
         function setBgPreview(dataUrl, fileName, opacity, blur) {
             var placeholder = $('bgPlaceholder');
             var preview = $('bgPreview');
@@ -975,7 +1094,7 @@
                 if (placeholder) placeholder.style.display = 'none';
                 if (preview) preview.style.display = 'flex';
                 if (img) img.src = dataUrl;
-                if (nameEl && fileName) nameEl.textContent = fileName;
+                if (nameEl) nameEl.textContent = fileName || '';
                 try { localStorage.setItem('marine_background', dataUrl); } catch (e) {}
             } else {
                 if (placeholder) placeholder.style.display = 'flex';
@@ -999,86 +1118,77 @@
             applyBackground(dataUrl, opacity, blur);
         }
 
-        // ✅ نسخة مصححة: z-index:0 (فوق body، تحت #page-settings)
-        function applyBackground(dataUrl, opacity, blur) {
-            var existing = document.getElementById('marine-dynamic-bg');
-            if (existing) existing.remove();
-            if (!dataUrl) {
-                try { localStorage.removeItem('marine_background_config'); } catch (e) {}
-                return;
-            }
-            opacity = typeof opacity === 'number' ? opacity : 0.15;
-            blur = typeof blur === 'number' ? blur : 0;
-            try {
-                localStorage.setItem('marine_background_config', JSON.stringify({
-                    dataUrl: dataUrl, opacity: opacity, blur: blur
-                }));
-            } catch (e) {}
-
-            var bg = document.createElement('div');
-            bg.id = 'marine-dynamic-bg';
-            bg.style.cssText = 'position:fixed !important;' +
-                'top:0 !important;left:0 !important;' +
-                'width:100vw !important;height:100vh !important;' +
-                'background-image:url(' + dataUrl + ') !important;' +
-                'background-size:cover !important;' +
-                'background-position:center !important;' +
-                'background-repeat:no-repeat !important;' +
-                'opacity:' + opacity + ' !important;' +
-                'filter:' + (blur > 0 ? 'blur(' + blur + 'px)' : 'none') + ' !important;' +
-                'pointer-events:none !important;' +
-                'z-index:0 !important;';  // ✅ فوق body, تحت #page-settings (z-index:2)
-
-            if (document.body.firstChild) {
-                document.body.insertBefore(bg, document.body.firstChild);
-            } else {
-                document.body.appendChild(bg);
-            }
-        }
-
-        async function loadBackground() {
-            try {
-                var response = await fetcher('/api/background', { method: 'GET' });
-                if (!response.ok) return;
-                var data = await response.json();
-                if (data.success && data.background && data.background.dataUrl) {
-                    setBgPreview(data.background.dataUrl, '', data.background.opacity, data.background.blur);
-                } else {
-                    try {
-                        var cached = localStorage.getItem('marine_background');
-                        if (cached) setBgPreview(cached, '', 0.15, 0);
-                    } catch (e) {}
-                }
-            } catch (e) {}
-        }
-
         async function uploadBackground(file) {
             if (!file) return;
-            if (file.size > 5 * 1024 * 1024) { showToast('❌ الصورة أكبر من 5 MB', 'error'); return; }
+
             var allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-            if (allowed.indexOf(file.type) === -1) { showToast('❌ نوع الصورة غير مدعوم', 'error'); return; }
+            if (allowed.indexOf(file.type) === -1) {
+                showToast('❌ نوع الملف غير مدعوم (PNG/JPG/WebP فقط)', 'error');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('❌ الصورة أكبر من 5 MB', 'error');
+                return;
+            }
+
+            var dropZone = $('bgDropZone');
+            if (dropZone) dropZone.classList.add('uploading');
             showToast('⏳ جاري رفع الخلفية...', 'info');
+
             try {
-                var formData = new FormData();
-                formData.append('background', file);
+                var localDataUrl = await readFileAsDataURL(file);
                 var opEl = $('bgOpacity');
                 var blEl = $('bgBlur');
-                formData.append('opacity', opEl ? (opEl.value / 100) : 0.15);
-                formData.append('blur', blEl ? blEl.value : 0);
-                var token = getToken();
-                var headers = {};
-                if (token) headers['Authorization'] = 'Bearer ' + token;
-                var csrfMatch = document.cookie.match(/marine_csrf=([^;]+)/);
-                if (csrfMatch) headers['X-CSRF-Token'] = csrfMatch[1];
-                var response = await fetch('/api/background/upload', {
-                    method: 'POST', headers: headers, credentials: 'include', body: formData
-                });
-                var data = await response.json().catch(function() { return {}; });
-                if (!response.ok || !data.success) throw new Error(data.error || ('خطأ ' + response.status));
-                setBgPreview(data.background.dataUrl, file.name, data.background.opacity, data.background.blur);
-                showToast('✅ تم رفع الخلفية بنجاح', 'success');
+                var opacity = opEl ? (opEl.value / 100) : 0.15;
+                var blur = blEl ? Number(blEl.value) : 0;
+
+                // محاولة الرفع للسيرفر
+                var serverDataUrl = await tryUploadBackgroundToServer(file, opacity, blur);
+                var finalDataUrl = serverDataUrl || localDataUrl;
+
+                setBgPreview(finalDataUrl, file.name, opacity, blur);
+
+                if (serverDataUrl) {
+                    showToast('✅ تم رفع الخلفية بنجاح', 'success');
+                } else {
+                    showToast('⚠️ تم الحفظ محلياً (السيرفر غير متاح)', 'warning');
+                }
             } catch (error) {
-                showToast('❌ ' + error.message, 'error');
+                console.error('Background upload error:', error);
+                showToast('❌ ' + (error.message || 'فشل رفع الخلفية'), 'error');
+            } finally {
+                if (dropZone) dropZone.classList.remove('uploading');
+            }
+        }
+
+        async function tryUploadBackgroundToServer(file, opacity, blur) {
+            try {
+                var formData = new FormData();
+                formData.append('background', file, file.name);
+                formData.append('opacity', opacity);
+                formData.append('blur', blur);
+
+                var response = await fetch('/api/background/upload', {
+                    method: 'POST',
+                    headers: buildHeaders(), // بدون Content-Type
+                    credentials: 'include',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    console.warn('Background server upload failed:', response.status);
+                    return null;
+                }
+
+                var data = await response.json().catch(function() { return {}; });
+                if (data && data.success) {
+                    return (data.background && data.background.dataUrl) ||
+                           data.dataUrl || data.url || null;
+                }
+                return null;
+            } catch (e) {
+                console.warn('tryUploadBackgroundToServer failed:', e);
+                return null;
             }
         }
 
@@ -1087,21 +1197,26 @@
             var blEl = $('bgBlur');
             var opacity = opEl ? (opEl.value / 100) : 0.15;
             var blur = blEl ? Number(blEl.value) : 0;
+
             try {
                 var cached = localStorage.getItem('marine_background');
-                if (!cached) { showToast('⚠️ لم يتم رفع صورة بعد', 'warning'); return; }
+                if (!cached) {
+                    showToast('⚠️ لم يتم رفع صورة بعد', 'warning');
+                    return;
+                }
+
                 applyBackground(cached, opacity, blur);
+
+                // محاولة حفظ على السيرفر (اختياري - لن يفشل العملية)
                 try {
-                    var response = await fetcher('/api/background/settings', {
+                    await fetcher('/api/background/settings', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ opacity: opacity, blur: blur })
                     });
-                    if (response.ok) showToast('✅ تم حفظ إعدادات الخلفية', 'success');
-                    else showToast('✅ تم الحفظ محلياً', 'info');
-                } catch (e) {
-                    showToast('✅ تم الحفظ محلياً', 'info');
-                }
+                } catch (e) { /* تجاهل */ }
+
+                showToast('✅ تم حفظ إعدادات الخلفية', 'success');
             } catch (e) {
                 showToast('❌ فشل الحفظ', 'error');
             }
@@ -1110,51 +1225,79 @@
         async function deleteBackground(event) {
             if (event) { event.preventDefault(); event.stopPropagation(); }
             if (!confirm('هل تريد حذف صورة الخلفية؟')) return;
+
             try {
-                var response = await fetcher('/api/background', { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
-                if (!response.ok) {
-                    var err = await response.json().catch(function() { return {}; });
-                    throw new Error(err.error || 'فشل الحذف');
-                }
+                await fetcher('/api/background', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                }).catch(function() {});
+
                 setBgPreview(null, null);
                 var existing = document.getElementById('marine-dynamic-bg');
                 if (existing) existing.remove();
                 try { localStorage.removeItem('marine_background_config'); } catch (e) {}
                 showToast('✅ تم حذف الخلفية', 'success');
             } catch (error) {
-                showToast('❌ ' + error.message, 'error');
+                showToast('❌ ' + (error.message || 'فشل الحذف'), 'error');
             }
         }
-        window._deleteBg = deleteBackground;
 
-        // ============ SETTINGS ============
-        async function loadSettings() {
-            if (_isDestroyed) return;
-            var token = getToken();
-            if (!token) { showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning'); return; }
-            if (!isAdmin()) return;
+        async function loadBackground() {
             try {
-                var response = await fetcher('/api/settings', { method: 'GET' });
-                if (!response.ok) throw new Error('فشل تحميل الإعدادات: ' + response.status);
-                var data = await response.json();
-                if (data && data.settings) applySettings(data.settings);
-            } catch (error) {
-                showToast('❌ ' + error.message, 'error');
+                var response = await fetcher('/api/background', { method: 'GET' });
+                if (response.ok) {
+                    var data = await response.json();
+                    if (data.success && data.background && data.background.dataUrl) {
+                        setBgPreview(
+                            data.background.dataUrl,
+                            '',
+                            data.background.opacity,
+                            data.background.blur
+                        );
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            // fallback من localStorage
+            try {
+                var cached = localStorage.getItem('marine_background');
+                if (cached) {
+                    var cfg = null;
+                    try { cfg = JSON.parse(localStorage.getItem('marine_background_config') || 'null'); } catch (e) {}
+                    setBgPreview(cached, '', cfg ? cfg.opacity : 0.15, cfg ? cfg.blur : 0);
+                }
+            } catch (e) {}
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ⚙️ SETTINGS - تحميل/حفظ
+        // ══════════════════════════════════════════════════════════
+        function applyThemeGlobally(theme) {
+            if (!theme) return;
+            try {
+                localStorage.setItem('marine_theme', JSON.stringify({
+                    primary: theme.primary, secondary: theme.secondary, gold: theme.gold
+                }));
+            } catch (e) {}
+            if (theme.primary) document.documentElement.style.setProperty('--primary-dark', theme.primary);
+            if (theme.secondary) document.documentElement.style.setProperty('--secondary', theme.secondary);
+            if (theme.gold) {
+                document.documentElement.style.setProperty('--gold', theme.gold);
+                document.documentElement.style.setProperty('--gold-light', theme.gold);
             }
+        }
+
+        function applyLogoSize(size) {
+            var sizes = { small: 40, medium: 60, large: 90 };
+            var px = sizes[size] || 60;
+            document.documentElement.style.setProperty('--app-logo-size', px + 'px');
+            try { localStorage.setItem('marine_logo_size', size || 'medium'); } catch (e) {}
         }
 
         function applySettings(settings) {
             if (_isDestroyed || !settings) return;
-            if (settings.theme) {
-                var t = settings.theme;
-                if (t.primary) document.documentElement.style.setProperty('--primary-dark', t.primary);
-                if (t.secondary) document.documentElement.style.setProperty('--secondary', t.secondary);
-                if (t.gold) {
-                    document.documentElement.style.setProperty('--gold', t.gold);
-                    document.documentElement.style.setProperty('--gold-light', t.gold);
-                }
-                applyThemeGlobally(t);
-            }
+            if (settings.theme) applyThemeGlobally(settings.theme);
             if (settings.layout) {
                 var el;
                 el = $('darkMode'); if (el) el.checked = settings.layout.darkMode !== false;
@@ -1178,6 +1321,7 @@
             if (settings.branding) {
                 var el4 = $('logoSize');
                 if (el4) el4.value = settings.branding.logoSize || 'medium';
+                applyLogoSize(settings.branding.logoSize || 'medium');
             }
         }
 
@@ -1199,7 +1343,9 @@
             settings.security = {
                 emailNotifications: $('emailNotifications') ? $('emailNotifications').checked : true,
                 smsNotifications: $('smsNotifications') ? $('smsNotifications').checked : false,
-                sessionTimeout: $('sessionTimeout') ? Math.min(Math.max(parseInt($('sessionTimeout').value) || 60, 5), 480) : 60
+                sessionTimeout: $('sessionTimeout')
+                    ? Math.min(Math.max(parseInt($('sessionTimeout').value) || 60, 5), 480)
+                    : 60
             };
             settings.notifications = {
                 emergencyAlerts: $('emergencyAlerts') ? $('emergencyAlerts').checked : true,
@@ -1212,26 +1358,61 @@
             return settings;
         }
 
-        async function saveSettings() {
+        async function loadSettings() {
+            if (_isDestroyed || !isAdmin()) return;
+            if (!getToken()) {
+                console.warn('No auth token');
+                return;
+            }
+            try {
+                var response = await fetcher('/api/settings', { method: 'GET' });
+                if (!response.ok) return;
+                var data = await response.json();
+                if (data && data.settings) applySettings(data.settings);
+            } catch (error) {
+                console.warn('loadSettings failed:', error);
+            }
+        }
+
+        async function saveSettings(btnEl) {
             if (_isDestroyed) return;
             if (!isAdmin()) { showToast('⚠️ ليس لديك صلاحية الحفظ', 'error'); return; }
+
+            if (btnEl) btnEl.classList.add('loading');
             var settings = collectSettings();
+
             try {
                 var response = await fetcher('/api/settings', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(settings)
                 });
+
                 if (!response.ok) {
                     var errData = null;
                     try { errData = await response.json(); } catch (_) {}
                     throw new Error((errData && (errData.error || errData.message)) || 'فشل الحفظ');
                 }
-                showToast('✅ تم حفظ الإعدادات', 'success');
+
+                // ✅ تطبيق محلي
                 applySettings(settings);
                 applyThemeGlobally(settings.theme);
+                applyLogoSize(settings.branding.logoSize);
+
+                showToast('✅ تم حفظ الإعدادات', 'success');
             } catch (error) {
-                showToast('❌ ' + error.message, 'error');
+                // ✅ حتى لو فشل السيرفر، نحفظ محلياً
+                try {
+                    localStorage.setItem('marine_settings', JSON.stringify(settings));
+                    applySettings(settings);
+                    applyThemeGlobally(settings.theme);
+                    applyLogoSize(settings.branding.logoSize);
+                    showToast('⚠️ تم الحفظ محلياً (السيرفر غير متاح)', 'warning');
+                } catch (e) {
+                    showToast('❌ ' + error.message, 'error');
+                }
+            } finally {
+                if (btnEl) btnEl.classList.remove('loading');
             }
         }
 
@@ -1252,11 +1433,39 @@
             }
         }
 
+        // ══════════════════════════════════════════════════════════
+        // 🎯 INIT
+        // ══════════════════════════════════════════════════════════
         function init() {
             if (_isDestroyed) return;
-            applyCardVisibility();
-            if (isAdmin()) loadSettings();
 
+            // التحقق من الصلاحيات
+            if (!isAdmin()) {
+                document.querySelectorAll('.settings-card').forEach(function(card) {
+                    card.classList.add('hidden');
+                });
+                var aboutCard = $('aboutCard');
+                if (aboutCard) aboutCard.classList.remove('hidden');
+                var saveAllBtn = $('saveAllBtn');
+                var resetBtn = $('resetDefaultsBtn');
+                if (saveAllBtn) saveAllBtn.disabled = true;
+                if (resetBtn) resetBtn.disabled = true;
+            }
+
+            // تطبيق حجم الشعار المحفوظ
+            try {
+                var savedSize = localStorage.getItem('marine_logo_size') || 'medium';
+                applyLogoSize(savedSize);
+                var sizeEl = $('logoSize');
+                if (sizeEl) sizeEl.value = savedSize;
+            } catch (e) {}
+
+            // تحميل البيانات
+            loadSettings();
+            loadLogo();
+            loadBackground();
+
+            // الألوان
             document.querySelectorAll('#colorPicker .color-option').forEach(function(btn) {
                 addSafeListener(btn, 'click', function() {
                     document.querySelectorAll('#colorPicker .color-option').forEach(function(b) {
@@ -1277,13 +1486,20 @@
             });
             updatePreview();
 
+            // أزرار الحفظ
             ['saveAllBtn', 'saveThemeBtn', 'saveLayoutBtn', 'saveSecurityBtn', 'saveNotificationsBtn', 'saveLogoBtn'].forEach(function(id) {
                 addSafeListener($(id), 'click', function() {
                     if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                    saveSettings();
+                    saveSettings(this);
                 });
             });
 
+            // تغيير حجم الشعار
+            addSafeListener($('logoSize'), 'change', function() {
+                applyLogoSize(this.value);
+            });
+
+            // التحديث
             addSafeListener($('refreshBtn'), 'click', function() {
                 if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
                 showToast('🔄 جاري التحديث...', 'info');
@@ -1292,6 +1508,7 @@
                 loadBackground();
             });
 
+            // استعادة الافتراضي
             addSafeListener($('resetDefaultsBtn'), 'click', function() {
                 if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
                 if (!confirm('⚠️ هل أنت متأكد من استعادة الإعدادات الافتراضية؟')) return;
@@ -1299,72 +1516,35 @@
                     .then(function(r) { if (!r.ok) throw new Error('فشل الاستعادة'); return r.json(); })
                     .then(function() {
                         showToast('✅ تم استعادة الإعدادات الافتراضية', 'success');
-                        setTimeout(function() { loadSettings(); }, 500);
+                        safeTimeout(function() { loadSettings(); }, 500);
                     })
                     .catch(function(err) { showToast('❌ ' + err.message, 'error'); });
             });
 
-            var logoFileInput = $('logoFileInput');
-            var logoDropZone = $('logoDropZone');
-            if (logoFileInput) {
-                addSafeListener(logoFileInput, 'change', function() {
-                    if (this.files && this.files[0]) { uploadLogo(this.files[0]); this.value = ''; }
-                });
-            }
-            if (logoDropZone) {
-                addSafeListener(logoDropZone, 'click', function(e) {
-                    if (e.target.closest('.logo-actions')) return;
-                    if (logoFileInput) logoFileInput.click();
-                });
-                ['dragenter', 'dragover'].forEach(function(evt) {
-                    addSafeListener(logoDropZone, evt, function(e) {
-                        e.preventDefault(); e.stopPropagation();
-                        logoDropZone.classList.add('dragover');
-                    });
-                });
-                ['dragleave', 'drop'].forEach(function(evt) {
-                    addSafeListener(logoDropZone, evt, function(e) {
-                        e.preventDefault(); e.stopPropagation();
-                        logoDropZone.classList.remove('dragover');
-                    });
-                });
-                addSafeListener(logoDropZone, 'drop', function(e) {
-                    var files = e.dataTransfer && e.dataTransfer.files;
-                    if (files && files[0]) uploadLogo(files[0]);
-                });
-            }
+            // ════ الشعار - ربط الأحداث ════
+            setupUploadZone({
+                input: 'logoFileInput',
+                dropZone: 'logoDropZone',
+                upload: uploadLogo,
+                changeBtn: '[data-action="change-logo"]',
+                deleteBtn: '[data-action="delete-logo"]',
+                onDelete: deleteLogo
+            });
 
-            var bgFileInput = $('bgFileInput');
-            var bgDropZone = $('bgDropZone');
+            // ════ الخلفية - ربط الأحداث ════
+            setupUploadZone({
+                input: 'bgFileInput',
+                dropZone: 'bgDropZone',
+                upload: uploadBackground,
+                changeBtn: '[data-action="change-bg"]',
+                deleteBtn: '[data-action="delete-bg"]',
+                onDelete: deleteBackground
+            });
+
+            // ════ Opacity & Blur ════
             var bgOpacity = $('bgOpacity');
             var bgBlur = $('bgBlur');
-            if (bgFileInput) {
-                addSafeListener(bgFileInput, 'change', function() {
-                    if (this.files && this.files[0]) { uploadBackground(this.files[0]); this.value = ''; }
-                });
-            }
-            if (bgDropZone) {
-                addSafeListener(bgDropZone, 'click', function(e) {
-                    if (e.target.closest('.logo-actions')) return;
-                    if (bgFileInput) bgFileInput.click();
-                });
-                ['dragenter', 'dragover'].forEach(function(evt) {
-                    addSafeListener(bgDropZone, evt, function(e) {
-                        e.preventDefault(); e.stopPropagation();
-                        bgDropZone.classList.add('dragover');
-                    });
-                });
-                ['dragleave', 'drop'].forEach(function(evt) {
-                    addSafeListener(bgDropZone, evt, function(e) {
-                        e.preventDefault(); e.stopPropagation();
-                        bgDropZone.classList.remove('dragover');
-                    });
-                });
-                addSafeListener(bgDropZone, 'drop', function(e) {
-                    var files = e.dataTransfer && e.dataTransfer.files;
-                    if (files && files[0]) uploadBackground(files[0]);
-                });
-            }
+
             if (bgOpacity) {
                 addSafeListener(bgOpacity, 'input', function() {
                     var v = $('bgOpacityVal');
@@ -1373,7 +1553,7 @@
                 addSafeListener(bgOpacity, 'change', function() {
                     try {
                         var cached = localStorage.getItem('marine_background');
-                        if (cached) applyBackground(cached, this.value / 100, Number($('bgBlur').value));
+                        if (cached) applyBackground(cached, this.value / 100, Number(bgBlur ? bgBlur.value : 0));
                     } catch (e) {}
                 });
             }
@@ -1385,7 +1565,7 @@
                 addSafeListener(bgBlur, 'change', function() {
                     try {
                         var cached = localStorage.getItem('marine_background');
-                        if (cached) applyBackground(cached, $('bgOpacity').value / 100, Number(this.value));
+                        if (cached) applyBackground(cached, Number(bgOpacity ? bgOpacity.value : 15) / 100, Number(this.value));
                     } catch (e) {}
                 });
             }
@@ -1398,25 +1578,92 @@
                 try {
                     var cached = localStorage.getItem('marine_background');
                     if (!cached) { showToast('⚠️ ارفع صورة أولاً', 'warning'); return; }
-                    applyBackground(cached, $('bgOpacity').value / 100, Number($('bgBlur').value));
+                    applyBackground(cached, Number($('bgOpacity').value) / 100, Number($('bgBlur').value));
                     showToast('👁️ معاينة الخلفية مطبّقة', 'info');
                 } catch (e) {}
             });
+        }
 
-            loadLogo();
-            loadBackground();
+        // ══════════════════════════════════════════════════════════
+        // 🔗 SETUP UPLOAD ZONE (موحّد للشعار والخلفية)
+        // ══════════════════════════════════════════════════════════
+        function setupUploadZone(config) {
+            var input = $(config.input);
+            var dropZone = $(config.dropZone);
+
+            if (input) {
+                addSafeListener(input, 'change', function() {
+                    if (this.files && this.files[0]) {
+                        config.upload(this.files[0]);
+                        this.value = '';
+                    }
+                });
+            }
+
+            if (dropZone) {
+                // click على المنطقة (ما عدا الأزرار)
+                addSafeListener(dropZone, 'click', function(e) {
+                    if (e.target.closest('.logo-actions')) return;
+                    if (input) input.click();
+                });
+
+                // keyboard accessibility
+                addSafeListener(dropZone, 'keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (input) input.click();
+                    }
+                });
+
+                // drag & drop
+                ['dragenter', 'dragover'].forEach(function(evt) {
+                    addSafeListener(dropZone, evt, function(e) {
+                        e.preventDefault(); e.stopPropagation();
+                        dropZone.classList.add('dragover');
+                    });
+                });
+                ['dragleave', 'drop'].forEach(function(evt) {
+                    addSafeListener(dropZone, evt, function(e) {
+                        e.preventDefault(); e.stopPropagation();
+                        dropZone.classList.remove('dragover');
+                    });
+                });
+                addSafeListener(dropZone, 'drop', function(e) {
+                    var files = e.dataTransfer && e.dataTransfer.files;
+                    if (files && files[0]) config.upload(files[0]);
+                });
+            }
+
+            // أزرار تغيير/حذف داخل المعاينة
+            document.querySelectorAll(config.changeBtn).forEach(function(btn) {
+                addSafeListener(btn, 'click', function(e) {
+                    e.stopPropagation();
+                    if (input) input.click();
+                });
+            });
+            document.querySelectorAll(config.deleteBtn).forEach(function(btn) {
+                addSafeListener(btn, 'click', function(e) {
+                    e.stopPropagation();
+                    if (config.onDelete) config.onDelete(e);
+                });
+            });
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // 🚀 START
+        // ══════════════════════════════════════════════════════════
+        function boot() {
+            if (_isDestroyed) return;
+            init();
         }
 
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
-                _pageTimeouts.push(id);
-            }, { once: true });
+            document.addEventListener('DOMContentLoaded', boot, { once: true });
         } else {
-            var id0 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
-            _pageTimeouts.push(id0);
+            safeTimeout(boot, 30);
         }
 
+        // Expose for external use
         window.loadSettings = loadSettings;
         window.getToken = getToken;
         window.showToast = showToast;
