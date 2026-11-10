@@ -540,7 +540,7 @@ function generateStrongPassword(len=20) {
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.local';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'nejiamanallah22@gmail.com';
 const ALLOW_ADMIN_RESET = process.env.ALLOW_ADMIN_RESET === 'true';
 
 let ADMIN_PASSWORD, ADMIN_PASSWORD_GENERATED = false;
@@ -646,9 +646,41 @@ async function withRetry(fn, n=3, d=500) {
 }
 async function sendEmail(to, subj, html) {
     if (!isValidEmail(to)) { console.warn('⚠️ Invalid email:', to); return null; }
+
+    // ✅ 1. Resend API (الأولوية القصوى - يعمل على Render)
+    const resendApiKey = process.env.RESEND_KEY_NEW || process.env.RESEND_API_KEY;
+    if (resendApiKey && fetchSafe) {
+        try {
+            const r = await withRetry(async () => {
+                const resp = await fetchSafe('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${resendApiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        from: 'Marine System <onboarding@resend.dev>',
+                        to: [to],
+                        subject: subj,
+                        html: html
+                    })
+                });
+                if (!resp.ok) {
+                    const err = await resp.text();
+                    throw new Error(`Resend ${resp.status}: ${err.substring(0, 200)}`);
+                }
+                return resp.json();
+            });
+            console.log('📧 Resend sent successfully to:', to);
+            return r;
+        } catch (e) { 
+            console.error('❌ Resend Error:', e.message); 
+        }
+    }
+
+    // ✅ 2. Mailjet (احتياطي)
     const k1 = process.env.MAILJET_API_KEY, k2 = process.env.MAILJET_SECRET_KEY;
-    if (k1 && k2) {
-        if (!fetchSafe) return null;
+    if (k1 && k2 && fetchSafe) {
         try {
             const auth = Buffer.from(`${k1}:${k2}`).toString('base64');
             return await withRetry(async () => {
@@ -666,6 +698,8 @@ async function sendEmail(to, subj, html) {
             });
         } catch (e) { console.error('❌ Mailjet:', e.message); return null; }
     }
+
+    // ✅ 3. SMTP (احتياطي أخير)
     if (!emailTransporter) emailTransporter = await initEmailService();
     if (!emailTransporter) return null;
     try {
@@ -673,7 +707,7 @@ async function sendEmail(to, subj, html) {
         return await withRetry(() => emailTransporter.sendMail({ from, to, subject: subj, html }));
     } catch (e) { console.error('❌ SMTP:', e.message); return null; }
 }
-setTimeout(() => { initEmailService().then(t => { emailTransporter = t; }).catch(()=>{}); }, 100);
+  setTimeout(() => { initEmailService().then(t => { emailTransporter = t; }).catch(()=>{}); }, 100);
 
 app.use(helmet({
     contentSecurityPolicy: {
