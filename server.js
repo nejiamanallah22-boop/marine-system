@@ -3569,7 +3569,18 @@ function formatMaintenance(log) {
         addSystemLog,
         notify,
         buildIdQuery
-    });    // ============ AI + IMPORT ============
+      });
+
+    // ═══════════════════════════════════════════════════════════
+    // 👥 CREW ROUTES — طاقم الوسائل (جديد)
+    // ═══════════════════════════════════════════════════════════
+    try {
+        require('./routes/crew')(app, { authenticateAccessToken, csrfProtection });
+    } catch (e) {
+        console.error('❌ [CREW] Failed to load:', e.message);
+    }
+
+    // ============ AI + IMPORT ============
     aiAndImportRoutes(app, {
         User, Vessel, Maintenance, Notification,
         authenticateAccessToken, csrfProtection,
