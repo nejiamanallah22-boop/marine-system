@@ -3179,7 +3179,7 @@
 
                var actions = '';
 actions += '<button class="btn-sm gallery" data-action="gallery" data-id="' + escapeHtml(id) + '" title="عرض الصور"><i class="fas fa-images"></i></button>';
-actions += '<button class="btn-sm crew" onclick="openCrewModal(\'' + id + '\', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')" title="إدارة الطاقم"><i class="fas fa-users"></i></button>';
+actions += '<button class="btn-sm crew" data-action="crew" data-id="' + escapeHtml(id) + '" data-name="' + escapeHtml(name) + '" title="إدارة الطاقم"><i class="fas fa-users"></i></button>';
 if (editable) actions += '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>';
 if (disposable) actions += '<button class="btn-sm dispose" onclick="openDisposeModal(\'' + id + '\')" title="طرح نهائي"><i class="fas fa-archive"></i></button>';
 if (deletable) actions += '<button class="btn-sm delete" onclick="deleteItem(\'' + id + '\',\'' + escapeHtml(name) + '\')" title="حذف"><i class="fas fa-trash-alt"></i></button>';
@@ -3209,6 +3209,16 @@ html += '<tr class="' + (isDamaged ? 'damaged' : '') + '">' +
                     if (id) window.openVesselGalleryById(id);
                 });
             });
+mainBody.querySelectorAll('[data-action="crew"]').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var id = this.getAttribute('data-id');
+        var name = this.getAttribute('data-name') || '';
+        if (id && typeof window.openCrewModal === 'function') {
+            window.openCrewModal(id, name);
+        }
+    });
+});
 
         } catch (err) {
             console.error('❌ renderMain error:', err);
