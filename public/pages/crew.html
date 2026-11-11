@@ -1,1278 +1,1457 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طاقم الوسيلة — الأسطول البحري</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        :root {
-            --gold-1: #f7d774;
-            --gold-2: #e6b31e;
-            --gold-3: #b8860b;
-            --gold-glow: rgba(230, 179, 30, 0.35);
-            --navy-1: #0f2744;
-            --navy-2: #1e3a5f;
-            --emerald: #10b981;
-            --emerald-light: #6ee7b7;
-            --red: #ef4444;
-            --red-light: #fca5a5;
-            --blue: #3b82f6;
-            --blue-light: #93c5fd;
-            --slate-50: #f8fafc;
-            --slate-100: #f1f5f9;
-            --slate-200: #e2e8f0;
-            --slate-300: #cbd5e1;
-            --slate-400: #94a3b8;
-            --slate-500: #64748b;
-            --slate-600: #475569;
-            --slate-700: #334155;
-            --slate-800: #1e293b;
-            --slate-900: #0f172a;
-            --radius: 14px;
-            --radius-sm: 10px;
-            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            --font: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
-        }
-        
-        body {
-            font-family: var(--font);
-            background: linear-gradient(135deg, #e8eef5 0%, #f1f5f9 50%, #e8eef5 100%);
-            color: var(--slate-900);
-            min-height: 100vh;
-            direction: rtl;
-            padding: 20px;
-        }
-        
-        .container { max-width: 1400px; margin: 0 auto; }
-        
-        /* ═══════════════════════════════════════════════════════ */
-        /* 🏛️ Header — احترافي */
-        /* ═══════════════════════════════════════════════════════ */
-        .header {
-            background: linear-gradient(135deg, var(--navy-1) 0%, var(--navy-2) 50%, var(--navy-1) 100%);
-            border-radius: var(--radius);
-            padding: 24px 32px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            box-shadow: 
-                0 20px 60px rgba(15, 39, 68, 0.3),
-                0 0 0 1px rgba(201, 162, 39, 0.2) inset;
-            position: relative;
-            overflow: hidden;
-        }
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--gold-2) 0%, var(--gold-1) 50%, var(--gold-2) 100%);
-        }
-        .header::after {
-            content: '';
-            position: absolute;
-            top: -50%; right: -20%;
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(230, 179, 30, 0.15) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            position: relative;
-            z-index: 1;
-        }
-        .header-icon {
-            width: 64px; height: 64px;
-            border-radius: 18px;
-            background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3));
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px;
-            color: var(--navy-1);
-            box-shadow: 
-                0 8px 32px var(--gold-glow),
-                0 0 0 4px rgba(230, 179, 30, 0.15),
-                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-            flex-shrink: 0;
-        }
-        .header-text h1 {
-            font-size: 26px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 4px;
-            letter-spacing: 0.5px;
-        }
-        .header-text p {
-            font-size: 13px;
-            color: var(--slate-400);
-            font-weight: 600;
-        }
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* ═══════════════════════════════════════════════════════ */
-        /* 🎯 Buttons */
-        /* ═══════════════════════════════════════════════════════ */
-        .btn {
-            padding: 12px 22px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 0; height: 0;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        .btn:hover::before { width: 300px; height: 300px; }
-        .btn > * { position: relative; z-index: 1; }
-        
-        .btn-print {
-            background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3));
-            color: var(--navy-1);
-            box-shadow: 0 8px 24px var(--gold-glow);
-        }
-        .btn-print:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 14px 40px var(--gold-glow);
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--emerald), #059669);
-            color: white;
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
-        }
-        .btn-primary:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 14px 40px rgba(16, 185, 129, 0.5);
-        }
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--slate-200);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-        }
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        .btn-danger {
-            background: linear-gradient(135deg, var(--red), #b91c1c);
-            color: white;
-            padding: 8px 14px;
-            font-size: 12px;
-            border-radius: 8px;
-        }
-        .btn-danger:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
-        }
-        .btn-icon {
-            width: 36px; height: 36px;
-            padding: 0;
-            justify-content: center;
-        }
-        
-        /* ═══════════════════════════════════════════════════════ */
-        /* 📊 Stats — إحصائيات سريعة */
-        /* ═══════════════════════════════════════════════════════ */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 22px 24px;
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            box-shadow: 0 4px 20px rgba(15, 39, 68, 0.08);
-            transition: all var(--transition);
-            border: 1px solid var(--slate-200);
-            position: relative;
-            overflow: hidden;
-        }
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; right: 0;
-            width: 4px;
-            height: 100%;
-            transition: width var(--transition);
-        }
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(15, 39, 68, 0.15);
-        }
-        .stat-card:hover::before { width: 8px; }
-        .stat-card.total::before { background: var(--gold-2); }
-        .stat-card.rank::before { background: var(--blue); }
-        .stat-card.phone::before { background: var(--emerald); }
-        .stat-card.recent::before { background: var(--gold-2); }
-        
-        .stat-icon {
-            width: 54px; height: 54px;
-            border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-            flex-shrink: 0;
-        }
-        .stat-card.total .stat-icon {
-            background: linear-gradient(135deg, rgba(230, 179, 30, 0.15), rgba(230, 179, 30, 0.08));
-            color: var(--gold-2);
-        }
-        .stat-card.rank .stat-icon {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08));
-            color: var(--blue);
-        }
-        .stat-card.phone .stat-icon {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
-            color: var(--emerald);
-        }
-        .stat-card.recent .stat-icon {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.08));
-            color: #8b5cf6;
-        }
-        .stat-content { flex: 1; min-width: 0; }
-        .stat-value {
-            font-size: 32px;
-            font-weight: 900;
-            color: var(--navy-1);
-            line-height: 1;
-            margin-bottom: 4px;
-        }
-        .stat-label {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--slate-500);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        
-        /* ═══════════════════════════════════════════════════════ */
-        /* 📝 Add Form Card */
-        /* ═══════════════════════════════════════════════════════ */
-        .card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 24px 28px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(15, 39, 68, 0.08);
-            border: 1px solid var(--slate-200);
-        }
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid var(--slate-100);
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .card-title {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--navy-1);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .card-title i {
-            width: 32px; height: 32px;
-            background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
-            color: var(--navy-1);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px;
-        }
-        .card-toggle {
-            background: transparent;
-            border: 1px solid var(--slate-300);
-            color: var(--slate-600);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-family: var(--font);
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .card-toggle:hover {
-            background: var(--slate-100);
-            border-color: var(--slate-400);
-        }
-        .card-toggle i { transition: transform var(--transition); }
-        .card-toggle.collapsed i { transform: rotate(-90deg); }
-        
-        .form-body {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 14px;
-            max-height: 2000px;
-            overflow: hidden;
-            transition: max-height 0.4s ease, opacity 0.3s ease;
-            opacity: 1;
-        }
-        .form-body.collapsed {
-            max-height: 0;
-            opacity: 0;
-            margin-bottom: 0;
-        }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group.full { grid-column: 1 / -1; }
-        .form-group label {
-            font-size: 12px;
-            font-weight: 800;
-            color: var(--slate-600);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .form-group label .req { color: var(--red); }
-        .form-control {
-            padding: 12px 16px;
-            background: var(--slate-50);
-            border: 2px solid var(--slate-200);
-            border-radius: var(--radius-sm);
-            color: var(--slate-900);
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 600;
-            transition: all var(--transition);
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: var(--gold-2);
-            background: white;
-            box-shadow: 0 0 0 4px var(--gold-glow);
-        }
-        .form-control::placeholder { color: var(--slate-400); font-weight: 500; }
-        textarea.form-control { resize: vertical; min-height: 70px; }
-        .form-actions {
-            grid-column: 1 / -1;
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-        
-        /* ═══════════════════════════════════════════════════════ */
-        /* 🔍 Search Bar */
-        /* ═══════════════════════════════════════════════════════ */
-        .search-bar {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            background: white;
-            border-radius: var(--radius);
-            padding: 14px 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(15, 39, 68, 0.08);
-            border: 1px solid var(--slate-200);
-            flex-wrap: wrap;
-        }
-        .search-input-wrap {
-            flex: 1;
-            min-width: 200px;
-            position: relative;
-        }
-        .search-input-wrap i {
-            position: absolute;
-            left: 16px; top: 50%;
-            transform: translateY(-50%);
-            color: var(--slate-400);
-            font-size: 14px;
-            pointer-events: none;
-        }
-        .search-input-wrap input {
-            width: 100%;
-            padding: 12px 16px 12px 44px;
-            background: var(--slate-50);
-            border: 2px solid var(--slate-200);
-            border-radius: var(--radius-sm);
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--slate-900);
-            transition: all var(--transition);
-        }
-        .search-input-wrap input:focus {
-            outline: none;
-            border-color: var(--gold-2);
-            background: white;
-            box-shadow: 0 0 0 4px var(--gold-glow);
-        }
-        
-        /* ═══════════════════════════════════════════════════════ */
-        /* 📋 Table — احترافي */
-        /* ═══════════════════════════════════════════════════════ */
-        .table-card {
-            background: white;
-            border-radius: var(--radius);
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(15, 39, 68, 0.08);
-            border: 1px solid var(--slate-200);
-            margin-bottom: 20px;
-        }
-        .table-card-header {
-            padding: 20px 28px;
-            background: linear-gradient(135deg, var(--navy-1), var(--navy-2));
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .table-card-title {
-            font-size: 15px;
-            font-weight: 800;
-            color: var(--gold-1);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .table-card-title i { font-size: 16px; }
-        .table-card-count {
-            font-size: 12px;
-            font-weight: 800;
-            background: var(--gold-2);
-            color: var(--navy-1);
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-        
-        .table-wrapper {
-            overflow-x: auto;
-            width: 100%;
-        }
-        .crew-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 13px;
-            min-width: 900px;
-        }
-        .crew-table thead {
-            background: linear-gradient(135deg, var(--navy-1), var(--navy-2));
-        }
-        .crew-table thead th {
-            padding: 16px 12px;
-            font-size: 11px;
-            font-weight: 800;
-            color: var(--gold-1);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            text-align: center;
-            border-bottom: 3px solid var(--gold-2);
-            white-space: nowrap;
-        }
-        .crew-table thead th i {
-            margin-left: 6px;
-            font-size: 12px;
-            color: var(--gold-2);
-        }
-        .crew-table tbody tr {
-            transition: all var(--transition);
-            background: white;
-            border-bottom: 1px solid var(--slate-100);
-        }
-        .crew-table tbody tr:hover {
-            background: linear-gradient(90deg, rgba(230, 179, 30, 0.08), rgba(230, 179, 30, 0.02));
-            transform: scale(1.001);
-            box-shadow: 0 2px 12px rgba(230, 179, 30, 0.15);
-        }
-        .crew-table tbody tr:nth-child(even) {
-            background: var(--slate-50);
-        }
-        .crew-table tbody tr:nth-child(even):hover {
-            background: linear-gradient(90deg, rgba(230, 179, 30, 0.08), rgba(230, 179, 30, 0.02));
-        }
-        .crew-table tbody td {
-            padding: 16px 12px;
-            text-align: center;
-            vertical-align: middle;
-            color: var(--slate-700);
-            font-weight: 600;
-            font-size: 13px;
-        }
-        .crew-table tbody td:first-child {
-            border-right: 4px solid var(--gold-2);
-            font-weight: 800;
-        }
-        .crew-table tbody tr:nth-child(3n+1) td:first-child { border-right-color: var(--gold-2); }
-        .crew-table tbody tr:nth-child(3n+2) td:first-child { border-right-color: var(--blue); }
-        .crew-table tbody tr:nth-child(3n) td:first-child { border-right-color: var(--emerald); }
-        
-        .crew-name-cell {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-align: right;
-            padding-right: 8px;
-        }
-        .crew-avatar {
-            width: 44px; height: 44px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--gold-2), var(--gold-3));
-            color: var(--navy-1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: 900;
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px var(--gold-glow);
-        }
-        .crew-name-info { min-width: 0; }
-        .crew-name-full {
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--navy-1);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .crew-name-rank {
-            font-size: 11px;
-            color: var(--slate-500);
-            font-weight: 700;
-            margin-top: 2px;
-        }
-        
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 800;
-            white-space: nowrap;
-        }
-        .badge-gold {
-            background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
-            color: var(--navy-1);
-        }
-        .badge-blue {
-            background: linear-gradient(135deg, var(--blue-light), var(--blue));
-            color: white;
-        }
-        .badge-emerald {
-            background: linear-gradient(135deg, var(--emerald-light), var(--emerald));
-            color: white;
-        }
-        .badge-slate {
-            background: var(--slate-100);
-            color: var(--slate-600);
-            border: 1px solid var(--slate-200);
-        }
-        .badge-empty {
-            background: var(--slate-50);
-            color: var(--slate-400);
-            border: 1px dashed var(--slate-300);
-        }
-        
-        .action-btns {
-            display: flex;
-            gap: 6px;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        /* ═══════════════════════════════════════════════════════ */
-        /* 📭 Empty & Loading States */
-        /* ═══════════════════════════════════════════════════════ */
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            color: var(--slate-500);
-        }
-        .empty-state i {
-            font-size: 72px;
-            color: var(--gold-2);
-            opacity: 0.25;
-            margin-bottom: 20px;
-            display: block;
-        }
-        .empty-state h3 {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--slate-700);
-            margin-bottom: 8px;
-        }
-        .empty-state p {
-            font-size: 13px;
-            color: var(--slate-500);
-        }
-        
-        .loading-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--slate-500);
-        }
-        .spinner {
-            width: 48px; height: 48px;
-            border: 4px solid var(--slate-200);
-            border-top-color: var(--gold-2);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        /* ═══════════════════════════════════════════════════════ */
-        /* 🔔 Toast */
-        /* ═══════════════════════════════════════════════════════ */
-        .toast {
-            position: fixed;
-            bottom: 28px;
-            left: 28px;
-            padding: 16px 24px;
-            border-radius: var(--radius);
-            font-size: 13px;
-            font-weight: 800;
-            color: white;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideIn 0.4s var(--bounce);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(20px);
-        }
-        .toast.success { background: linear-gradient(135deg, var(--emerald), #059669); }
-        .toast.error { background: linear-gradient(135deg, var(--red), #b91c1c); }
-        .toast.info { background: linear-gradient(135deg, var(--blue), #1d4ed8); }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        
-        /* ═══════════════════════════════════════════════════════ */
-        /* 📱 Responsive */
-        /* ═══════════════════════════════════════════════════════ */
-        @media (max-width: 768px) {
-            body { padding: 12px; }
-            .header { padding: 20px 20px; }
-            .header-text h1 { font-size: 20px; }
-            .header-icon { width: 52px; height: 52px; font-size: 22px; }
-            .stat-value { font-size: 26px; }
-            .card { padding: 18px 20px; }
-            .crew-table { font-size: 12px; }
-            .crew-table thead th { padding: 12px 8px; font-size: 10px; }
-            .crew-table tbody td { padding: 12px 8px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طاقم الوسيلة — الأسطول البحري</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --gold-1: #f7d774;
+    --gold-2: #e6b31e;
+    --gold-3: #b8860b;
+    --gold-glow: rgba(230, 179, 30, 0.35);
+    --navy-1: #0f2744;
+    --navy-2: #1e3a5f;
+    --emerald: #10b981;
+    --emerald-light: #6ee7b7;
+    --red: #ef4444;
+    --red-light: #fca5a5;
+    --blue: #3b82f6;
+    --blue-light: #93c5fd;
+    --purple: #8b5cf6;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --font: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+}
+
+body {
+    font-family: var(--font);
+    background: linear-gradient(135deg, #e8eef5 0%, #f1f5f9 50%, #e8eef5 100%);
+    color: var(--slate-900);
+    min-height: 100vh;
+    direction: rtl;
+    padding: 20px;
+}
+
+.container { max-width: 1600px; margin: 0 auto; }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 🏛️ HEADER */
+/* ═══════════════════════════════════════════════════════════ */
+.header {
+    background: linear-gradient(135deg, var(--navy-1) 0%, var(--navy-2) 50%, var(--navy-1) 100%);
+    border-radius: var(--radius);
+    padding: 24px 32px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    box-shadow:
+        0 20px 60px rgba(15, 39, 68, 0.3),
+        0 0 0 1px rgba(201, 162, 39, 0.2) inset;
+    position: relative;
+    overflow: hidden;
+}
+.header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--gold-2) 0%, var(--gold-1) 50%, var(--gold-2) 100%);
+}
+.header::after {
+    content: '';
+    position: absolute;
+    top: -50%; right: -20%;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(230, 179, 30, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    position: relative;
+    z-index: 2;
+}
+.header-icon {
+    width: 64px; height: 64px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    color: var(--navy-1);
+    box-shadow:
+        0 8px 32px var(--gold-glow),
+        0 0 0 4px rgba(230, 179, 30, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    flex-shrink: 0;
+}
+.header-text h1 {
+    font-size: 26px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+.header-text p {
+    font-size: 13px;
+    color: var(--slate-400);
+    font-weight: 600;
+}
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 10;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 🎯 BUTTONS */
+/* ═══════════════════════════════════════════════════════════ */
+.btn {
+    padding: 12px 22px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+.btn-print {
+    background: linear-gradient(135deg, var(--gold-1), var(--gold-2), var(--gold-3));
+    color: var(--navy-1);
+    box-shadow: 0 8px 24px var(--gold-glow);
+}
+.btn-print:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 14px 40px var(--gold-glow);
+}
+.btn-primary {
+    background: linear-gradient(135deg, var(--emerald), #059669);
+    color: white;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+}
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 14px 40px rgba(16, 185, 129, 0.5);
+}
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--slate-200);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+.btn-outline {
+    background: var(--slate-100);
+    color: var(--slate-700);
+    border: 1px solid var(--slate-300);
+}
+.btn-outline:hover {
+    background: var(--slate-200);
+    transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 📊 STATS */
+/* ═══════════════════════════════════════════════════════════ */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.stat-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    box-shadow: 0 4px 20px rgba(15, 39, 68, 0.08);
+    transition: all var(--transition);
+    border: 1px solid var(--slate-200);
+    position: relative;
+    overflow: hidden;
+}
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px;
+    height: 100%;
+    transition: width var(--transition);
+}
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(15, 39, 68, 0.15);
+}
+.stat-card:hover::before { width: 8px; }
+.stat-card.vessel::before { background: var(--gold-2); }
+.stat-card.rank::before { background: var(--blue); }
+.stat-card.phone::before { background: var(--emerald); }
+.stat-card.recent::before { background: var(--purple); }
+.stat-card.user::before { background: var(--gold-3); }
+
+.stat-icon {
+    width: 54px; height: 54px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+.stat-card.vessel .stat-icon {
+    background: linear-gradient(135deg, rgba(230, 179, 30, 0.15), rgba(230, 179, 30, 0.08));
+    color: var(--gold-2);
+}
+.stat-card.rank .stat-icon {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08));
+    color: var(--blue);
+}
+.stat-card.phone .stat-icon {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
+    color: var(--emerald);
+}
+.stat-card.recent .stat-icon {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.08));
+    color: var(--purple);
+}
+.stat-card.user .stat-icon {
+    background: linear-gradient(135deg, rgba(184, 134, 11, 0.15), rgba(184, 134, 11, 0.08));
+    color: var(--gold-3);
+}
+.stat-content { flex: 1; min-width: 0; }
+.stat-value {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--navy-1);
+    line-height: 1.15;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.stat-value.name {
+    font-size: 17px;
+    line-height: 1.3;
+}
+.stat-value.small {
+    font-size: 16px;
+    line-height: 1.3;
+}
+.stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--slate-500);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 📝 FORM CARD */
+/* ═══════════════════════════════════════════════════════════ */
+.card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(15, 39, 68, 0.08);
+    border: 1px solid var(--slate-200);
+}
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--slate-100);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.card-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--navy-1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.card-title i {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
+    color: var(--navy-1);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+}
+.card-toggle {
+    background: transparent;
+    border: 1px solid var(--slate-300);
+    color: var(--slate-600);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.card-toggle:hover {
+    background: var(--slate-100);
+    border-color: var(--slate-400);
+}
+.card-toggle i { transition: transform var(--transition); }
+
+.form-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    opacity: 1;
+}
+.form-body.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+}
+.form-group { display: flex; flex-direction: column; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--slate-600);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.form-group label .req { color: var(--red); }
+.form-control {
+    padding: 12px 16px;
+    background: var(--slate-50);
+    border: 2px solid var(--slate-200);
+    border-radius: var(--radius-sm);
+    color: var(--slate-900);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    transition: all var(--transition);
+}
+.form-control:focus {
+    outline: none;
+    border-color: var(--gold-2);
+    background: white;
+    box-shadow: 0 0 0 4px var(--gold-glow);
+}
+.form-control::placeholder { color: var(--slate-400); font-weight: 500; }
+textarea.form-control { resize: vertical; min-height: 70px; }
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 🔍 SEARCH BAR */
+/* ═══════════════════════════════════════════════════════════ */
+.search-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: white;
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(15, 39, 68, 0.08);
+    border: 1px solid var(--slate-200);
+    flex-wrap: wrap;
+}
+.search-input-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+}
+.search-input-wrap i {
+    position: absolute;
+    left: 16px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--slate-400);
+    font-size: 14px;
+    pointer-events: none;
+}
+.search-input-wrap input {
+    width: 100%;
+    padding: 12px 16px 12px 44px;
+    background: var(--slate-50);
+    border: 2px solid var(--slate-200);
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--slate-900);
+    transition: all var(--transition);
+}
+.search-input-wrap input:focus {
+    outline: none;
+    border-color: var(--gold-2);
+    background: white;
+    box-shadow: 0 0 0 4px var(--gold-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 📋 TABLE */
+/* ═══════════════════════════════════════════════════════════ */
+.table-card {
+    background: white;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(15, 39, 68, 0.08);
+    border: 1px solid var(--slate-200);
+    margin-bottom: 20px;
+}
+.table-card-header {
+    padding: 20px 28px;
+    background: linear-gradient(135deg, var(--navy-1), var(--navy-2));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.table-card-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--gold-1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.table-card-title i { font-size: 16px; }
+.table-card-count {
+    font-size: 12px;
+    font-weight: 800;
+    background: var(--gold-2);
+    color: var(--navy-1);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+.crew-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    min-width: 1200px;
+}
+.crew-table thead {
+    background: linear-gradient(135deg, var(--navy-1), var(--navy-2));
+}
+.crew-table thead th {
+    padding: 16px 12px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--gold-1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    border-bottom: 3px solid var(--gold-2);
+    white-space: nowrap;
+}
+.crew-table thead th i {
+    margin-left: 6px;
+    font-size: 12px;
+    color: var(--gold-2);
+}
+.crew-table tbody tr {
+    transition: all var(--transition);
+    background: white;
+    border-bottom: 1px solid var(--slate-100);
+}
+.crew-table tbody tr:hover {
+    background: linear-gradient(90deg, rgba(230, 179, 30, 0.08), rgba(230, 179, 30, 0.02));
+    box-shadow: 0 2px 12px rgba(230, 179, 30, 0.15);
+}
+.crew-table tbody tr:nth-child(even) {
+    background: var(--slate-50);
+}
+.crew-table tbody tr:nth-child(even):hover {
+    background: linear-gradient(90deg, rgba(230, 179, 30, 0.08), rgba(230, 179, 30, 0.02));
+}
+.crew-table tbody td {
+    padding: 14px 10px;
+    text-align: center;
+    vertical-align: middle;
+    color: var(--slate-700);
+    font-weight: 600;
+    font-size: 13px;
+}
+.crew-table tbody td:first-child {
+    border-right: 4px solid var(--gold-2);
+    text-align: right;
+    padding-right: 12px;
+}
+
+.crew-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.crew-avatar {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--gold-2), var(--gold-3));
+    color: var(--navy-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 900;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px var(--gold-glow);
+}
+.crew-name-info { min-width: 0; }
+.crew-name-full {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--navy-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.crew-name-rank {
+    font-size: 11px;
+    color: var(--slate-500);
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.badge-gold {
+    background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
+    color: var(--navy-1);
+}
+.badge-blue {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--blue);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.badge-emerald {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--emerald);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.badge-slate {
+    background: var(--slate-100);
+    color: var(--slate-600);
+    border: 1px solid var(--slate-200);
+}
+.badge-empty {
+    background: var(--slate-50);
+    color: var(--slate-400);
+    border: 1px dashed var(--slate-300);
+}
+
+.action-btns {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+}
+.btn-sm-edit, .btn-sm-delete {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+    border: none;
+    flex-shrink: 0;
+}
+.btn-sm-edit {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--blue);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.btn-sm-edit:hover {
+    background: linear-gradient(135deg, var(--blue), #1d4ed8);
+    color: white;
+    transform: translateY(-2px) scale(1.05);
+}
+.btn-sm-delete {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--red);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.btn-sm-delete:hover {
+    background: linear-gradient(135deg, var(--red), #b91c1c);
+    color: white;
+    transform: translateY(-2px) scale(1.05);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 📭 STATES */
+/* ═══════════════════════════════════════════════════════════ */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--slate-500);
+}
+.empty-state i {
+    font-size: 72px;
+    color: var(--gold-2);
+    opacity: 0.25;
+    margin-bottom: 20px;
+    display: block;
+}
+.empty-state h3 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--slate-700);
+    margin-bottom: 8px;
+}
+.empty-state p {
+    font-size: 13px;
+    color: var(--slate-500);
+}
+.loading-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--slate-500);
+}
+.spinner {
+    width: 48px; height: 48px;
+    border: 4px solid var(--slate-200);
+    border-top-color: var(--gold-2);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 🔔 TOAST */
+/* ═══════════════════════════════════════════════════════════ */
+.toast {
+    position: fixed;
+    bottom: 28px;
+    left: 28px;
+    padding: 16px 24px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 800;
+    color: white;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.4s var(--bounce);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+}
+.toast.success { background: linear-gradient(135deg, var(--emerald), #059669); }
+.toast.error { background: linear-gradient(135deg, var(--red), #b91c1c); }
+.toast.info { background: linear-gradient(135deg, var(--blue), #1d4ed8); }
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 📱 RESPONSIVE */
+/* ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    body { padding: 12px; }
+    .header { padding: 20px; }
+    .header-text h1 { font-size: 20px; }
+    .header-icon { width: 52px; height: 52px; font-size: 22px; }
+    .stat-value { font-size: 22px; }
+    .stat-value.name { font-size: 15px; }
+    .card { padding: 18px 20px; }
+    .crew-table { font-size: 12px; }
+    .crew-table thead th { padding: 12px 8px; font-size: 10px; }
+    .crew-table tbody td { padding: 12px 8px; }
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <!-- HEADER -->
-        <div class="header">
-            <div class="header-left">
-                <div class="header-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="header-text">
-                    <h1>طاقم الوسيلة</h1>
-                    <p id="vesselName">جاري التحميل...</p>
-                </div>
+<div class="container">
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-users"></i>
             </div>
-            <div class="header-actions">
-                <button class="btn btn-print" onclick="printCrew()">
-                    <i class="fas fa-print"></i>
-                    <span>طباعة</span>
-                </button>
-                <button class="btn btn-secondary" onclick="window.close()">
-                    <i class="fas fa-times"></i>
-                    <span>إغلاق</span>
-                </button>
+            <div class="header-text">
+                <h1>طاقم الوسيلة</h1>
+                <p id="vesselName">جاري التحميل...</p>
             </div>
         </div>
+        <div class="header-actions">
+            <button class="btn btn-print" onclick="printCrew()">
+                <i class="fas fa-print"></i>
+                <span>طباعة</span>
+            </button>
+            <button class="btn btn-secondary" onclick="window.close()">
+                <i class="fas fa-arrow-right"></i>
+                <span>رجوع</span>
+            </button>
+        </div>
+    </div>
 
-        <!-- STATS -->
-        <div class="stats-grid">
-            <div class="stat-card total">
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-content">
-                    <div class="stat-value" id="statTotal">0</div>
-                    <div class="stat-label">إجمالي الأفراد</div>
-                </div>
-            </div>
-            <div class="stat-card rank">
-                <div class="stat-icon"><i class="fas fa-medal"></i></div>
-                <div class="stat-content">
-                    <div class="stat-value" id="statRanks">0</div>
-                    <div class="stat-label">عدد الرتب</div>
-                </div>
-            </div>
-            <div class="stat-card phone">
-                <div class="stat-icon"><i class="fas fa-phone"></i></div>
-                <div class="stat-content">
-                    <div class="stat-value" id="statPhones">0</div>
-                    <div class="stat-label">أرقام هواتف</div>
-                </div>
-            </div>
-            <div class="stat-card recent">
-                <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                <div class="stat-content">
-                    <div class="stat-value" id="statRecent">0</div>
-                    <div class="stat-label">أضيفوا مؤخراً</div>
-                </div>
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card vessel">
+            <div class="stat-icon"><i class="fas fa-ship"></i></div>
+            <div class="stat-content">
+                <div class="stat-value name" id="statVesselName">—</div>
+                <div class="stat-label">اسم الوسيلة</div>
             </div>
         </div>
-
-        <!-- ADD FORM -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-user-plus"></i>
-                    إضافة فرد جديد
-                </div>
-                <button class="card-toggle" id="formToggle" onclick="toggleForm()">
-                    <i class="fas fa-chevron-down"></i>
-                    <span>إخفاء</span>
-                </button>
-            </div>
-            <div class="form-body" id="formBody">
-                <div class="form-group">
-                    <label>الاسم <span class="req">*</span></label>
-                    <input type="text" id="fFirstName" class="form-control" placeholder="الاسم">
-                </div>
-                <div class="form-group">
-                    <label>اللقب <span class="req">*</span></label>
-                    <input type="text" id="fLastName" class="form-control" placeholder="اللقب">
-                </div>
-                <div class="form-group">
-                    <label>الرتبة</label>
-                    <input type="text" id="fRank" class="form-control" placeholder="الرتبة">
-                </div>
-                <div class="form-group">
-                    <label>الخطة</label>
-                    <input type="text" id="fJobTitle" class="form-control" placeholder="الخطة">
-                </div>
-                <div class="form-group">
-                    <label>رقم الهاتف</label>
-                    <input type="tel" id="fPhone" class="form-control" placeholder="الهاتف">
-                </div>
-                <div class="form-group">
-                    <label>البطاقة الوطنية</label>
-                    <input type="text" id="fCin" class="form-control" placeholder="رقم البطاقة">
-                </div>
-                <div class="form-group">
-                    <label>مكان الولادة</label>
-                    <input type="text" id="fBirthPlace" class="form-control" placeholder="مكان الولادة">
-                </div>
-                <div class="form-group">
-                    <label>تاريخ الانتداب</label>
-                    <input type="date" id="fHireDate" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>المؤهلات</label>
-                    <input type="text" id="fQualifications" class="form-control" placeholder="المؤهلات">
-                </div>
-                <div class="form-group">
-                    <label>الحالة العائلية</label>
-                    <input type="text" id="fFamilyStatus" class="form-control" placeholder="الحالة العائلية">
-                </div>
-                <div class="form-group full">
-                    <label>ملاحظات</label>
-                    <textarea id="fNotes" class="form-control" placeholder="ملاحظات إضافية..."></textarea>
-                </div>
-                <div class="form-actions">
-                    <button class="btn btn-primary" id="addBtn" onclick="addCrewMember()">
-                        <i class="fas fa-plus"></i>
-                        <span>إضافة الفرد</span>
-                    </button>
-                    <button class="btn btn-secondary" style="background: var(--slate-100); color: var(--slate-700); border-color: var(--slate-300);" onclick="clearForm()">
-                        <i class="fas fa-eraser"></i>
-                        <span>مسح</span>
-                    </button>
-                </div>
+        <div class="stat-card rank">
+            <div class="stat-icon"><i class="fas fa-medal"></i></div>
+            <div class="stat-content">
+                <div class="stat-value" id="statRanks">0</div>
+                <div class="stat-label">عدد الرتب</div>
             </div>
         </div>
-
-        <!-- SEARCH -->
-        <div class="search-bar">
-            <div class="search-input-wrap">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="بحث في الطاقم..." oninput="renderCrewList()">
+        <div class="stat-card phone">
+            <div class="stat-icon"><i class="fas fa-phone"></i></div>
+            <div class="stat-content">
+                <div class="stat-value" id="statPhones">0</div>
+                <div class="stat-label">أرقام هواتف</div>
             </div>
         </div>
-
-        <!-- TABLE -->
-        <div class="table-card">
-            <div class="table-card-header">
-                <div class="table-card-title">
-                    <i class="fas fa-list"></i>
-                    قائمة الأفراد
-                    <span class="table-card-count" id="tableCount">0</span>
-                </div>
+        <div class="stat-card recent">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-content">
+                <div class="stat-value" id="statRecent">0</div>
+                <div class="stat-label">أضيفوا مؤخراً</div>
             </div>
-            <div class="table-wrapper">
-                <table class="crew-table">
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-user"></i> الاسم واللقب</th>
-                            <th><i class="fas fa-medal"></i> الرتبة</th>
-                            <th><i class="fas fa-briefcase"></i> الخطة</th>
-                            <th><i class="fas fa-phone"></i> الهاتف</th>
-                            <th><i class="fas fa-id-card"></i> البطاقة</th>
-                            <th><i class="fas fa-map-marker-alt"></i> مكان الولادة</th>
-                            <th><i class="fas fa-calendar"></i> تاريخ الانتداب</th>
-                            <th><i class="fas fa-graduation-cap"></i> المؤهلات</th>
-                            <th><i class="fas fa-heart"></i> الحالة العائلية</th>
-                            <th><i class="fas fa-cog"></i> إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="crewTableBody">
-                        <tr>
-                            <td colspan="10">
-                                <div class="loading-state">
-                                    <div class="spinner"></div>
-                                    <p>جاري التحميل...</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        </div>
+        <div class="stat-card user">
+            <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
+            <div class="stat-content">
+                <div class="stat-value small" id="statCurrentUser">—</div>
+                <div class="stat-label">المسؤول</div>
             </div>
         </div>
     </div>
 
-    <script>
-    (function() {
-        'use strict';
+    <!-- ADD FORM -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-user-plus"></i>
+                <span id="formTitle">إضافة فرد جديد</span>
+            </div>
+            <button class="card-toggle" id="formToggle" onclick="toggleForm()">
+                <i class="fas fa-chevron-down"></i>
+                <span>إخفاء</span>
+            </button>
+        </div>
+        <div class="form-body" id="formBody">
+            <div class="form-group">
+                <label>الاسم <span class="req">*</span></label>
+                <input type="text" id="fFirstName" class="form-control" placeholder="الاسم">
+            </div>
+            <div class="form-group">
+                <label>اللقب <span class="req">*</span></label>
+                <input type="text" id="fLastName" class="form-control" placeholder="اللقب">
+            </div>
+            <div class="form-group">
+                <label>الرتبة</label>
+                <input type="text" id="fRank" class="form-control" placeholder="الرتبة">
+            </div>
+            <div class="form-group">
+                <label>الخطة</label>
+                <input type="text" id="fJobTitle" class="form-control" placeholder="الخطة">
+            </div>
+            <div class="form-group">
+                <label>رقم الهاتف</label>
+                <input type="tel" id="fPhone" class="form-control" placeholder="الهاتف">
+            </div>
+            <div class="form-group">
+                <label>البطاقة الوطنية</label>
+                <input type="text" id="fCin" class="form-control" placeholder="رقم البطاقة">
+            </div>
+            <div class="form-group">
+                <label>مكان الولادة</label>
+                <input type="text" id="fBirthPlace" class="form-control" placeholder="مكان الولادة">
+            </div>
+            <div class="form-group">
+                <label>تاريخ الانتداب</label>
+                <input type="date" id="fHireDate" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>المؤهلات</label>
+                <input type="text" id="fQualifications" class="form-control" placeholder="المؤهلات">
+            </div>
+            <div class="form-group">
+                <label>الحالة العائلية</label>
+                <input type="text" id="fFamilyStatus" class="form-control" placeholder="الحالة العائلية">
+            </div>
+            <div class="form-group full">
+                <label>ملاحظات</label>
+                <textarea id="fNotes" class="form-control" placeholder="ملاحظات إضافية..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" id="addBtn" onclick="addCrewMember()">
+                    <i class="fas fa-plus"></i>
+                    <span>إضافة الفرد</span>
+                </button>
+                <button class="btn btn-outline" id="cancelBtn" style="display:none;" onclick="cancelEdit()">
+                    <i class="fas fa-times"></i>
+                    <span>إلغاء التعديل</span>
+                </button>
+                <button class="btn btn-outline" onclick="clearForm()">
+                    <i class="fas fa-eraser"></i>
+                    <span>مسح</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
-        // ============ State ============
-        var vesselId = null;
-        var vesselName = '';
-        var allCrew = [];
+    <!-- SEARCH -->
+    <div class="search-bar">
+        <div class="search-input-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="بحث في الطاقم..." oninput="renderCrewList()">
+        </div>
+    </div>
 
-        // ============ Helpers ============
-        function $(s) { return document.querySelector(s); }
-        function getToken() {
-            return localStorage.getItem('marine_token') ||
-                   localStorage.getItem('token') ||
-                   localStorage.getItem('authToken') ||
-                   localStorage.getItem('accessToken') || '';
+    <!-- TABLE -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <div class="table-card-title">
+                <i class="fas fa-list"></i>
+                قائمة الأفراد
+                <span class="table-card-count" id="tableCount">0</span>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table class="crew-table">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-user"></i> الاسم واللقب</th>
+                        <th><i class="fas fa-medal"></i> الرتبة</th>
+                        <th><i class="fas fa-briefcase"></i> الخطة</th>
+                        <th><i class="fas fa-phone"></i> الهاتف</th>
+                        <th><i class="fas fa-id-card"></i> البطاقة</th>
+                        <th><i class="fas fa-map-marker-alt"></i> مكان الولادة</th>
+                        <th><i class="fas fa-calendar"></i> تاريخ الانتداب</th>
+                        <th><i class="fas fa-graduation-cap"></i> المؤهلات</th>
+                        <th><i class="fas fa-heart"></i> الحالة العائلية</th>
+                        <th><i class="fas fa-user-tie"></i> المسؤول</th>
+                        <th><i class="fas fa-cog"></i> إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="crewTableBody">
+                    <tr>
+                        <td colspan="11">
+                            <div class="loading-state">
+                                <div class="spinner"></div>
+                                <p>جاري التحميل...</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // ═══════════════════════════════════════════════════════════
+    // 🔧 State
+    // ═══════════════════════════════════════════════════════════
+    var vesselId = null;
+    var vesselName = '';
+    var allCrew = [];
+    var editingId = null;
+
+    // ═══════════════════════════════════════════════════════════
+    // 🛠️ Helpers
+    // ═══════════════════════════════════════════════════════════
+    function $(s) { return document.querySelector(s); }
+    function getToken() {
+        return localStorage.getItem('marine_token') ||
+               localStorage.getItem('token') ||
+               localStorage.getItem('authToken') ||
+               localStorage.getItem('accessToken') || '';
+    }
+    function getCsrf() {
+        try {
+            var m = document.cookie.match(/marine_csrf=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : '';
+        } catch(e) { return ''; }
+    }
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/[&<>"']/g, function(m) {
+            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+        });
+    }
+    function toast(msg, type) {
+        type = type || 'info';
+        var t = document.createElement('div');
+        t.className = 'toast ' + type;
+        var icons = { success: '✅', error: '❌', info: 'ℹ️' };
+        t.innerHTML = '<span style="font-size:18px;">' + (icons[type] || 'ℹ️') + '</span><span>' + escapeHtml(msg) + '</span>';
+        document.body.appendChild(t);
+        setTimeout(function() { if (t.parentNode) t.remove(); }, 3500);
+    }
+    function formatDate(d) {
+        if (!d) return '—';
+        try {
+            var date = new Date(d);
+            if (isNaN(date.getTime())) return '—';
+            return String(date.getDate()).padStart(2, '0') + '/' +
+                   String(date.getMonth() + 1).padStart(2, '0') + '/' +
+                   date.getFullYear();
+        } catch (e) { return '—'; }
+    }
+    function getInitials(m) {
+        var f = (m.firstName || '')[0] || '';
+        var l = (m.lastName || '')[0] || '';
+        return (f + l).toUpperCase() || '👤';
+    }
+    function getCurrentUser() {
+        if (window.currentUser) return window.currentUser;
+        try {
+            return JSON.parse(localStorage.getItem('marine_user') || 'null');
+        } catch(e) { return null; }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🚀 Init
+    // ═══════════════════════════════════════════════════════════
+    function init() {
+        var token = getToken();
+        if (!token) {
+            document.body.innerHTML = '<div style="text-align:center;padding:80px;color:#ef4444;font-size:20px;font-family:Cairo,sans-serif;">⚠️ يجب تسجيل الدخول أولاً</div>';
+            return;
         }
-        function getCsrf() {
-            try {
-                var m = document.cookie.match(/marine_csrf=([^;]+)/);
-                return m ? decodeURIComponent(m[1]) : '';
-            } catch(e) { return ''; }
+
+        var params = new URLSearchParams(window.location.search);
+        vesselId = params.get('id');
+        if (!vesselId) {
+            document.body.innerHTML = '<div style="text-align:center;padding:80px;color:#ef4444;font-size:20px;font-family:Cairo,sans-serif;">⚠️ لم يتم تحديد المركب</div>';
+            return;
         }
-        function escapeHtml(s) {
-            if (s == null) return '';
-            return String(s).replace(/[&<>"']/g, function(m) {
-                return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+
+        loadVesselInfo();
+        loadCrew();
+    }
+
+    async function loadVesselInfo() {
+        try {
+            var res = await fetch('/api/vessels', {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
             });
-        }
-        function toast(msg, type) {
-            type = type || 'info';
-            var t = document.createElement('div');
-            t.className = 'toast ' + type;
-            var icons = { success: '✅', error: '❌', info: 'ℹ️' };
-            t.innerHTML = '<span style="font-size:18px;">' + (icons[type] || 'ℹ️') + '</span><span>' + escapeHtml(msg) + '</span>';
-            document.body.appendChild(t);
-            setTimeout(function() { if (t.parentNode) t.remove(); }, 3500);
-        }
-        function formatDate(d) {
-            if (!d) return '—';
-            try {
-                var date = new Date(d);
-                if (isNaN(date.getTime())) return '—';
-                return String(date.getDate()).padStart(2, '0') + '/' +
-                       String(date.getMonth() + 1).padStart(2, '0') + '/' +
-                       date.getFullYear();
-            } catch (e) { return '—'; }
-        }
-        function getInitials(m) {
-            var f = (m.firstName || '')[0] || '';
-            var l = (m.lastName || '')[0] || '';
-            return (f + l).toUpperCase() || '👤';
-        }
-
-        // ============ Init ============
-        function init() {
-            var token = getToken();
-            if (!token) {
-                document.body.innerHTML = '<div style="text-align:center;padding:80px;color:#ef4444;font-size:20px;font-family:Cairo,sans-serif;">⚠️ يجب تسجيل الدخول أولاً</div>';
-                return;
-            }
-
-            var params = new URLSearchParams(window.location.search);
-            vesselId = params.get('id');
-            if (!vesselId) {
-                document.body.innerHTML = '<div style="text-align:center;padding:80px;color:#ef4444;font-size:20px;font-family:Cairo,sans-serif;">⚠️ لم يتم تحديد المركب</div>';
-                return;
-            }
-
-            loadVesselInfo();
-            loadCrew();
-        }
-
-        async function loadVesselInfo() {
-            try {
-                var res = await fetch('/api/vessels', {
-                    headers: { 'Authorization': 'Bearer ' + getToken() }
-                });
-                var vessels = await res.json();
-                var v = vessels.find(function(x) {
-                    return String(x._id || x.id) === String(vesselId);
-                });
-                if (v) {
-                    vesselName = v.name || v.num || 'مركب';
-                    var label = vesselName;
-                    if (v.num) label += ' • رقم: ' + v.num;
-                    if (v.region) label += ' • ' + v.region;
-                    $('#vesselName').textContent = label;
-                    document.title = 'طاقم: ' + vesselName;
-                } else {
-                    $('#vesselName').textContent = 'المركب غير موجود';
-                }
-            } catch (e) {
-                $('#vesselName').textContent = 'خطأ في تحميل بيانات المركب';
-            }
-        }
-
-        // ============ Load ============
-        async function loadCrew() {
-            var tbody = $('#crewTableBody');
-            tbody.innerHTML = '<tr><td colspan="10"><div class="loading-state"><div class="spinner"></div><p>جاري التحميل...</p></div></td></tr>';
-            try {
-                var res = await fetch('/api/vessels/' + encodeURIComponent(vesselId) + '/crew', {
-                    headers: { 'Authorization': 'Bearer ' + getToken() }
-                });
-                var data = await res.json();
-                allCrew = (data && data.crew) || [];
-                updateStats();
-                renderCrewList();
-            } catch (e) {
-                tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i><h3>فشل التحميل</h3><p>' + escapeHtml(e.message) + '</p></div></td></tr>';
-            }
-        }
-
-        function updateStats() {
-            var ranks = new Set();
-            var phones = 0;
-            var recent = 0;
-            var now = Date.now();
-            allCrew.forEach(function(m) {
-                if (m.rank) ranks.add(m.rank);
-                if (m.phone) phones++;
-                if (m.createdAt) {
-                    var age = now - new Date(m.createdAt).getTime();
-                    if (age < 7 * 24 * 60 * 60 * 1000) recent++;
-                }
+            var vessels = await res.json();
+            var v = vessels.find(function(x) {
+                return String(x._id || x.id) === String(vesselId);
             });
-            $('#statTotal').textContent = allCrew.length;
-            $('#statRanks').textContent = ranks.size;
-            $('#statPhones').textContent = phones;
-            $('#statRecent').textContent = recent;
-        }
-
-        // ============ Render ============
-        function renderCrewList() {
-            var tbody = $('#crewTableBody');
-            var search = ($('#searchInput').value || '').toLowerCase().trim();
-            
-            var filtered = allCrew;
-            if (search) {
-                filtered = allCrew.filter(function(m) {
-                    var text = [m.firstName, m.lastName, m.rank, m.jobTitle,
-                                m.phone, m.cin, m.birthPlace, m.qualifications,
-                                m.familyStatus, m.notes]
-                                .filter(Boolean).join(' ').toLowerCase();
-                    return text.indexOf(search) !== -1;
-                });
-            }
-
-            $('#tableCount').textContent = filtered.length;
-
-            if (!filtered.length) {
-                tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><i class="fas fa-users"></i><h3>' + (search ? 'لا نتائج' : 'لا يوجد أفراد في الطاقم بعد') + '</h3><p>' + (search ? 'جرب كلمة بحث أخرى' : 'استخدم النموذج أعلاه لإضافة أول فرد') + '</p></div></td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = filtered.map(function(m) {
-                var fullName = ((m.firstName || '') + ' ' + (m.lastName || '')).trim();
-                var initials = getInitials(m);
-                return '<tr data-crew-id="' + escapeHtml(m.id) + '">' +
-                    '<td>' +
-                        '<div class="crew-name-cell">' +
-                            '<div class="crew-avatar">' + escapeHtml(initials) + '</div>' +
-                            '<div class="crew-name-info">' +
-                                '<div class="crew-name-full">' + escapeHtml(fullName || '—') + '</div>' +
-                                (m.rank ? '<div class="crew-name-rank">' + escapeHtml(m.rank) + '</div>' : '') +
-                            '</div>' +
-                        '</div>' +
-                    '</td>' +
-                    '<td>' + (m.rank ? '<span class="badge badge-gold">' + escapeHtml(m.rank) + '</span>' : '<span class="badge badge-empty">—</span>') + '</td>' +
-                    '<td>' + (m.jobTitle ? '<span class="badge badge-blue">' + escapeHtml(m.jobTitle) + '</span>' : '<span class="badge badge-empty">—</span>') + '</td>' +
-                    '<td>' + (m.phone ? '<span class="badge badge-slate"><i class="fas fa-phone" style="font-size:10px;"></i> ' + escapeHtml(m.phone) + '</span>' : '<span class="badge badge-empty">—</span>') + '</td>' +
-                    '<td>' + (m.cin ? escapeHtml(m.cin) : '<span class="badge badge-empty">—</span>') + '</td>' +
-                    '<td>' + (m.birthPlace ? escapeHtml(m.birthPlace) : '<span class="badge badge-empty">—</span>') + '</td>' +
-                    '<td>' + (m.hireDate ? escapeHtml(formatDate(m.hireDate)) : '<span class="badge badge-empty">—</span>') + '</td>' +
-                    '<td>' + (m.qualifications ? escapeHtml(m.qualifications) : '<span class="badge badge-empty">—</span>') + '</td>' +
-                    '<td>' + (m.familyStatus ? escapeHtml(m.familyStatus) : '<span class="badge badge-empty">—</span>') + '</td>' +
-                    '<td>' +
-                        '<div class="action-btns">' +
-                            '<button class="btn btn-danger" data-delete-id="' + escapeHtml(m.id) + '" title="حذف">' +
-                                '<i class="fas fa-trash"></i>' +
-                            '</button>' +
-                        '</div>' +
-                    '</td>' +
-                '</tr>';
-            }).join('');
-
-            tbody.querySelectorAll('[data-delete-id]').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    deleteCrewMember(this.getAttribute('data-delete-id'));
-                });
-            });
-        }
-
-        // ============ Add ============
-        window.addCrewMember = async function() {
-            var firstName = ($('#fFirstName').value || '').trim();
-            var lastName  = ($('#fLastName').value || '').trim();
-            if (!firstName) { toast('الاسم مطلوب', 'error'); $('#fFirstName').focus(); return; }
-            if (!lastName)  { toast('اللقب مطلوب', 'error'); $('#fLastName').focus(); return; }
-
-            var data = {
-                firstName: firstName,
-                lastName: lastName,
-                rank: ($('#fRank').value || '').trim(),
-                jobTitle: ($('#fJobTitle').value || '').trim(),
-                phone: ($('#fPhone').value || '').trim(),
-                cin: ($('#fCin').value || '').trim(),
-                birthPlace: ($('#fBirthPlace').value || '').trim(),
-                hireDate: $('#fHireDate').value || null,
-                qualifications: ($('#fQualifications').value || '').trim(),
-                familyStatus: ($('#fFamilyStatus').value || '').trim(),
-                notes: ($('#fNotes').value || '').trim()
-            };
-
-            var btn = $('#addBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
-
-            try {
-                var res = await fetch('/api/vessels/' + encodeURIComponent(vesselId) + '/crew', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + getToken(),
-                        'X-CSRF-Token': getCsrf()
-                    },
-                    body: JSON.stringify(data)
-                });
-                var result = await res.json();
-                if (!res.ok) throw new Error(result.error || 'فشل الحفظ');
-                toast('تمت إضافة ' + firstName + ' ' + lastName, 'success');
-                clearForm();
-                loadCrew();
-            } catch (e) {
-                toast(e.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-plus"></i> إضافة الفرد';
-            }
-        };
-
-        window.clearForm = function() {
-            ['fFirstName','fLastName','fRank','fJobTitle','fPhone',
-             'fCin','fBirthPlace','fHireDate','fQualifications','fFamilyStatus','fNotes']
-                .forEach(function(id) {
-                    var el = document.getElementById(id);
-                    if (el) el.value = '';
-                });
-            $('#fFirstName').focus();
-        };
-
-        // ============ Delete ============
-        window.deleteCrewMember = async function(id) {
-            var m = allCrew.find(function(x) { return x.id === id; });
-            var name = m ? ((m.firstName || '') + ' ' + (m.lastName || '')).trim() : 'هذا الفرد';
-            if (!confirm('هل تريد حذف "' + name + '" نهائياً؟')) return;
-            try {
-                var res = await fetch('/api/crew/' + encodeURIComponent(id), {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': 'Bearer ' + getToken(),
-                        'X-CSRF-Token': getCsrf()
-                    }
-                });
-                if (!res.ok) {
-                    var err = await res.json().catch(function(){return{};});
-                    throw new Error(err.error || 'فشل الحذف');
-                }
-                toast('تم الحذف', 'success');
-                loadCrew();
-            } catch (e) {
-                toast(e.message, 'error');
-            }
-        };
-
-        // ============ Toggle Form ============
-        window.toggleForm = function() {
-            var form = $('#formBody');
-            var btn = $('#formToggle');
-            form.classList.toggle('collapsed');
-            btn.classList.toggle('collapsed');
-            var icon = btn.querySelector('i');
-            var label = btn.querySelector('span');
-            if (form.classList.contains('collapsed')) {
-                icon.style.transform = 'rotate(-90deg)';
-                label.textContent = 'إظهار';
+            if (v) {
+                vesselName = v.name || v.num || 'مركب';
+                var label = vesselName;
+                if (v.num) label += ' • رقم: ' + v.num;
+                if (v.region) label += ' • ' + v.region;
+                $('#vesselName').textContent = label;
+                $('#statVesselName').textContent = vesselName;
+                document.title = 'طاقم: ' + vesselName;
             } else {
-                icon.style.transform = 'rotate(0deg)';
-                label.textContent = 'إخفاء';
+                $('#vesselName').textContent = 'المركب غير موجود';
+                $('#statVesselName').textContent = '—';
             }
-        };
-
-        // ============ 🖨️ PRINT ============
-        window.printCrew = function() {
-            if (!allCrew.length) {
-                toast('لا يوجد أفراد للطباعة', 'error');
-                return;
-            }
-
-            // إعداد بيانات الطباعة
-            var stats = [
-                {
-                    value: allCrew.length,
-                    label: '👥 إجمالي أفراد الطاقم',
-                    type: 'gold'
-                },
-                {
-                    value: new Set(allCrew.filter(function(m){return m.rank;}).map(function(m){return m.rank;})).size,
-                    label: '🎖️ عدد الرتب',
-                    type: 'info'
-                },
-                {
-                    value: allCrew.filter(function(m){return m.phone;}).length,
-                    label: '📞 أرقام هواتف',
-                    type: 'success'
-                },
-                {
-                    value: allCrew.filter(function(m){
-                        if (!m.createdAt) return false;
-                        return (Date.now() - new Date(m.createdAt).getTime()) < 7*24*60*60*1000;
-                    }).length,
-                    label: '🆕 أضيفوا مؤخراً',
-                    type: 'warning'
-                }
-            ];
-
-            // أعمدة الجدول
-            var columns = [
-                'الاسم واللقب',
-                'الرتبة',
-                'الخطة',
-                'الهاتف',
-                'البطاقة الوطنية',
-                'مكان الولادة',
-                'تاريخ الانتداب',
-                'المؤهلات',
-                'الحالة العائلية'
-            ];
-
-            // صفوف الجدول
-            var rows = allCrew.map(function(m) {
-                return [
-                    ((m.firstName || '') + ' ' + (m.lastName || '')).trim() || '—',
-                    m.rank || '—',
-                    m.jobTitle || '—',
-                    m.phone || '—',
-                    m.cin || '—',
-                    m.birthPlace || '—',
-                    m.hireDate ? formatDate(m.hireDate) : '—',
-                    m.qualifications || '—',
-                    m.familyStatus || '—'
-                ];
-            });
-
-            // حفظ البيانات في localStorage
-            var printData = {
-                type: 'crew',
-                title: 'طاقم الوسيلة — ' + vesselName,
-                subtitle: 'Crew Registry',
-                sectionTitle: 'قائمة أفراد الطاقم',
-                stats: stats,
-                columns: columns,
-                rows: rows
-            };
-
-            try {
-                localStorage.setItem('print_data', JSON.stringify(printData));
-                window.open('/print.html?type=crew&key=print_data', '_blank');
-                toast('جاري تحضير الطباعة...', 'info');
-            } catch (e) {
-                toast('❌ فشل تجهيز الطباعة: ' + e.message, 'error');
-            }
-        };
-
-        // ============ Boot ============
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
+        } catch (e) {
+            $('#vesselName').textContent = 'خطأ في تحميل بيانات المركب';
+            $('#statVesselName').textContent = '—';
         }
+    }
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-                e.preventDefault();
-                printCrew();
+    // ═══════════════════════════════════════════════════════════
+    // 📥 Load Crew
+    // ═══════════════════════════════════════════════════════════
+    async function loadCrew() {
+        var tbody = $('#crewTableBody');
+        tbody.innerHTML = '<tr><td colspan="11"><div class="loading-state"><div class="spinner"></div><p>جاري التحميل...</p></div></td></tr>';
+        try {
+            var res = await fetch('/api/vessels/' + encodeURIComponent(vesselId) + '/crew', {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            });
+            var data = await res.json();
+            allCrew = (data && data.crew) || [];
+            updateStats();
+            renderCrewList();
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i><h3>فشل التحميل</h3><p>' + escapeHtml(e.message) + '</p></div></td></tr>';
+        }
+    }
+
+    function updateStats() {
+        var ranks = new Set();
+        var phones = 0;
+        var recent = 0;
+        var now = Date.now();
+        allCrew.forEach(function(m) {
+            if (m.rank) ranks.add(m.rank);
+            if (m.phone) phones++;
+            if (m.createdAt) {
+                var age = now - new Date(m.createdAt).getTime();
+                if (age < 7 * 24 * 60 * 60 * 1000) recent++;
             }
         });
-    })();
-    </script>
+        $('#statRanks').textContent = ranks.size;
+        $('#statPhones').textContent = phones;
+        $('#statRecent').textContent = recent;
+
+        var cu = getCurrentUser();
+        $('#statCurrentUser').textContent = cu ? (cu.name || cu.username || '—') : '—';
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🎨 Render
+    // ═══════════════════════════════════════════════════════════
+    function renderCrewList() {
+        var tbody = $('#crewTableBody');
+        var search = ($('#searchInput').value || '').toLowerCase().trim();
+
+        var filtered = allCrew;
+        if (search) {
+            filtered = allCrew.filter(function(m) {
+                var text = [m.firstName, m.lastName, m.rank, m.jobTitle,
+                            m.phone, m.cin, m.birthPlace, m.qualifications,
+                            m.familyStatus, m.notes, m.createdByName]
+                            .filter(Boolean).join(' ').toLowerCase();
+                return text.indexOf(search) !== -1;
+            });
+        }
+
+        $('#tableCount').textContent = filtered.length;
+
+        if (!filtered.length) {
+            tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><i class="fas fa-users"></i><h3>' +
+                (search ? 'لا نتائج' : 'لا يوجد أفراد في الطاقم بعد') + '</h3><p>' +
+                (search ? 'جرب كلمة بحث أخرى' : 'استخدم النموذج أعلاه لإضافة أول فرد') +
+                '</p></div></td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(function(m) {
+            var fullName = ((m.firstName || '') + ' ' + (m.lastName || '')).trim();
+            var initials = getInitials(m);
+            return '<tr data-crew-id="' + escapeHtml(m.id) + '">' +
+                '<td>' +
+                    '<div class="crew-name-cell">' +
+                        '<div class="crew-avatar">' + escapeHtml(initials) + '</div>' +
+                        '<div class="crew-name-info">' +
+                            '<div class="crew-name-full">' + escapeHtml(fullName || '—') + '</div>' +
+                            (m.rank ? '<div class="crew-name-rank">' + escapeHtml(m.rank) + '</div>' : '') +
+                        '</div>' +
+                    '</div>' +
+                '</td>' +
+                '<td>' + (m.rank ? '<span class="badge badge-gold">' + escapeHtml(m.rank) + '</span>' : '<span class="badge badge-empty">—</span>') + '</td>' +
+                '<td>' + (m.jobTitle ? '<span class="badge badge-blue">' + escapeHtml(m.jobTitle) + '</span>' : '<span class="badge badge-empty">—</span>') + '</td>' +
+                '<td>' + (m.phone ? '<span class="badge badge-slate"><i class="fas fa-phone" style="font-size:10px;"></i> ' + escapeHtml(m.phone) + '</span>' : '<span class="badge badge-empty">—</span>') + '</td>' +
+                '<td>' + (m.cin ? escapeHtml(m.cin) : '<span class="badge badge-empty">—</span>') + '</td>' +
+                '<td>' + (m.birthPlace ? escapeHtml(m.birthPlace) : '<span class="badge badge-empty">—</span>') + '</td>' +
+                '<td>' + (m.hireDate ? escapeHtml(formatDate(m.hireDate)) : '<span class="badge badge-empty">—</span>') + '</td>' +
+                '<td>' + (m.qualifications ? escapeHtml(m.qualifications) : '<span class="badge badge-empty">—</span>') + '</td>' +
+                '<td>' + (m.familyStatus ? escapeHtml(m.familyStatus) : '<span class="badge badge-empty">—</span>') + '</td>' +
+                '<td>' +
+                    '<span class="badge badge-slate">' +
+                        '<i class="fas fa-user-tie" style="font-size:10px;"></i> ' +
+                        escapeHtml(m.createdByName || '—') +
+                    '</span>' +
+                '</td>' +
+                '<td>' +
+                    '<div class="action-btns">' +
+                        '<button class="btn-sm-edit" data-edit-id="' + escapeHtml(m.id) + '" title="تعديل">' +
+                            '<i class="fas fa-edit"></i>' +
+                        '</button>' +
+                        '<button class="btn-sm-delete" data-delete-id="' + escapeHtml(m.id) + '" title="حذف">' +
+                            '<i class="fas fa-trash"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</td>' +
+            '</tr>';
+        }).join('');
+
+        tbody.querySelectorAll('[data-edit-id]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                editCrewMember(this.getAttribute('data-edit-id'));
+            });
+        });
+        tbody.querySelectorAll('[data-delete-id]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                deleteCrewMember(this.getAttribute('data-delete-id'));
+            });
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // ➕ Add
+    // ═══════════════════════════════════════════════════════════
+    window.addCrewMember = async function() {
+        var firstName = ($('#fFirstName').value || '').trim();
+        var lastName  = ($('#fLastName').value || '').trim();
+        if (!firstName) { toast('الاسم مطلوب', 'error'); $('#fFirstName').focus(); return; }
+        if (!lastName)  { toast('اللقب مطلوب', 'error'); $('#fLastName').focus(); return; }
+
+        var data = {
+            firstName: firstName,
+            lastName: lastName,
+            rank: ($('#fRank').value || '').trim(),
+            jobTitle: ($('#fJobTitle').value || '').trim(),
+            phone: ($('#fPhone').value || '').trim(),
+            cin: ($('#fCin').value || '').trim(),
+            birthPlace: ($('#fBirthPlace').value || '').trim(),
+            hireDate: $('#fHireDate').value || null,
+            qualifications: ($('#fQualifications').value || '').trim(),
+            familyStatus: ($('#fFamilyStatus').value || '').trim(),
+            notes: ($('#fNotes').value || '').trim()
+        };
+
+        var btn = $('#addBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+
+        try {
+            var res = await fetch('/api/vessels/' + encodeURIComponent(vesselId) + '/crew', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + getToken(),
+                    'X-CSRF-Token': getCsrf()
+                },
+                body: JSON.stringify(data)
+            });
+            var result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'فشل الحفظ');
+            toast('تمت إضافة ' + firstName + ' ' + lastName, 'success');
+            clearForm();
+            loadCrew();
+        } catch (e) {
+            toast(e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus"></i> <span>إضافة الفرد</span>';
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // ✏️ Edit
+    // ═══════════════════════════════════════════════════════════
+    window.editCrewMember = function(id) {
+        var m = allCrew.find(function(x) { return x.id === id; });
+        if (!m) { toast('الفرد غير موجود', 'error'); return; }
+
+        editingId = id;
+
+        $('#fFirstName').value = m.firstName || '';
+        $('#fLastName').value = m.lastName || '';
+        $('#fRank').value = m.rank || '';
+        $('#fJobTitle').value = m.jobTitle || '';
+        $('#fPhone').value = m.phone || '';
+        $('#fCin').value = m.cin || '';
+        $('#fBirthPlace').value = m.birthPlace || '';
+        $('#fHireDate').value = m.hireDate ? String(m.hireDate).split('T')[0] : '';
+        $('#fQualifications').value = m.qualifications || '';
+        $('#fFamilyStatus').value = m.familyStatus || '';
+        $('#fNotes').value = m.notes || '';
+
+        $('#formTitle').textContent = 'تعديل: ' + ((m.firstName || '') + ' ' + (m.lastName || '')).trim();
+        $('#formBody').classList.remove('collapsed');
+
+        var btn = $('#addBtn');
+        btn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>تحديث الفرد</span>';
+        btn.style.background = 'linear-gradient(135deg, var(--blue), #1d4ed8)';
+        btn.onclick = updateCrewMember;
+
+        $('#cancelBtn').style.display = 'inline-flex';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(function() { $('#fFirstName').focus(); }, 400);
+
+        toast('وضع التعديل — حدّث البيانات ثم اضغط "تحديث الفرد"', 'info');
+    };
+
+    async function updateCrewMember() {
+        if (!editingId) return;
+        var firstName = ($('#fFirstName').value || '').trim();
+        var lastName  = ($('#fLastName').value || '').trim();
+        if (!firstName) { toast('الاسم مطلوب', 'error'); return; }
+        if (!lastName)  { toast('اللقب مطلوب', 'error'); return; }
+
+        var data = {
+            firstName: firstName,
+            lastName: lastName,
+            rank: ($('#fRank').value || '').trim(),
+            jobTitle: ($('#fJobTitle').value || '').trim(),
+            phone: ($('#fPhone').value || '').trim(),
+            cin: ($('#fCin').value || '').trim(),
+            birthPlace: ($('#fBirthPlace').value || '').trim(),
+            hireDate: $('#fHireDate').value || null,
+            qualifications: ($('#fQualifications').value || '').trim(),
+            familyStatus: ($('#fFamilyStatus').value || '').trim(),
+            notes: ($('#fNotes').value || '').trim()
+        };
+
+        var btn = $('#addBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+
+        try {
+            var res = await fetch('/api/vessels/' + encodeURIComponent(vesselId) + '/crew/' + encodeURIComponent(editingId), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + getToken(),
+                    'X-CSRF-Token': getCsrf()
+                },
+                body: JSON.stringify(data)
+            });
+            var result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'فشل التحديث');
+            toast('تم تحديث ' + firstName + ' ' + lastName, 'success');
+            cancelEdit();
+            loadCrew();
+        } catch (e) {
+            toast(e.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>تحديث الفرد</span>';
+        }
+    }
+
+    window.cancelEdit = function() {
+        editingId = null;
+        clearForm();
+        $('#formTitle').textContent = 'إضافة فرد جديد';
+        var btn = $('#addBtn');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus"></i> <span>إضافة الفرد</span>';
+        btn.style.background = '';
+        btn.onclick = addCrewMember;
+        $('#cancelBtn').style.display = 'none';
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // 🗑️ Delete
+    // ═══════════════════════════════════════════════════════════
+    window.deleteCrewMember = async function(id) {
+        var m = allCrew.find(function(x) { return x.id === id; });
+        var name = m ? ((m.firstName || '') + ' ' + (m.lastName || '')).trim() : 'هذا الفرد';
+        if (!confirm('هل تريد حذف "' + name + '" نهائياً؟')) return;
+        try {
+            var res = await fetch('/api/crew/' + encodeURIComponent(id), {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + getToken(),
+                    'X-CSRF-Token': getCsrf()
+                }
+            });
+            if (!res.ok) {
+                var err = await res.json().catch(function(){return{};});
+                throw new Error(err.error || 'فشل الحذف');
+            }
+            toast('تم الحذف', 'success');
+            loadCrew();
+        } catch (e) {
+            toast(e.message, 'error');
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // 🧹 Form helpers
+    // ═══════════════════════════════════════════════════════════
+    window.clearForm = function() {
+        ['fFirstName','fLastName','fRank','fJobTitle','fPhone',
+         'fCin','fBirthPlace','fHireDate','fQualifications','fFamilyStatus','fNotes']
+            .forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+        $('#fFirstName').focus();
+    };
+
+    window.toggleForm = function() {
+        var form = $('#formBody');
+        var btn = $('#formToggle');
+        form.classList.toggle('collapsed');
+        var icon = btn.querySelector('i');
+        var label = btn.querySelector('span');
+        if (form.classList.contains('collapsed')) {
+            icon.style.transform = 'rotate(-90deg)';
+            label.textContent = 'إظهار';
+        } else {
+            icon.style.transform = 'rotate(0deg)';
+            label.textContent = 'إخفاء';
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // 🖨️ Print
+    // ═══════════════════════════════════════════════════════════
+    window.printCrew = function() {
+        if (!allCrew.length) {
+            toast('لا يوجد أفراد للطباعة', 'error');
+            return;
+        }
+
+        var stats = [
+            { value: allCrew.length, label: '👥 إجمالي أفراد الطاقم', type: 'gold' },
+            {
+                value: new Set(allCrew.filter(function(m){return m.rank;}).map(function(m){return m.rank;})).size,
+                label: '🎖️ عدد الرتب',
+                type: 'info'
+            },
+            {
+                value: allCrew.filter(function(m){return m.phone;}).length,
+                label: '📞 أرقام هواتف',
+                type: 'success'
+            },
+            {
+                value: allCrew.filter(function(m){
+                    if (!m.createdAt) return false;
+                    return (Date.now() - new Date(m.createdAt).getTime()) < 7*24*60*60*1000;
+                }).length,
+                label: '🆕 أضيفوا مؤخراً',
+                type: 'warning'
+            }
+        ];
+
+        var columns = [
+            'الاسم واللقب',
+            'الرتبة',
+            'الخطة',
+            'الهاتف',
+            'البطاقة الوطنية',
+            'مكان الولادة',
+            'تاريخ الانتداب',
+            'المؤهلات',
+            'الحالة العائلية',
+            'المسؤول'
+        ];
+
+        var rows = allCrew.map(function(m) {
+            return [
+                ((m.firstName || '') + ' ' + (m.lastName || '')).trim() || '—',
+                m.rank || '—',
+                m.jobTitle || '—',
+                m.phone || '—',
+                m.cin || '—',
+                m.birthPlace || '—',
+                m.hireDate ? formatDate(m.hireDate) : '—',
+                m.qualifications || '—',
+                m.familyStatus || '—',
+                m.createdByName || '—'
+            ];
+        });
+
+        var printData = {
+            type: 'crew',
+            title: 'طاقم الوسيلة — ' + vesselName,
+            subtitle: 'Crew Registry',
+            sectionTitle: 'قائمة أفراد الطاقم',
+            stats: stats,
+            columns: columns,
+            rows: rows
+        };
+
+        try {
+            localStorage.setItem('print_data', JSON.stringify(printData));
+            window.open('/print.html?type=crew&key=print_data', '_blank');
+            toast('جاري تحضير الطباعة...', 'info');
+        } catch (e) {
+            toast('❌ فشل تجهيز الطباعة: ' + e.message, 'error');
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // 🚀 Boot
+    // ═══════════════════════════════════════════════════════════
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            printCrew();
+        }
+        if (e.key === 'Escape' && editingId) {
+            cancelEdit();
+        }
+    });
+})();
+</script>
 </body>
 </html>
