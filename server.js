@@ -2946,7 +2946,28 @@ function formatMaintenance(log) {
         console.log('   📌 DELETE /api/vessels/:id/images/:imageId');
         console.log('   📌 PATCH  /api/vessels/:id/images/:imageId/primary');
     })();
+    // ═══════════════════════════════════════════════════════════
+    // 👥 CREW ROUTES — طاقم الوسائل (إضافة جديدة)
+    // ═══════════════════════════════════════════════════════════
+    try {
+        const crewRoutes = require('./routes/crew');
+        const crewDeleteRoutes = require('./routes/crewDelete');
+        
+        // ✅ crewRoutes أولاً (قبل VESSELS)
+        app.use('/api/vessels', crewRoutes);
+        app.use('/api/crew', crewDeleteRoutes);
+        
+        console.log('✅ [CREW] Routes registered:');
+        console.log('   📥 GET    /api/vessels/:id/crew');
+        console.log('   📤 POST   /api/vessels/:id/crew');
+        console.log('   ✏️  PUT    /api/vessels/:id/crew/:crewId');
+        console.log('   🗑️  DELETE /api/crew/:id');
+    } catch (e) {
+        console.error('❌ [CREW] Routes failed to load:', e.message);
+    }
 
+    // ============ VESSELS ============
+    app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
      // ============ VESSELS ============
     app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
         try {
