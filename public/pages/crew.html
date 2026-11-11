@@ -230,6 +230,21 @@ body {
     box-shadow: 0 16px 44px rgba(16, 185, 129, 0.5);
 }
 
+/* زر الطاقم الجديد */
+.btn-crew {
+    background: linear-gradient(135deg, var(--blue), #1d4ed8);
+    color: white;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+    width: 100%;
+    justify-content: center;
+    font-size: 15px;
+    padding: 15px;
+}
+.btn-crew:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 16px 44px rgba(59, 130, 246, 0.6);
+}
+
 .btn-secondary {
     background: rgba(255, 255, 255, 0.08);
     color: var(--slate-200);
@@ -766,7 +781,7 @@ textarea.form-control { resize: vertical; min-height: 78px; line-height: 1.6; }
     justify-content: center;
     align-items: center;
 }
-.btn-sm-edit, .btn-sm-delete {
+.btn-sm-edit, .btn-sm-delete, .btn-sm-crew {
     width: 36px; height: 36px;
     border-radius: 9px;
     display: inline-flex;
@@ -780,21 +795,32 @@ textarea.form-control { resize: vertical; min-height: 78px; line-height: 1.6; }
     position: relative;
     overflow: hidden;
 }
-.btn-sm-edit {
-    background: rgba(59, 130, 246, 0.13);
+.btn-sm-crew {
+    background: rgba(59, 130, 246, 0.15);
     color: var(--blue);
-    border: 1.5px solid rgba(59, 130, 246, 0.3);
+    border: 1.5px solid rgba(59, 130, 246, 0.35);
 }
-.btn-sm-edit:hover {
+.btn-sm-crew:hover {
     background: linear-gradient(135deg, var(--blue), #1d4ed8);
     color: white;
     transform: translateY(-2px) scale(1.08);
     box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
 }
+.btn-sm-edit {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+    border: 1.5px solid rgba(245, 158, 11, 0.35);
+}
+.btn-sm-edit:hover {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    transform: translateY(-2px) scale(1.08);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.4);
+}
 .btn-sm-delete {
-    background: rgba(239, 68, 68, 0.13);
+    background: rgba(239, 68, 68, 0.15);
     color: var(--red);
-    border: 1.5px solid rgba(239, 68, 68, 0.3);
+    border: 1.5px solid rgba(239, 68, 68, 0.35);
 }
 .btn-sm-delete:hover {
     background: linear-gradient(135deg, var(--red), #b91c1c);
@@ -802,7 +828,7 @@ textarea.form-control { resize: vertical; min-height: 78px; line-height: 1.6; }
     transform: translateY(-2px) scale(1.08);
     box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
 }
-.btn-sm-edit:active, .btn-sm-delete:active { transform: scale(0.96); }
+.btn-sm-crew:active, .btn-sm-edit:active, .btn-sm-delete:active { transform: scale(0.96); }
 
 /* ═══════════════════════════════════════════════════════════ */
 /* 📭 STATES */
@@ -1055,6 +1081,14 @@ textarea.form-control { resize: vertical; min-height: 78px; line-height: 1.6; }
                 <label>ملاحظات</label>
                 <textarea id="fNotes" class="form-control" placeholder="ملاحظات إضافية..."></textarea>
             </div>
+            
+            <!-- 🔴 زر الطاقم الجديد في النموذج (قبل أزرار الإضافة) -->
+            <div class="form-group full" style="margin-top: 10px; margin-bottom: 10px;">
+                <button type="button" class="btn btn-crew" onclick="goToCrewPageFromForm()">
+                    <i class="fas fa-users-cog"></i> إدارة طاقم هذا المركب
+                </button>
+            </div>
+
             <div class="form-actions">
                 <button class="btn btn-primary" id="addBtn" onclick="addCrewMember()">
                     <i class="fas fa-plus"></i>
@@ -1331,6 +1365,10 @@ textarea.form-control { resize: vertical; min-height: 78px; line-height: 1.6; }
                 '</td>' +
                 '<td>' +
                     '<div class="action-btns">' +
+                        // 🔴 زر الطاقم في الجدول
+                        '<button class="btn-sm-crew" data-crew-id="' + escapeHtml(m.id) + '" title="إدارة الطاقم">' +
+                            '<i class="fas fa-users-cog"></i>' +
+                        '</button>' +
                         '<button class="btn-sm-edit" data-edit-id="' + escapeHtml(m.id) + '" title="تعديل">' +
                             '<i class="fas fa-edit"></i>' +
                         '</button>' +
@@ -1342,6 +1380,12 @@ textarea.form-control { resize: vertical; min-height: 78px; line-height: 1.6; }
             '</tr>';
         }).join('');
 
+        // ربط الأحداث للأزرار
+        tbody.querySelectorAll('[data-crew-id]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                goToCrewPageFromTable(this.getAttribute('data-crew-id'));
+            });
+        });
         tbody.querySelectorAll('[data-edit-id]').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 editCrewMember(this.getAttribute('data-edit-id'));
@@ -1352,6 +1396,38 @@ textarea.form-control { resize: vertical; min-height: 78px; line-height: 1.6; }
                 deleteCrewMember(this.getAttribute('data-delete-id'));
             });
         });
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // 🚢 Crew Page Navigation (New)
+    // ═══════════════════════════════════════════════════════════
+    
+    // دالة الانتقال لصفحة الطاقم من النموذج
+    window.goToCrewPageFromForm = function() {
+        // الحصول على معرف المركب الحالي من متغير vesselId أو من رابط الصفحة
+        var currentId = vesselId; 
+        
+        if (!currentId) {
+            toast('⚠️ يرجى تحديد مركب أولاً', 'error');
+            return;
+        }
+        
+        // الانتقال لصفحة الطاقم
+        window.location.href = '/crew.html?id=' + encodeURIComponent(currentId);
+    };
+
+    // دالة الانتقال لصفحة الطاقم من الجدول
+    window.goToCrewPageFromTable = function(crewId) {
+        // إذا كان الكود يعرض أفراد الطاقم، فإننا نستخدم معرف المركب الحالي (vesselId) للانتقال
+        // أو إذا كان معرف الطاقم نفسه يمثل المركب، يمكنك تعديل المتغير أدناه
+        var targetId = vesselId || crewId;
+        
+        if (!targetId) {
+            toast('⚠️ لا يمكن العثور على معرف المركب', 'error');
+            return;
+        }
+        
+        window.location.href = '/crew.html?id=' + encodeURIComponent(targetId);
     };
 
     // ═══════════════════════════════════════════════════════════
