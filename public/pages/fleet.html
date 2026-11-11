@@ -561,6 +561,14 @@
             border-radius: 50%; animation: spin 0.8s linear infinite;
             margin: 0 auto 12px;
         }
+        .btn-sm.crew {
+            background: rgba(16, 185, 129, 0.15); color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .btn-sm.crew:hover {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff; transform: translateY(-2px) scale(1.05);
+        }
         .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--c-text-3); margin-bottom: 4px; }
         .empty-state p { font-size: 13px; color: var(--c-text-4); }
 
@@ -1674,7 +1682,58 @@
                 <span>جاري رفع الصور...</span>
             </div>
         </div>
+<!-- 👥 قسم الطاقم داخل التعديل -->
+<div class="images-section" id="crewSectionInEdit" style="display:none;">
+    <div class="images-section-header">
+        <div class="images-section-title">
+            <i class="fas fa-users"></i>
+            طاقم الوسيلة
+            <span class="images-count" id="crewCountInline">(0)</span>
+        </div>
+        <button type="button" class="source-btn camera" onclick="toggleCrewAddForm()" style="padding:6px 14px;font-size:11px;">
+            <i class="fas fa-user-plus"></i> إضافة فرد
+        </button>
+    </div>
+    <div id="crewAddFormInline" style="display:none;background:rgba(255,255,255,.03);padding:14px;border-radius:10px;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;">
+            <input id="crewFirstNameInline" placeholder="الاسم *" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewLastNameInline" placeholder="اللقب *" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewRankInline" placeholder="الرتبة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewHireDateInline" type="date" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewBirthPlaceInline" placeholder="مكان الولادة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewQualificationsInline" placeholder="المؤهلات" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewFamilyStatusInline" placeholder="الحالة العائلية" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewJobTitleInline" placeholder="الخطة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewPhoneInline" placeholder="الهاتف" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewCinInline" placeholder="البطاقة الوطنية" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+        </div>
+        <textarea id="crewNotesInline" placeholder="ملاحظات" rows="2" style="width:100%;margin-top:8px;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;resize:vertical;"></textarea>
+        <button type="button" onclick="addCrewMemberInline()" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;border:0;padding:10px;border-radius:6px;cursor:pointer;font-weight:800;">➕ إضافة</button>
+    </div>
+    <div id="crewListInline" style="max-height:200px;overflow-y:auto;"></div>
+</div>
 
+    <div class="images-section-header">
+        <div class="images-section-title">
+            <i class="fas fa-users"></i>
+            طاقم الوسيلة
+            <span class="images-count" id="crewCountInline">(0)</span>
+        </div>
+        <button type="button" class="source-btn camera" onclick="toggleCrewAddForm()" style="padding:6px 14px;font-size:11px;">
+            <i class="fas fa-user-plus"></i> إضافة فرد
+        </button>
+    </div>
+    <div id="crewAddFormInline" style="display:none;background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
+            <input id="crewNameInline" placeholder="الاسم الكامل *" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewRankInline" placeholder="الرتبة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewCinInline" placeholder="البطاقة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+            <input id="crewPhoneInline" placeholder="الهاتف" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+        </div>
+        <button type="button" onclick="addCrewMemberInline()" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;border:0;padding:8px;border-radius:6px;cursor:pointer;font-weight:800;">➕ إضافة</button>
+    </div>
+    <div id="crewListInline" style="max-height:200px;overflow-y:auto;"></div>
+</div>
         <button id="saveVesselBtn" class="btn-save" onclick="addItem()">
             <i class="fas fa-save"></i> حفظ المركب
         </button>
@@ -3179,29 +3238,29 @@
                         '</div>';
                 }
 
-                var actions = '';
-                actions += '<button class="btn-sm gallery" data-action="gallery" data-id="' + escapeHtml(id) + '" title="عرض الصور"><i class="fas fa-images"></i></button>';
-                if (editable) actions += '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>';
-                if (disposable) actions += '<button class="btn-sm dispose" onclick="openDisposeModal(\'' + id + '\')" title="طرح نهائي"><i class="fas fa-archive"></i></button>';
-                if (deletable) actions += '<button class="btn-sm delete" onclick="deleteItem(\'' + id + '\',\'' + escapeHtml(name) + '\')" title="حذف"><i class="fas fa-trash-alt"></i></button>';
+               var actions = '';
+actions += '<button class="btn-sm gallery" data-action="gallery" data-id="' + escapeHtml(id) + '" title="عرض الصور"><i class="fas fa-images"></i></button>';
+actions += '<button class="btn-sm crew" onclick="openCrewModal(\'' + id + '\', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')" title="إدارة الطاقم"><i class="fas fa-users"></i></button>';
+if (editable) actions += '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>';
+if (disposable) actions += '<button class="btn-sm dispose" onclick="openDisposeModal(\'' + id + '\')" title="طرح نهائي"><i class="fas fa-archive"></i></button>';
+if (deletable) actions += '<button class="btn-sm delete" onclick="deleteItem(\'' + id + '\',\'' + escapeHtml(name) + '\')" title="حذف"><i class="fas fa-trash-alt"></i></button>';
 
-                html += '<tr class="' + (isDamaged ? 'damaged' : '') + '">' +
-                    '<td>' + thumbHtml + '</td>' +
-                    '<td class="vessel-name">' + escapeHtml(name) + '</td>' +
-                    '<td>' + escapeHtml(number) + '</td>' +
-                    '<td>' + escapeHtml(length) + '</td>' +
-                    '<td>' + escapeHtml(category) + '</td>' +
-                    '<td>' + escapeHtml(region) + '</td>' +
-                    '<td>' + escapeHtml(zone) + '</td>' +
-                    '<td>' + escapeHtml(port) + '</td>' +
-                    '<td>' + escapeHtml(supp) + '</td>' +
-                    '<td><span class="status-badge ' + statusClass + '">' + escapeHtml(status) + '</span></td>' +
-                    '<td>' + escapeHtml(breakType) + '</td>' +
-                    '<td>' + formatDate(v.fDate) + '</td>' +
-                    '<td>' + escapeHtml(repairUnit) + '</td>' +
-                    '<td><div class="action-btns">' + actions + '</div></td>' +
-                '</tr>';
-            });
+html += '<tr class="' + (isDamaged ? 'damaged' : '') + '">' +
+    '<td>' + thumbHtml + '</td>' +
+    '<td class="vessel-name">' + escapeHtml(name) + '</td>' +
+    '<td>' + escapeHtml(number) + '</td>' +
+    '<td>' + escapeHtml(length) + '</td>' +
+    '<td>' + escapeHtml(category) + '</td>' +
+    '<td>' + escapeHtml(region) + '</td>' +
+    '<td>' + escapeHtml(zone) + '</td>' +
+    '<td>' + escapeHtml(port) + '</td>' +
+    '<td>' + escapeHtml(supp) + '</td>' +
+    '<td><span class="status-badge ' + statusClass + '">' + escapeHtml(status) + '</span></td>' +
+    '<td>' + escapeHtml(breakType) + '</td>' +
+    '<td>' + formatDate(v.fDate) + '</td>' +
+    '<td>' + escapeHtml(repairUnit) + '</td>' +
+    '<td><div class="action-btns">' + actions + '</div></td>' +
+'</tr>';
             mainBody.innerHTML = html;
 
             mainBody.querySelectorAll('[data-action="gallery"]').forEach(function(el) {
@@ -3897,7 +3956,214 @@
     window.openDisposeModal = openDisposeModal;
     window.closeDisposeModal = closeDisposeModal;
     window.navigateToDisposals = navigateToDisposals;
+// ═══════════════════════════════════════════════════════════
+// 👥 دوال إدارة الطاقم (جميع الحقول)
+// ═══════════════════════════════════════════════════════════
+window._crewVesselIdInline = null;
+
+function _crewToken() { return localStorage.getItem('marine_token') || localStorage.getItem('token') || ''; }
+function _crewCsrf() { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; }
+
+window.openCrewModal = function(vesselId, vesselName) {
+    window._crewVesselIdInline = vesselId;
+    document.getElementById('crewStandaloneVesselName').textContent = vesselName;
+    document.getElementById('crewModalStandalone').style.display = 'flex';
+    window.loadCrewList('crewListStandalone');
+};
+
+window.closeCrewModal = function() {
+    document.getElementById('crewModalStandalone').style.display = 'none';
+};
+
+window.toggleCrewAddForm = function() {
+    var form = document.getElementById('crewAddFormInline');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+};
+
+window.loadCrewList = async function(containerId) {
+    var container = document.getElementById(containerId);
+    if (!container || !window._crewVesselIdInline) return;
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,.4);">⏳ جاري التحميل...</div>';
+    try {
+        var res = await fetch('/api/vessels/' + encodeURIComponent(window._crewVesselIdInline) + '/crew', {
+            headers: { 'Authorization': 'Bearer ' + _crewToken() }
+        });
+        var data = await res.json();
+        if (!data.success || !data.crew || !data.crew.length) {
+            container.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(255,255,255,.4);">لا يوجد أفراد في الطاقم</div>';
+            if (containerId === 'crewListInline') document.getElementById('crewCountInline').textContent = '(0)';
+            return;
+        }
+        if (containerId === 'crewListInline') document.getElementById('crewCountInline').textContent = '(' + data.crew.length + ')';
+        
+        container.innerHTML = data.crew.map(function(m) {
+            var fullName = (m.firstName || m.name || '') + ' ' + (m.lastName || '');
+            var hireDateStr = m.hireDate ? new Date(m.hireDate).toLocaleDateString('ar-TN') : '';
+            return '<div style="display:flex;justify-content:space-between;align-items:start;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:8px;">' +
+                '<div style="flex:1;">' +
+                    '<div style="color:#fff;font-weight:700;font-size:14px;">' + fullName + '</div>' +
+                    '<div style="color:rgba(255,255,255,.6);font-size:12px;margin-top:4px;line-height:1.7;">' +
+                        (m.rank ? '🎖️ ' + m.rank + ' • ' : '') +
+                        (m.jobTitle ? '💼 ' + m.jobTitle + ' • ' : '') +
+                        (m.phone ? '📞 ' + m.phone + ' • ' : '') +
+                        (m.birthPlace ? '📍 ' + m.birthPlace + ' • ' : '') +
+                        (m.familyStatus ? '👨‍👩‍👧 ' + m.familyStatus + ' • ' : '') +
+                        (m.qualifications ? '🎓 ' + m.qualifications + ' • ' : '') +
+                        (hireDateStr ? '📅 ' + hireDateStr : '') +
+                    '</div>' +
+                    (m.notes ? '<div style="color:rgba(255,255,255,.4);font-size:11px;margin-top:4px;">📝 ' + m.notes + '</div>' : '') +
+                '</div>' +
+                '<button onclick="window.deleteCrewMember(\'' + m.id + '\', \'' + containerId + '\')" style="background:rgba(239,68,68,.2);color:#f87171;border:0;padding:6px 10px;border-radius:6px;cursor:pointer;margin-left:8px;">🗑️</button>' +
+            '</div>';
+        }).join('');
+    } catch (e) {
+        container.innerHTML = '<div style="color:#f87171;text-align:center;padding:20px;">❌ فشل التحميل</div>';
+    }
+};
+
+window.addCrewMember = async function() {
+    var firstName = document.getElementById('crewFirstName').value.trim();
+    var lastName = document.getElementById('crewLastName').value.trim();
+    if (!firstName) return alert('الاسم مطلوب');
+    if (!lastName) return alert('اللقب مطلوب');
+
+    var data = {
+        firstName: firstName,
+        lastName: lastName,
+        rank: document.getElementById('crewRank').value,
+        hireDate: document.getElementById('crewHireDate').value || null,
+        birthPlace: document.getElementById('crewBirthPlace').value,
+        qualifications: document.getElementById('crewQualifications').value,
+        familyStatus: document.getElementById('crewFamilyStatus').value,
+        jobTitle: document.getElementById('crewJobTitle').value,
+        phone: document.getElementById('crewPhone').value,
+        cin: document.getElementById('crewCin').value,
+        notes: document.getElementById('crewNotes').value
+    };
+
+    await _saveCrewMember(window._crewVesselIdInline, data);
+
+    ['crewFirstName','crewLastName','crewRank','crewHireDate','crewBirthPlace',
+     'crewQualifications','crewFamilyStatus','crewJobTitle','crewPhone','crewCin','crewNotes']
+        .forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+
+    window.loadCrewList('crewListStandalone');
+};
+
+window.addCrewMemberInline = async function() {
+    var firstName = document.getElementById('crewFirstNameInline').value.trim();
+    var lastName = document.getElementById('crewLastNameInline').value.trim();
+    if (!firstName) return alert('الاسم مطلوب');
+    if (!lastName) return alert('اللقب مطلوب');
+
+    var data = {
+        firstName: firstName,
+        lastName: lastName,
+        rank: document.getElementById('crewRankInline').value,
+        hireDate: document.getElementById('crewHireDateInline').value || null,
+        birthPlace: document.getElementById('crewBirthPlaceInline').value,
+        qualifications: document.getElementById('crewQualificationsInline').value,
+        familyStatus: document.getElementById('crewFamilyStatusInline').value,
+        jobTitle: document.getElementById('crewJobTitleInline').value,
+        phone: document.getElementById('crewPhoneInline').value,
+        cin: document.getElementById('crewCinInline').value,
+        notes: document.getElementById('crewNotesInline').value
+    };
+
+    await _saveCrewMember(window._crewVesselIdInline, data);
+
+    ['crewFirstNameInline','crewLastNameInline','crewRankInline','crewHireDateInline','crewBirthPlaceInline',
+     'crewQualificationsInline','crewFamilyStatusInline','crewJobTitleInline','crewPhoneInline','crewCinInline','crewNotesInline']
+        .forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+
+    document.getElementById('crewAddFormInline').style.display = 'none';
+    window.loadCrewList('crewListInline');
+};
+
+async function _saveCrewMember(vesselId, data) {
+    try {
+        var res = await fetch('/api/vessels/' + encodeURIComponent(vesselId) + '/crew', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + _crewToken(),
+                'X-CSRF-Token': _crewCsrf()
+            },
+            body: JSON.stringify(data)
+        });
+        var result = await res.json();
+        if (!result.success) throw new Error(result.error || 'فشل');
+    } catch (e) {
+        alert('❌ ' + e.message);
+    }
+}
+
+window.deleteCrewMember = async function(id, containerId) {
+    if (!confirm('هل تريد حذف هذا الفرد؟')) return;
+    try {
+        await fetch('/api/crew/' + encodeURIComponent(id), {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + _crewToken(), 'X-CSRF-Token': _crewCsrf() }
+        });
+        window.loadCrewList(containerId);
+    } catch (e) {
+        alert('❌ ' + e.message);
+    }
+};
+
+var _originalEditItem = window.editItem;
+window.editItem = function(id) {
+    window._crewVesselIdInline = id;
+    if (typeof _originalEditItem === 'function') _originalEditItem(id);
+    setTimeout(function() {
+        var section = document.getElementById('crewSectionInEdit');
+        if (section) {
+            section.style.display = 'block';
+            window.loadCrewList('crewListInline');
+        }
+    }, 300);
+};
 
 })();
 </script>
+
+<!-- 👥 نافذة الطاقم المستقلة -->
+<div id="crewModalStandalone" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:99999;align-items:center;justify-content:center;padding:16px;direction:rtl;">
+    <div style="background:linear-gradient(135deg,#0f1729,#0a1020);border:1px solid rgba(230,179,30,.25);border-radius:18px;width:100%;max-width:850px;max-height:92vh;display:flex;flex-direction:column;font-family:'Cairo',sans-serif;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;background:rgba(230,179,30,.04);">
+            <div>
+                <h2 style="color:#f5d76e;margin:0;font-size:18px;">👥 طاقم الوسيلة</h2>
+                <p style="color:rgba(255,255,255,.5);margin:4px 0 0;font-size:12px;" id="crewStandaloneVesselName">—</p>
+            </div>
+            <button onclick="closeCrewModal()" style="background:rgba(239,68,68,.15);color:#f87171;border:0;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:16px;">✖</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:16px 20px;">
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px;margin-bottom:16px;">
+                <h3 style="color:#fff;margin:0 0 10px;font-size:14px;">➕ إضافة فرد جديد</h3>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">
+                    <input id="crewFirstName" placeholder="الاسم *" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+                    <input id="crewLastName" placeholder="اللقب *" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+                    <input id="crewRank" placeholder="الرتبة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+                    <input id="crewHireDate" type="date" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+                    <input id="crewBirthPlace" placeholder="مكان الولادة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+                    <input id="crewQualifications" placeholder="المؤهلات" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+                    <input id="crewFamilyStatus" placeholder="الحالة العائلية" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+                    <input id="crewJobTitle" placeholder="الخطة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+                    <input id="crewPhone" placeholder="الهاتف" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+                    <input id="crewCin" placeholder="البطاقة الوطنية" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
+                </div>
+                <textarea id="crewNotes" placeholder="ملاحظات" rows="2" style="width:100%;margin-top:8px;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;resize:vertical;"></textarea>
+                <button onclick="addCrewMember()" style="margin-top:10px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;border:0;padding:10px 24px;border-radius:6px;cursor:pointer;font-weight:800;">إضافة</button>
+            </div>
+            <div id="crewListStandalone"></div>
+        </div>
+    </div>
+</div>
+
 </div>
