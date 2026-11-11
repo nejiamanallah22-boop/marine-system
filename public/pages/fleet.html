@@ -1653,67 +1653,6 @@
 
         <div class="images-section" id="imagesSection">
             <div class="images-section-header">
-                <div class="images-section-title">
-                    <i class="fas fa-images"></i>
-                    صور المركب
-                    <span class="images-count" id="imagesCount">(0/10)</span>
-                </div>
-                <div class="image-source-btns">
-                    <button type="button" class="source-btn camera" id="captureBtn">
-                        <i class="fas fa-camera"></i><span>التقاط صورة</span>
-                    </button>
-                    <button type="button" class="source-btn browse" id="browseBtn">
-                        <i class="fas fa-folder-open"></i><span>استيراد صور</span>
-                    </button>
-                </div>
-            </div>
-            <input type="file" id="imagesInput" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" multiple hidden>
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
-            <div class="images-dropzone" id="imagesDropzone">
-                <div class="dropzone-content">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p class="dropzone-title">أو اسحب الصور وأفلتها هنا</p>
-                    <p class="dropzone-hint">JPG, PNG, WEBP, GIF — حتى 5 MB لكل صورة</p>
-                </div>
-            </div>
-            <div class="images-gallery" id="imagesGallery"></div>
-            <div class="images-uploading" id="imagesUploading" style="display:none;">
-                <div class="uploading-spinner"></div>
-                <span>جاري رفع الصور...</span>
-            </div>
-        </div>
-<!-- 👥 قسم الطاقم داخل التعديل -->
-<div class="images-section" id="crewSectionInEdit" style="display:none;">
-    <div class="images-section-header">
-        <div class="images-section-title">
-            <i class="fas fa-users"></i>
-            طاقم الوسيلة
-            <span class="images-count" id="crewCountInline">(0)</span>
-        </div>
-        <button type="button" class="source-btn camera" onclick="toggleCrewAddForm()" style="padding:6px 14px;font-size:11px;">
-            <i class="fas fa-user-plus"></i> إضافة فرد
-        </button>
-    </div>
-    <div id="crewAddFormInline" style="display:none;background:rgba(255,255,255,.03);padding:14px;border-radius:10px;margin-bottom:10px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;">
-            <input id="crewFirstNameInline" placeholder="الاسم *" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-            <input id="crewLastNameInline" placeholder="اللقب *" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-            <input id="crewRankInline" placeholder="الرتبة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-            <input id="crewHireDateInline" type="date" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-            <input id="crewBirthPlaceInline" placeholder="مكان الولادة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-            <input id="crewQualificationsInline" placeholder="المؤهلات" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-            <input id="crewFamilyStatusInline" placeholder="الحالة العائلية" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-            <input id="crewJobTitleInline" placeholder="الخطة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-            <input id="crewPhoneInline" placeholder="الهاتف" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-            <input id="crewCinInline" placeholder="البطاقة الوطنية" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-        </div>
-        <textarea id="crewNotesInline" placeholder="ملاحظات" rows="2" style="width:100%;margin-top:8px;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;resize:vertical;"></textarea>
-        <button type="button" onclick="addCrewMemberInline()" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;border:0;padding:10px;border-radius:6px;cursor:pointer;font-weight:800;">➕ إضافة</button>
-    </div>
-    <div id="crewListInline" style="max-height:200px;overflow-y:auto;"></div>
-</div>
-
-    <div class="images-section-header">
         <div class="images-section-title">
             <i class="fas fa-users"></i>
             طاقم الوسيلة
@@ -3766,266 +3705,200 @@ html += '<tr class="' + (isDamaged ? 'damaged' : '') + '">' +
         _disposeVesselData = null;
     }
 
-    async function confirmDispose() {
-        if (!_disposeVesselData) return;
-        var reason = ($('#disposeReason').value || '').trim();
-        if (!reason) { fleetToast('⚠️ سبب الطرح مطلوب', 'error'); return; }
-        if (!$('#disposeConfirmCheck').checked) { fleetToast('⚠️ يجب تأكيد الإقرار', 'error'); return; }
+ // ═══════════════════════════════════════════════════════════
+// 🛠️ confirmDispose — مع finally لضمان إعادة تفعيل الزر
+// ═══════════════════════════════════════════════════════════
+async function confirmDispose() {
+    if (!_disposeVesselData) return;
+    var reason = ($('#disposeReason').value || '').trim();
+    if (!reason) { fleetToast('⚠️ سبب الطرح مطلوب', 'error'); return; }
+    if (!$('#disposeConfirmCheck').checked) { fleetToast('⚠️ يجب تأكيد الإقرار', 'error'); return; }
 
-        var id = _disposeVesselData._id || _disposeVesselData.id;
-        var payload = {
-            reason: reason,
-            decision: $('#disposeDecision').value || '',
-            disposedBy: $('#disposeBy').value || '',
-            notes: $('#disposeNotes').value || '',
-            date: $('#disposeDate').value || null
-        };
+    var id = _disposeVesselData._id || _disposeVesselData.id;
+    var payload = {
+        reason: reason,
+        decision: $('#disposeDecision').value || '',
+        disposedBy: $('#disposeBy').value || '',
+        notes: $('#disposeNotes').value || '',
+        date: $('#disposeDate').value || null
+    };
 
-        var btn = $('#fleetDisposeConfirm');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الطرح...'; }
+    var btn = $('#fleetDisposeConfirm');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الطرح...'; }
 
-        try {
-            var response = await fetcher('/api/vessels/' + id + '/dispose', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            var data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'فشل الطرح');
+    try {
+        var response = await fetcher('/api/vessels/' + id + '/dispose', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        var data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'فشل الطرح');
 
-            fleetToast('✅ تم طرح المركب بنجاح', 'success');
-            closeDisposeModal();
-            await renderMain();
-        } catch (err) {
-            fleetToast('❌ ' + err.message, 'error');
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-archive"></i> تأكيد الطرح'; }
-        }
-    }
-
-    function navigateToDisposals() {
-        try {
-            if (typeof _fleetCleanup === 'function') {
-                _fleetCleanup();
-            }
-
-            document.querySelectorAll('style').forEach(function(styleEl) {
-                if (styleEl.textContent && (
-                    styleEl.textContent.indexOf('#page-fleet') !== -1 ||
-                    styleEl.textContent.indexOf('.fleet-header') !== -1
-                )) {
-                    styleEl.remove();
-                }
-            });
-
-            var oldPage = document.getElementById('page-fleet');
-            if (oldPage && oldPage.parentNode) {
-                oldPage.parentNode.removeChild(oldPage);
-            }
-
-            document.body.style.overflow = '';
-            document.body.removeAttribute('dir');
-            document.documentElement.setAttribute('dir', 'rtl');
-        } catch (e) {
-            console.debug('Cleanup error:', e.message);
-        }
-
-        if (typeof window.loadPage === 'function') {
-            try { window.loadPage('disposals-vessels'); return; } catch (e) {}
-        }
-        if (typeof window.navigateTo === 'function') {
-            try { window.navigateTo('disposals-vessels'); return; } catch (e) {}
-        }
-        window.location.href = '/pages/disposals-vessels.html';
-    }
-
-    function setupDisposeListeners() {
-        var closeBtn = $('#fleetDisposeClose');
-        if (closeBtn) closeBtn.addEventListener('click', closeDisposeModal);
-        var cancelBtn = $('#fleetDisposeCancel');
-        if (cancelBtn) cancelBtn.addEventListener('click', closeDisposeModal);
-        var confirmBtn = $('#fleetDisposeConfirm');
-        if (confirmBtn) confirmBtn.addEventListener('click', confirmDispose);
-        var checkEl = $('#disposeConfirmCheck');
-        if (checkEl) {
-            checkEl.addEventListener('change', function() {
-                $('#fleetDisposeConfirm').disabled = !this.checked;
-            });
-        }
-        var modal = $('#fleetDisposeModal');
-        if (modal) modal.addEventListener('click', function(e) { if (e.target === this) closeDisposeModal(); });
-    }
-
-    function applyLogo() {
-        try {
-            var cachedLogo = localStorage.getItem('marine_logo');
-            if (!cachedLogo) return;
-            var iconDiv = $('#fleetHeaderIcon');
-            var img = $('#globalLogo');
-            if (img) { img.src = cachedLogo; img.style.display = 'block'; }
-            if (iconDiv) iconDiv.classList.add('has-logo');
-        } catch (e) {}
-    }
-    applyLogo();
-
-    var _initialized = false;
-
-    async function initPage() {
-        if (_isDestroyed || _initialized) return false;
-        var header = $('#fleetHeader');
-        if (!header) return false;
-
-        _initialized = true;
-        console.log('🚀 Fleet v9.1 — Initializing...');
-
-        initFilters();
-        initImagesUI();
-        initGalleryEvents();
-        initMiniUploadEvents();
-        initCameraEvents();
-        setupDisposeListeners();
-
-        bindComboboxSearch('iZoneSearch', 'iZone');
-        bindComboboxSearch('iBreakSearch', 'iBreak');
-
-        toggleFreeInput('iReg', 'iRegFree', ['__other__']);
-        toggleFreeInput('iZone', 'iZoneFree', ['__other__']);
-        toggleFreeInput('iBreak', 'iBreakFree', ['أخرى']);
-        toggleFreeInput('iRepairUnit', 'iRepairUnitFree', ['__other__']);
-
-        var regSel = $('#iReg');
-        if (regSel) regSel.addEventListener('change', updateZones);
-        var regFree = $('#iRegFree');
-        if (regFree) regFree.addEventListener('input', updateZones);
-
-        var refreshBtn = $('#fleetRefreshBtn');
-        if (refreshBtn) refreshBtn.addEventListener('click', function() { renderMain(); });
-        var printBtn = $('#fleetPrintBtn');
-        if (printBtn) printBtn.addEventListener('click', printFleet);
-        var excelBtn = $('#fleetExcelBtn');
-        if (excelBtn) excelBtn.addEventListener('click', exportFleetExcel);
-        var disposalsBtn = $('#fleetDisposalsBtn');
-        if (disposalsBtn) disposalsBtn.addEventListener('click', navigateToDisposals);
-
-        var token = getToken();
-        if (!token) { window.location.href = '/index.html'; return true; }
-
-        try {
-            var response = await fetcher('/api/auth/me', { method: 'GET' });
-            if (!response.ok) {
-                localStorage.removeItem('marine_token');
-                window.location.href = '/index.html';
-                return true;
-            }
-            var data = await response.json();
-            if (data.success && data.user) window.currentUser = data.user;
-        } catch (error) {
-            console.error('❌ Auth error:', error);
-        }
-
-        if (_isDestroyed) return true;
-
-        var addBtn = $('#saveVesselBtn');
-        if (addBtn) addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
-
-        var imagesSection = $('#imagesSection');
-        if (imagesSection && !canEdit()) imagesSection.style.display = 'none';
-
-        updateZones();
+        fleetToast('✅ تم طرح المركب بنجاح', 'success');
+        closeDisposeModal();
         await renderMain();
-
-        console.log('✅ Fleet v9.1 ready');
-        return true;
+    } catch (err) {
+        fleetToast('❌ ' + err.message, 'error');
+    } finally {
+        // ✅ إعادة تفعيل الزر دائماً إن كان لا يزال موجوداً
+        var btnNow = $('#fleetDisposeConfirm');
+        if (btnNow && document.getElementById('fleetDisposeModal').classList.contains('active')) {
+            btnNow.disabled = false;
+            btnNow.innerHTML = '<i class="fas fa-archive"></i> تأكيد الطرح';
+        }
     }
+}
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initPage, { once: true });
-    } else {
-        initPage();
-    }
-
-    window.renderMain = renderMain;
-    window.addItem = addItem;
-    window.editItem = editItem;
-    window.updateItem = updateItem;
-    window.deleteItem = deleteItem;
-    window.clearMainSearch = clearMainSearch;
-    window.updateZones = updateZones;
-    window.refreshFleet = refreshFleet;
-    window.printFleet = printFleet;
-    window.exportFleetExcel = exportFleetExcel;
-    window.openDisposeModal = openDisposeModal;
-    window.closeDisposeModal = closeDisposeModal;
-    window.navigateToDisposals = navigateToDisposals;
 // ═══════════════════════════════════════════════════════════
-// 👥 دوال إدارة الطاقم (جميع الحقول)
+// 👥 نظام الطاقم — إعادة كتابة كاملة مع فصل السياق
 // ═══════════════════════════════════════════════════════════
-window._crewVesselIdInline = null;
 
-function _crewToken() { return localStorage.getItem('marine_token') || localStorage.getItem('token') || ''; }
-function _crewCsrf() { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; }
+// ✅ كائن مركزي لفصل سياق المستقل عن سياق التعديل الداخلي
+window._crewCtx = {
+    standaloneId: null,
+    inlineId: null
+};
 
+function _crewToken() {
+    return localStorage.getItem('marine_token') || localStorage.getItem('token') || '';
+}
+function _crewCsrf() {
+    var m = document.cookie.match(/marine_csrf=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+}
+
+// ✅ تنظيف حقول الطاقم
+function _clearCrewFields(prefix) {
+    var fields = ['FirstName','LastName','Rank','HireDate','BirthPlace',
+                  'Qualifications','FamilyStatus','JobTitle','Phone','Cin','Notes'];
+    fields.forEach(function(f) {
+        var el = document.getElementById('crew' + f + prefix);
+        if (el) el.value = '';
+    });
+}
+
+// ✅ فتح نافذة الطاقم المستقلة
 window.openCrewModal = function(vesselId, vesselName) {
-    window._crewVesselIdInline = vesselId;
-    document.getElementById('crewStandaloneVesselName').textContent = vesselName;
-    document.getElementById('crewModalStandalone').style.display = 'flex';
-    window.loadCrewList('crewListStandalone');
+    window._crewCtx.standaloneId = vesselId;
+    
+    var nameEl = document.getElementById('crewStandaloneVesselName');
+    if (nameEl) nameEl.textContent = vesselName || '—';
+    
+    // ✅ تنظيف الحقول قبل الفتح
+    _clearCrewFields('');
+    
+    var modal = document.getElementById('crewModalStandalone');
+    if (modal) modal.style.display = 'flex';
+    
+    window.loadCrewList('crewListStandalone', 'standalone');
 };
 
 window.closeCrewModal = function() {
-    document.getElementById('crewModalStandalone').style.display = 'none';
+    var modal = document.getElementById('crewModalStandalone');
+    if (modal) modal.style.display = 'none';
+    window._crewCtx.standaloneId = null;
 };
 
 window.toggleCrewAddForm = function() {
     var form = document.getElementById('crewAddFormInline');
+    if (!form) return;
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
 };
 
-window.loadCrewList = async function(containerId) {
+// ✅ loadCrewList مع دعم السياق
+window.loadCrewList = async function(containerId, context) {
     var container = document.getElementById(containerId);
-    if (!container || !window._crewVesselIdInline) return;
+    if (!container) return;
+    
+    var vesselId = context === 'inline' 
+        ? window._crewCtx.inlineId 
+        : window._crewCtx.standaloneId;
+    
+    if (!vesselId) {
+        container.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,.4);">⚠️ لم يتم تحديد المركب</div>';
+        return;
+    }
+    
     container.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,.4);">⏳ جاري التحميل...</div>';
+    
     try {
-        var res = await fetch('/api/vessels/' + encodeURIComponent(window._crewVesselIdInline) + '/crew', {
+        var res = await fetch('/api/vessels/' + encodeURIComponent(vesselId) + '/crew', {
             headers: { 'Authorization': 'Bearer ' + _crewToken() }
         });
         var data = await res.json();
+        
         if (!data.success || !data.crew || !data.crew.length) {
             container.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(255,255,255,.4);">لا يوجد أفراد في الطاقم</div>';
-            if (containerId === 'crewListInline') document.getElementById('crewCountInline').textContent = '(0)';
+            if (containerId === 'crewListInline') {
+                var cnt = document.getElementById('crewCountInline');
+                if (cnt) cnt.textContent = '(0)';
+            }
             return;
         }
-        if (containerId === 'crewListInline') document.getElementById('crewCountInline').textContent = '(' + data.crew.length + ')';
+        
+        if (containerId === 'crewListInline') {
+            var cnt2 = document.getElementById('crewCountInline');
+            if (cnt2) cnt2.textContent = '(' + data.crew.length + ')';
+        }
+        
+        // ✅ استخدام escapeHtml للحماية من XSS
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function(m) {
+                return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+            });
+        }
         
         container.innerHTML = data.crew.map(function(m) {
-            var fullName = (m.firstName || m.name || '') + ' ' + (m.lastName || '');
+            var fullName = ((m.firstName || m.name || '') + ' ' + (m.lastName || '')).trim();
             var hireDateStr = m.hireDate ? new Date(m.hireDate).toLocaleDateString('ar-TN') : '';
+            var ctx = context === 'inline' ? 'inline' : 'standalone';
+            
             return '<div style="display:flex;justify-content:space-between;align-items:start;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:8px;">' +
                 '<div style="flex:1;">' +
-                    '<div style="color:#fff;font-weight:700;font-size:14px;">' + fullName + '</div>' +
+                    '<div style="color:#fff;font-weight:700;font-size:14px;">' + esc(fullName) + '</div>' +
                     '<div style="color:rgba(255,255,255,.6);font-size:12px;margin-top:4px;line-height:1.7;">' +
-                        (m.rank ? '🎖️ ' + m.rank + ' • ' : '') +
-                        (m.jobTitle ? '💼 ' + m.jobTitle + ' • ' : '') +
-                        (m.phone ? '📞 ' + m.phone + ' • ' : '') +
-                        (m.birthPlace ? '📍 ' + m.birthPlace + ' • ' : '') +
-                        (m.familyStatus ? '👨‍👩‍👧 ' + m.familyStatus + ' • ' : '') +
-                        (m.qualifications ? '🎓 ' + m.qualifications + ' • ' : '') +
-                        (hireDateStr ? '📅 ' + hireDateStr : '') +
+                        (m.rank ? '🎖️ ' + esc(m.rank) + ' • ' : '') +
+                        (m.jobTitle ? '💼 ' + esc(m.jobTitle) + ' • ' : '') +
+                        (m.phone ? '📞 ' + esc(m.phone) + ' • ' : '') +
+                        (m.birthPlace ? '📍 ' + esc(m.birthPlace) + ' • ' : '') +
+                        (m.familyStatus ? '👨‍👩‍👧 ' + esc(m.familyStatus) + ' • ' : '') +
+                        (m.qualifications ? '🎓 ' + esc(m.qualifications) + ' • ' : '') +
+                        (hireDateStr ? '📅 ' + esc(hireDateStr) : '') +
                     '</div>' +
-                    (m.notes ? '<div style="color:rgba(255,255,255,.4);font-size:11px;margin-top:4px;">📝 ' + m.notes + '</div>' : '') +
+                    (m.notes ? '<div style="color:rgba(255,255,255,.4);font-size:11px;margin-top:4px;">📝 ' + esc(m.notes) + '</div>' : '') +
                 '</div>' +
-                '<button onclick="window.deleteCrewMember(\'' + m.id + '\', \'' + containerId + '\')" style="background:rgba(239,68,68,.2);color:#f87171;border:0;padding:6px 10px;border-radius:6px;cursor:pointer;margin-left:8px;">🗑️</button>' +
+                '<button data-crew-delete="' + esc(m.id) + '" data-crew-ctx="' + ctx + '" ' +
+                        'style="background:rgba(239,68,68,.2);color:#f87171;border:0;padding:6px 10px;border-radius:6px;cursor:pointer;margin-left:8px;">🗑️</button>' +
             '</div>';
         }).join('');
+        
+        // ✅ ربط أزرار الحذف عبر addEventListener بدلاً من onclick inline
+        container.querySelectorAll('[data-crew-delete]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                window.deleteCrewMember(
+                    this.getAttribute('data-crew-delete'),
+                    containerId,
+                    this.getAttribute('data-crew-ctx')
+                );
+            });
+        });
+        
     } catch (e) {
         container.innerHTML = '<div style="color:#f87171;text-align:center;padding:20px;">❌ فشل التحميل</div>';
     }
 };
 
+// ✅ إضافة فرد من النافذة المستقلة
 window.addCrewMember = async function() {
-    var firstName = document.getElementById('crewFirstName').value.trim();
-    var lastName = document.getElementById('crewLastName').value.trim();
-    if (!firstName) return alert('الاسم مطلوب');
-    if (!lastName) return alert('اللقب مطلوب');
+    var firstName = (document.getElementById('crewFirstName') || {}).value || '';
+    var lastName  = (document.getElementById('crewLastName')  || {}).value || '';
+    firstName = firstName.trim();
+    lastName  = lastName.trim();
+    
+    if (!firstName) { alert('الاسم مطلوب'); return; }
+    if (!lastName)  { alert('اللقب مطلوب'); return; }
+    if (!window._crewCtx.standaloneId) { alert('لم يتم تحديد المركب'); return; }
 
     var data = {
         firstName: firstName,
@@ -4041,23 +3914,23 @@ window.addCrewMember = async function() {
         notes: document.getElementById('crewNotes').value
     };
 
-    await _saveCrewMember(window._crewVesselIdInline, data);
+    var ok = await _saveCrewMember(window._crewCtx.standaloneId, data);
+    if (!ok) return;
 
-    ['crewFirstName','crewLastName','crewRank','crewHireDate','crewBirthPlace',
-     'crewQualifications','crewFamilyStatus','crewJobTitle','crewPhone','crewCin','crewNotes']
-        .forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-
-    window.loadCrewList('crewListStandalone');
+    _clearCrewFields('');
+    window.loadCrewList('crewListStandalone', 'standalone');
 };
 
+// ✅ إضافة فرد من قسم التعديل الداخلي
 window.addCrewMemberInline = async function() {
-    var firstName = document.getElementById('crewFirstNameInline').value.trim();
-    var lastName = document.getElementById('crewLastNameInline').value.trim();
-    if (!firstName) return alert('الاسم مطلوب');
-    if (!lastName) return alert('اللقب مطلوب');
+    var firstName = (document.getElementById('crewFirstNameInline') || {}).value || '';
+    var lastName  = (document.getElementById('crewLastNameInline')  || {}).value || '';
+    firstName = firstName.trim();
+    lastName  = lastName.trim();
+    
+    if (!firstName) { alert('الاسم مطلوب'); return; }
+    if (!lastName)  { alert('اللقب مطلوب'); return; }
+    if (!window._crewCtx.inlineId) { alert('لم يتم تحديد المركب'); return; }
 
     var data = {
         firstName: firstName,
@@ -4073,19 +3946,16 @@ window.addCrewMemberInline = async function() {
         notes: document.getElementById('crewNotesInline').value
     };
 
-    await _saveCrewMember(window._crewVesselIdInline, data);
+    var ok = await _saveCrewMember(window._crewCtx.inlineId, data);
+    if (!ok) return;
 
-    ['crewFirstNameInline','crewLastNameInline','crewRankInline','crewHireDateInline','crewBirthPlaceInline',
-     'crewQualificationsInline','crewFamilyStatusInline','crewJobTitleInline','crewPhoneInline','crewCinInline','crewNotesInline']
-        .forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-
-    document.getElementById('crewAddFormInline').style.display = 'none';
-    window.loadCrewList('crewListInline');
+    _clearCrewFields('Inline');
+    var form = document.getElementById('crewAddFormInline');
+    if (form) form.style.display = 'none';
+    window.loadCrewList('crewListInline', 'inline');
 };
 
+// ✅ حفظ فرد — يُرجع true/false
 async function _saveCrewMember(vesselId, data) {
     try {
         var res = await fetch('/api/vessels/' + encodeURIComponent(vesselId) + '/crew', {
@@ -4098,71 +3968,53 @@ async function _saveCrewMember(vesselId, data) {
             body: JSON.stringify(data)
         });
         var result = await res.json();
-        if (!result.success) throw new Error(result.error || 'فشل');
+        if (!res.ok || !result.success) {
+            throw new Error(result.error || 'فشل الحفظ');
+        }
+        return true;
     } catch (e) {
         alert('❌ ' + e.message);
+        return false;
     }
 }
 
-window.deleteCrewMember = async function(id, containerId) {
+// ✅ حذف فرد مع دعم السياق
+window.deleteCrewMember = async function(id, containerId, context) {
     if (!confirm('هل تريد حذف هذا الفرد؟')) return;
     try {
-        await fetch('/api/crew/' + encodeURIComponent(id), {
+        var res = await fetch('/api/crew/' + encodeURIComponent(id), {
             method: 'DELETE',
-            headers: { 'Authorization': 'Bearer ' + _crewToken(), 'X-CSRF-Token': _crewCsrf() }
+            headers: {
+                'Authorization': 'Bearer ' + _crewToken(),
+                'X-CSRF-Token': _crewCsrf()
+            }
         });
-        window.loadCrewList(containerId);
+        if (!res.ok) throw new Error('فشل الحذف');
+        window.loadCrewList(containerId, context);
     } catch (e) {
         alert('❌ ' + e.message);
     }
 };
 
+// ✅ حفظ الدالة الأصلية قبل تغليفها
 var _originalEditItem = window.editItem;
+
 window.editItem = function(id) {
-    window._crewVesselIdInline = id;
+    // ✅ تخزين في سياق "inline" فقط
+    window._crewCtx.inlineId = id;
+    
     if (typeof _originalEditItem === 'function') _originalEditItem(id);
+    
     setTimeout(function() {
         var section = document.getElementById('crewSectionInEdit');
         if (section) {
             section.style.display = 'block';
-            window.loadCrewList('crewListInline');
+            _clearCrewFields('Inline');
+            var form = document.getElementById('crewAddFormInline');
+            if (form) form.style.display = 'none';
+            window.loadCrewList('crewListInline', 'inline');
         }
-    }, 300);
+    }, 350);
 };
 })();
 </script>
-
-<!-- 👥 نافذة الطاقم المستقلة -->
-<div id="crewModalStandalone" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:99999;align-items:center;justify-content:center;padding:16px;direction:rtl;">
-    <div style="background:linear-gradient(135deg,#0f1729,#0a1020);border:1px solid rgba(230,179,30,.25);border-radius:18px;width:100%;max-width:850px;max-height:92vh;display:flex;flex-direction:column;font-family:'Cairo',sans-serif;overflow:hidden;">
-        <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;background:rgba(230,179,30,.04);">
-            <div>
-                <h2 style="color:#f5d76e;margin:0;font-size:18px;">👥 طاقم الوسيلة</h2>
-                <p style="color:rgba(255,255,255,.5);margin:4px 0 0;font-size:12px;" id="crewStandaloneVesselName">—</p>
-            </div>
-            <button onclick="closeCrewModal()" style="background:rgba(239,68,68,.15);color:#f87171;border:0;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:16px;">✖</button>
-        </div>
-        <div style="flex:1;overflow-y:auto;padding:16px 20px;">
-            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px;margin-bottom:16px;">
-                <h3 style="color:#fff;margin:0 0 10px;font-size:14px;">➕ إضافة فرد جديد</h3>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">
-                    <input id="crewFirstName" placeholder="الاسم *" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-                    <input id="crewLastName" placeholder="اللقب *" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-                    <input id="crewRank" placeholder="الرتبة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-                    <input id="crewHireDate" type="date" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-                    <input id="crewBirthPlace" placeholder="مكان الولادة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-                    <input id="crewQualifications" placeholder="المؤهلات" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-                    <input id="crewFamilyStatus" placeholder="الحالة العائلية" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-                    <input id="crewJobTitle" placeholder="الخطة" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-                    <input id="crewPhone" placeholder="الهاتف" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-                    <input id="crewCin" placeholder="البطاقة الوطنية" style="padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;">
-                </div>
-                <textarea id="crewNotes" placeholder="ملاحظات" rows="2" style="width:100%;margin-top:8px;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#fff;font-family:inherit;resize:vertical;"></textarea>
-                <button onclick="addCrewMember()" style="margin-top:10px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;border:0;padding:10px 24px;border-radius:6px;cursor:pointer;font-weight:800;">إضافة</button>
-            </div>
-            <div id="crewListStandalone"></div>
-        </div>
-    </div>
-</div>
-
-</div>
