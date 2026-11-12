@@ -1,5 +1,5 @@
 // ============================================================
-// 📦 models/index.js - v2.7 (SAFE + Vehicle)
+// 📦 models/index.js - v2.9 (SAFE + Vehicle + Driver)
 // ============================================================
 
 console.log('');
@@ -27,7 +27,7 @@ function tryLoad(name, path, required = true) {
 let Vessel, User, Ticket, Log, Maintenance, Note;
 
 // ✅ الموديلات الاختيارية
-let Vehicle, Notification, UserSettings, SystemLogo;
+let Vehicle, Driver, Notification, UserSettings, SystemLogo;
 
 try {
     // ============================================================
@@ -44,6 +44,7 @@ try {
     // 🟢 الاختيارية — إذا فشل أي واحد → يتجاهله
     // ============================================================
     Vehicle      = tryLoad('Vehicle', './Vehicle', false);
+    Driver       = tryLoad('Driver', './Driver', false);
     Notification = tryLoad('Notification', './Notification', false);
     UserSettings = tryLoad('UserSettings', './UserSettings', false);
     SystemLogo   = tryLoad('SystemLogo', './SystemLogo', false);
@@ -80,6 +81,7 @@ console.log(`   📝 Note: ${Note ? '✅' : '❌'}`);
 console.log(`   🔧 Maintenance: ${Maintenance ? '✅' : '❌'}`);
 console.log(`   📊 Log: ${Log ? '✅' : '❌'}`);
 console.log(`   🚛 Vehicle: ${Vehicle ? '✅' : '❌'} (optional)`);
+console.log(`   👨‍✈️ Driver: ${Driver ? '✅' : '❌'} (optional)`);
 console.log(`   🔔 Notification: ${Notification ? '✅' : '❌'} (optional)`);
 console.log(`   ⚙️  UserSettings: ${UserSettings ? '✅' : '❌'} (optional)`);
 console.log(`   🖼️  SystemLogo: ${SystemLogo ? '✅' : '❌'} (optional)`);
@@ -93,6 +95,7 @@ module.exports = {
     Maintenance,
     Note,
     Vehicle,
+    Driver,
     Notification,
     UserSettings,
     SystemLogo
