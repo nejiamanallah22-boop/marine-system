@@ -3570,6 +3570,24 @@ function formatMaintenance(log) {
         notify,
         buildIdQuery
       });
+        // ═══════════════════════════════════════════════════════════
+    // 👨‍✈️ DRIVERS ROUTES — سائقو الوسائل البرية (جديد)
+    // ═══════════════════════════════════════════════════════════
+    try {
+        require('./routes/drivers')(app, {
+            Driver,                    // ← النموذج الجديد
+            Vehicle,                   // ← للتحقق من وجود الوسيلة
+            authenticateAccessToken,
+            csrfProtection,
+            requirePermission,
+            randomId,
+            addSystemLog,
+            buildIdQuery
+        });
+        console.log('✅ [DRIVERS] Routes registered');
+    } catch (e) {
+        console.error('❌ [DRIVERS] Failed to load:', e.message);
+    }
 
     // ═══════════════════════════════════════════════════════════
     // 👥 CREW ROUTES — طاقم الوسائل (جديد)
