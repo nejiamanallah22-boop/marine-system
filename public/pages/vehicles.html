@@ -3276,7 +3276,7 @@
     window.openCrewFromFormVehicle = function() {
         var id = document.getElementById('vehId') ? document.getElementById('vehId').value : null;
         if (id) {
-            window.open('/pages/crew.html?id=' + encodeURIComponent(id), '_blank');
+            window.open('/pages/drivers.html?id=' + encodeURIComponent(id), '_blank');
         } else {
             alert('⚠️ يرجى تحديد وسيلة أو حفظها أولاً للوصول إلى طاقمها.');
         }
@@ -3284,7 +3284,7 @@
 
     window.openCrewFromTableVehicle = function(id) {
         if (id) {
-            window.open('/pages/crew.html?id=' + encodeURIComponent(id), '_blank');
+            window.open('/pages/drivers.html?id=' + encodeURIComponent(id), '_blank');
         }
     };
     // 🔴 نهاية الدالتين
