@@ -106,16 +106,17 @@ function loadModels() {
 let User, Vessel, Vehicle, Driver, Maintenance, Log, Ticket, Note, Notification, UserSettings, SystemLogo;
 //                            
 try {
-    const m = loadModels();
+const m = loadModels();
     User = m.User; Vessel = m.Vessel; Maintenance = m.Maintenance; Log = m.Log; Ticket = m.Ticket;
     Note = m.Note || null; Notification = m.Notification || null;
     UserSettings = m.UserSettings || null; SystemLogo = m.SystemLogo || null;
     Vehicle = m.Vehicle || null;
+    Driver = m.Driver || null;   // ← ⚠️ السطر الجديد (أضفه هنا)
     console.log('📦 Optional:', 'Note=' + (Note?'✅':'❌'), 'Notif=' + (Notification?'✅':'❌'),
         'Settings=' + (UserSettings?'✅':'❌'), 'Logo=' + (SystemLogo?'✅':'❌'));
     console.log('🚛 Vehicle:', Vehicle ? '✅' : '❌');
+    console.log('👨‍✈️ Driver:', Driver ? '✅' : '❌');  // ← ⚠️ للتحقق
 } catch (e) { console.error('❌', e.message); process.exit(1); }
-
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
