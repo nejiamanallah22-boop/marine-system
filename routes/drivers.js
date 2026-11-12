@@ -1,4 +1,5 @@
 // routes/drivers.js
+// ✅ متوافق 100% مع server.js الخاص بك
 const mongoose = require('mongoose');
 
 module.exports = function(app, deps) {
@@ -16,17 +17,17 @@ module.exports = function(app, deps) {
     console.log('🚗 [DRIVERS] Registering routes...');
 
     if (!Driver) {
-        console.error('❌ [DRIVERS] Driver model missing! Routes will not work.');
+        console.error('❌ [DRIVERS] Driver model is not loaded!');
         return;
     }
     if (!Vehicle) {
-        console.error('❌ [DRIVERS] Vehicle model missing! Routes will not work.');
+        console.error('❌ [DRIVERS] Vehicle model is not loaded!');
         return;
     }
 
-    /* ═══════════════════════════════════════════════════════════
-       🔍 GET /api/vehicles/:vehicleId/drivers
-       ═══════════════════════════════════════════════════════════ */
+    // ═══════════════════════════════════════════════════════
+    // 🔍 GET /api/vehicles/:vehicleId/drivers
+    // ═══════════════════════════════════════════════════════
     app.get(
         '/api/vehicles/:vehicleId/drivers',
         authenticateAccessToken,
@@ -62,7 +63,6 @@ module.exports = function(app, deps) {
                         licenseDate: d.licenseDate,
                         licenseCat: d.licenseCat,
                         assignment: d.assignment,
-                        notes: d.notes,
                         createdByName: d.createdByName,
                         createdAt: d.createdAt
                     }))
@@ -74,9 +74,9 @@ module.exports = function(app, deps) {
         }
     );
 
-    /* ═══════════════════════════════════════════════════════════
-       ➕ POST /api/vehicles/:vehicleId/drivers
-       ═══════════════════════════════════════════════════════════ */
+    // ═══════════════════════════════════════════════════════
+    // ➕ POST /api/vehicles/:vehicleId/drivers
+    // ═══════════════════════════════════════════════════════
     app.post(
         '/api/vehicles/:vehicleId/drivers',
         authenticateAccessToken,
@@ -85,7 +85,7 @@ module.exports = function(app, deps) {
         async (req, res) => {
             try {
                 const { vehicleId } = req.params;
-                const { firstName, lastName, cin, license, licenseDate, licenseCat, assignment, notes } = req.body;
+                const { firstName, lastName, cin, license, licenseDate, licenseCat, assignment } = req.body;
 
                 if (!firstName || !String(firstName).trim()) {
                     return res.status(400).json({ success: false, error: 'اسم السائق مطلوب' });
@@ -111,26 +111,11 @@ module.exports = function(app, deps) {
                     licenseDate: licenseDate || null,
                     licenseCat: String(licenseCat || '').trim().substring(0, 20),
                     assignment: String(assignment || '').trim().substring(0, 200),
-                    notes: String(notes || '').trim().substring(0, 1000),
-                    createdBy: req.user ? (req.user._id || null) : null,
-                    createdByName: req.user ? (req.user.name || req.user.username || '') : ''
+                    createdBy: req.user._id || null,
+                    createdByName: req.user.name || req.user.username || ''
                 });
 
                 await driver.save();
-
-                try {
-                    await addSystemLog({
-                        userId: req.user.id,
-                        userName: req.user.name,
-                        action: 'create',
-                        resource: 'driver',
-                        resourceId: driver._id.toString(),
-                        resourceName: `${driver.firstName} ${driver.lastName}`,
-                        status: 'success',
-                        ip: req.ip,
-                        requestId: req.requestId
-                    });
-                } catch(e) {}
 
                 res.status(201).json({
                     success: true,
@@ -144,7 +129,6 @@ module.exports = function(app, deps) {
                         licenseDate: driver.licenseDate,
                         licenseCat: driver.licenseCat,
                         assignment: driver.assignment,
-                        notes: driver.notes,
                         createdAt: driver.createdAt
                     }
                 });
@@ -155,9 +139,9 @@ module.exports = function(app, deps) {
         }
     );
 
-    /* ═══════════════════════════════════════════════════════════
-       ✏️ PUT /api/vehicles/:vehicleId/drivers/:driverId
-       ═══════════════════════════════════════════════════════════ */
+    // ═══════════════════════════════════════════════════════
+    // ✏️ PUT /api/vehicles/:vehicleId/drivers/:driverId
+    // ═══════════════════════════════════════════════════════
     app.put(
         '/api/vehicles/:vehicleId/drivers/:driverId',
         authenticateAccessToken,
@@ -166,7 +150,7 @@ module.exports = function(app, deps) {
         async (req, res) => {
             try {
                 const { vehicleId, driverId } = req.params;
-                const { firstName, lastName, cin, license, licenseDate, licenseCat, assignment, notes } = req.body;
+                const { firstName, lastName, cin, license, licenseDate, licenseCat, assignment } = req.body;
 
                 if (!mongoose.Types.ObjectId.isValid(vehicleId) || !mongoose.Types.ObjectId.isValid(driverId)) {
                     return res.status(400).json({ success: false, error: 'معرف غير صالح' });
@@ -174,7 +158,7 @@ module.exports = function(app, deps) {
 
                 const driver = await Driver.findOne({ _id: driverId, vehicleId });
                 if (!driver) {
-                    return res.status(404).json({ success: false, error: 'السائق غير موجود أو لا ينتمي لهذه الوسيلة' });
+                    return res.status(404).json({ success: false, error: 'السائق غير موجود' });
                 }
 
                 if (firstName !== undefined && String(firstName).trim()) driver.firstName = String(firstName).trim();
@@ -184,23 +168,8 @@ module.exports = function(app, deps) {
                 if (licenseDate !== undefined) driver.licenseDate = licenseDate || null;
                 if (licenseCat !== undefined) driver.licenseCat = String(licenseCat).trim();
                 if (assignment !== undefined) driver.assignment = String(assignment).trim();
-                if (notes !== undefined) driver.notes = String(notes).trim();
 
                 await driver.save();
-
-                try {
-                    await addSystemLog({
-                        userId: req.user.id,
-                        userName: req.user.name,
-                        action: 'update',
-                        resource: 'driver',
-                        resourceId: driver._id.toString(),
-                        resourceName: `${driver.firstName} ${driver.lastName}`,
-                        status: 'success',
-                        ip: req.ip,
-                        requestId: req.requestId
-                    });
-                } catch(e) {}
 
                 res.json({ success: true, message: 'تم تحديث السائق بنجاح', driver });
             } catch (err) {
@@ -210,9 +179,9 @@ module.exports = function(app, deps) {
         }
     );
 
-    /* ═══════════════════════════════════════════════════════════
-       🗑️ DELETE /api/vehicles/:vehicleId/drivers/:driverId
-       ═══════════════════════════════════════════════════════════ */
+    // ═══════════════════════════════════════════════════════
+    // 🗑️ DELETE /api/vehicles/:vehicleId/drivers/:driverId
+    // ═══════════════════════════════════════════════════════
     app.delete(
         '/api/vehicles/:vehicleId/drivers/:driverId',
         authenticateAccessToken,
@@ -228,22 +197,8 @@ module.exports = function(app, deps) {
 
                 const driver = await Driver.findOneAndDelete({ _id: driverId, vehicleId });
                 if (!driver) {
-                    return res.status(404).json({ success: false, error: 'السائق غير موجود أو لا ينتمي لهذه الوسيلة' });
+                    return res.status(404).json({ success: false, error: 'السائق غير موجود' });
                 }
-
-                try {
-                    await addSystemLog({
-                        userId: req.user.id,
-                        userName: req.user.name,
-                        action: 'delete',
-                        resource: 'driver',
-                        resourceId: driver._id.toString(),
-                        resourceName: `${driver.firstName} ${driver.lastName}`,
-                        status: 'success',
-                        ip: req.ip,
-                        requestId: req.requestId
-                    });
-                } catch(e) {}
 
                 res.json({ success: true, message: 'تم حذف السائق بنجاح' });
             } catch (err) {
@@ -253,7 +208,7 @@ module.exports = function(app, deps) {
         }
     );
 
-    console.log('✅ [DRIVERS] All routes registered:');
+    console.log('✅ [DRIVERS] All routes registered successfully:');
     console.log('   GET    /api/vehicles/:vehicleId/drivers');
     console.log('   POST   /api/vehicles/:vehicleId/drivers');
     console.log('   PUT    /api/vehicles/:vehicleId/drivers/:driverId');
