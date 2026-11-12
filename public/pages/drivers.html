@@ -299,7 +299,7 @@ body.dark-mode .avatar{background:linear-gradient(145deg,var(--gold-d),var(--gol
 <script>
 (function () {
   'use strict';
-  var vehicleId = null, vehicleName = '', vehicleAssignment = '';
+  var vehicleId = null, vehicleName = '', vehicleAssignment = '', vehiclePlateNumber = '';
   var allDrivers = [], filteredDrivers = [], editingId = null, pendingDelete = null;
 
   function $(s) { return document.querySelector(s); }
@@ -382,19 +382,27 @@ body.dark-mode .avatar{background:linear-gradient(145deg,var(--gold-d),var(--gol
       var list = await res.json();
       var vehicles = Array.isArray(list) ? list : (list.vehicles || []);
       var v = vehicles.find(function (x) { return String(x.id || x._id) === String(vehicleId); });
+      
       if (v) {
+        // ✅ هنا يتم جلب الرقم الصحيح (24569) بدلاً من الـ ID
         vehicleName = v.plateNumber || v.name || 'وسيلة';
+        vehiclePlateNumber = v.num || v.plateNumber || vehicleId; 
         vehicleAssignment = v.supplyPlace || v.zone || v.region || '—';
+        
         $('#vesselName').textContent = 'الوسيلة: ' + vehicleName;
-        $('#statVesselName').textContent = vehicleName;
+        $('#statVesselName').textContent = vehiclePlateNumber; // عرض الرقم الحقيقي
         $('#statAssignment').textContent = vehicleAssignment;
-        $('#plateText').textContent = vehicleName;
+        
+        $('#plateText').textContent = vehiclePlateNumber;
         $('#plateBox').style.display = 'inline-flex';
+        
         document.title = 'سائقو: ' + vehicleName;
+        
+        // ✅ تحديث عنوان الجدول بالرقم الحقيقي
+        updateTableTitle();
       } else {
         $('#vesselName').textContent = 'الوسيلة غير موجودة';
       }
-      updateTableTitle();
     } catch (e) { console.error('loadVehicleInfo:', e); }
     try {
       var cu = JSON.parse(localStorage.getItem('marine_user') || 'null');
@@ -404,9 +412,21 @@ body.dark-mode .avatar{background:linear-gradient(145deg,var(--gold-d),var(--gol
 
   function updateTableTitle() {
     var parts = ['قائمة السائقين المعينين على الوسيلة'];
-    if (vehicleAssignment && vehicleAssignment !== '—') parts.push('الإدارة: ' + vehicleAssignment);
-    if (vehicleId) parts.push('رقم: ' + vehicleId);
-    $('#tableTitleText').textContent = parts.join(' — ');
+    
+    // إضافة الإدارة
+    if (vehicleAssignment && vehicleAssignment !== '—') {
+        parts.push('الإدارة: ' + vehicleAssignment);
+    }
+    
+    // ✅ إضافة الرقم الحقيقي (24569) وليس الـ ID الطويل
+    if (vehiclePlateNumber) {
+        parts.push('رقم: ' + vehiclePlateNumber);
+    }
+    
+    var titleEl = document.getElementById('tableTitleText');
+    if (titleEl) {
+        titleEl.textContent = parts.join(' — ');
+    }
   }
 
   /* ── Load ── */
@@ -676,9 +696,18 @@ body.dark-mode .avatar{background:linear-gradient(145deg,var(--gold-d),var(--gol
   window.printDrivers = function () {
     var data = filteredDrivers.length ? filteredDrivers : allDrivers;
     if (!data.length) { toast('لا يوجد سائقون للطباعة', 'error'); return; }
+    
     var parts = ['قائمة السائقين المعينين على الوسيلة'];
-    parts.push('الإدارة: ' + (vehicleAssignment && vehicleAssignment !== '—' ? vehicleAssignment : 'غير محددة'));
-    if (vehicleId) parts.push('رقم: ' + vehicleId);
+    
+    if (vehicleAssignment && vehicleAssignment !== '—') {
+        parts.push('الإدارة: ' + vehicleAssignment);
+    }
+    
+    // ✅ استخدام الرقم الحقيقي للوسيلة
+    if (vehiclePlateNumber) {
+        parts.push('رقم: ' + vehiclePlateNumber);
+    }
+
     var printData = {
       type: 'drivers',
       title: 'سائقو الوسيلة — ' + (vehicleName || ''),
@@ -693,6 +722,7 @@ body.dark-mode .avatar{background:linear-gradient(145deg,var(--gold-d),var(--gol
         return [fullName(d), d.cin || '—', d.license || '—', d.licenseDate ? formatDate(d.licenseDate) : '—', d.licenseCat || '—', d.assignment || vehicleAssignment];
       })
     };
+    
     try { localStorage.setItem('print_data', JSON.stringify(printData)); } catch (e) { toast('تعذّر تجهيز الطباعة', 'error'); return; }
     window.open('/print.html?type=drivers&key=print_data', '_blank');
   };
