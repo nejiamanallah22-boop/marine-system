@@ -1345,6 +1345,14 @@
                 <textarea class="veh-form-control" id="vehNotes" placeholder="ملاحظات..." maxlength="1000"></textarea>
             </div>
 
+            <!-- 🔴 زر الطاقم (السواق) في النموذج — أُضيف هنا -->
+            <div class="veh-form-group" style="margin-top: 15px; margin-bottom: 15px;">
+                <button type="button" class="veh-btn primary" onclick="openCrewFromFormVehicle()" style="width: 100%; justify-content: center; padding: 14px; font-size: 15px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; border: none; box-shadow: 0 8px 24px rgba(59,130,246,0.4);">
+                    <i class="fas fa-users"></i> إدارة طاقم هذه الوسيلة
+                </button>
+            </div>
+            <!-- 🔴 نهاية زر الطاقم -->
+
             <div class="veh-modal-actions">
                 <button type="button" class="veh-btn secondary" id="vehCancelBtn">إلغاء</button>
                 <button type="submit" class="veh-btn primary" id="vehSaveBtn">
@@ -2685,6 +2693,11 @@
 
             var actions = '';
             actions += '<button class="veh-act gallery" data-action="gallery" data-id="' + escapeHtml(id) + '" title="عرض الصور"><i class="fas fa-images"></i></button>';
+            
+            // 🔴 زر الطاقم (السواق) في الجدول — أُضيف هنا
+            actions += '<button class="veh-act crew" data-action="crew" data-id="' + escapeHtml(id) + '" title="إدارة الطاقم" style="background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3);"><i class="fas fa-users"></i></button>';
+            // 🔴 نهاية زر الطاقم
+
             if (isDisposed) {
                 actions += '<button class="veh-act restore" data-action="restore" data-id="' + escapeHtml(id) + '" title="استعادة"><i class="fas fa-undo"></i></button>';
             } else {
@@ -2722,6 +2735,7 @@
             var id = target.getAttribute('data-id');
             if (!id) return;
             if (action === 'gallery') openGalleryForVehicle(id);
+            else if (action === 'crew') openCrewFromTableVehicle(id); // 🔴 تفعيل زر الطاقم
             else if (action === 'edit') openEditModal(id);
             else if (action === 'dispose') openDisposeModal(id);
             else if (action === 'restore') confirmRestore(id);
@@ -3257,6 +3271,23 @@
         var id2 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
         _timeouts.push(id2);
     }
+
+    // 🔴 دالتا زر الطاقم (السواق) للوسائل البرية
+    window.openCrewFromFormVehicle = function() {
+        var id = document.getElementById('vehId') ? document.getElementById('vehId').value : null;
+        if (id) {
+            window.open('/pages/crew.html?id=' + encodeURIComponent(id), '_blank');
+        } else {
+            alert('⚠️ يرجى تحديد وسيلة أو حفظها أولاً للوصول إلى طاقمها.');
+        }
+    };
+
+    window.openCrewFromTableVehicle = function(id) {
+        if (id) {
+            window.open('/pages/crew.html?id=' + encodeURIComponent(id), '_blank');
+        }
+    };
+    // 🔴 نهاية الدالتين
 
 })();
 </script>
