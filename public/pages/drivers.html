@@ -9,9 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* ═══════════════════════════════════════════════════════ */
-/* 🎨 DESIGN TOKENS & RESET */
-/* ═══════════════════════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --gold:#d4a017;--gold-l:#f3d77a;--gold-d:#9a7209;--gold-bg:#fbf3da;
@@ -25,7 +22,6 @@
   --font:'Cairo','Segoe UI',Tahoma,sans-serif;
   --ease:.25s cubic-bezier(.4,0,.2,1);
 }
-/* Dark Mode Variables */
 body.dark-mode {
   --bg: #0f172a; --card: #1e293b; --line: #334155; --line-2: #1e293b;
   --t1: #f1f5f9; --t2: #cbd5e1; --t3: #94a3b8;
@@ -384,13 +380,14 @@ body.dark-mode .avatar{background:linear-gradient(145deg,var(--gold-d),var(--gol
       var v = vehicles.find(function (x) { return String(x.id || x._id) === String(vehicleId); });
       
       if (v) {
-        // ✅ هنا يتم جلب الرقم الصحيح (24569) بدلاً من الـ ID
+        // جلب الرقم الحقيقي من قاعدة البيانات
         vehicleName = v.plateNumber || v.name || 'وسيلة';
-        vehiclePlateNumber = v.num || v.plateNumber || vehicleId; 
+        // هنا نضع رقم الوسيلة الصحيح، إذا لم يوجد نضع "غير محدد" بدلاً من الـ ID
+        vehiclePlateNumber = v.num || v.plateNumber || 'غير محدد'; 
         vehicleAssignment = v.supplyPlace || v.zone || v.region || '—';
         
         $('#vesselName').textContent = 'الوسيلة: ' + vehicleName;
-        $('#statVesselName').textContent = vehiclePlateNumber; // عرض الرقم الحقيقي
+        $('#statVesselName').textContent = vehiclePlateNumber; // عرض الرقم في البطاقة
         $('#statAssignment').textContent = vehicleAssignment;
         
         $('#plateText').textContent = vehiclePlateNumber;
@@ -398,7 +395,7 @@ body.dark-mode .avatar{background:linear-gradient(145deg,var(--gold-d),var(--gol
         
         document.title = 'سائقو: ' + vehicleName;
         
-        // ✅ تحديث عنوان الجدول بالرقم الحقيقي
+        // تحديث العنوان بالرقم الحقيقي
         updateTableTitle();
       } else {
         $('#vesselName').textContent = 'الوسيلة غير موجودة';
@@ -412,13 +409,11 @@ body.dark-mode .avatar{background:linear-gradient(145deg,var(--gold-d),var(--gol
 
   function updateTableTitle() {
     var parts = ['قائمة السائقين المعينين على الوسيلة'];
-    
-    // إضافة الإدارة
     if (vehicleAssignment && vehicleAssignment !== '—') {
         parts.push('الإدارة: ' + vehicleAssignment);
     }
     
-    // ✅ إضافة الرقم الحقيقي (24569) وليس الـ ID الطويل
+    // استخدام الرقم الصحيح هنا
     if (vehiclePlateNumber) {
         parts.push('رقم: ' + vehiclePlateNumber);
     }
@@ -703,7 +698,7 @@ body.dark-mode .avatar{background:linear-gradient(145deg,var(--gold-d),var(--gol
         parts.push('الإدارة: ' + vehicleAssignment);
     }
     
-    // ✅ استخدام الرقم الحقيقي للوسيلة
+    // استخدام الرقم الحقيقي هنا
     if (vehiclePlateNumber) {
         parts.push('رقم: ' + vehiclePlateNumber);
     }
