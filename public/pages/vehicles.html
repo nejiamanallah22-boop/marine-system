@@ -3271,24 +3271,40 @@
         var id2 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
         _timeouts.push(id2);
     }
-
     // 🔴 دالتا زر الطاقم (السواق) للوسائل البرية
     window.openCrewFromFormVehicle = function() {
-        var id = document.getElementById('vehId') ? document.getElementById('vehId').value : null;
-        if (id) {
-            window.open('/pages/drivers.html?id=' + encodeURIComponent(id), '_blank');
-        } else {
-            alert('⚠️ يرجى تحديد وسيلة أو حفظها أولاً للوصول إلى طاقمها.');
+        var idInput = document.getElementById('vehId');
+        var id = idInput ? String(idInput.value || '').trim() : '';
+        
+        console.log('🔍 [Crew Button] Form - vehId value:', id);
+        
+        // تحقق من صحة id
+        if (!id || id === 'undefined' || id === 'null' || id === '0' || id.length < 10) {
+            alert('⚠️ لحفظ الوسيلة أولاً قبل إدارة طاقمها.\n\nالوسيلة الجديدة يجب أن تُحفظ أولاً ليحصل لها معرف (ID) يمكن ربط السائقين به.');
+            return;
         }
+        
+        var url = '/pages/drivers.html?id=' + encodeURIComponent(id);
+        console.log('🔗 [Crew Button] Opening:', url);
+        window.open(url, '_blank');
     };
 
     window.openCrewFromTableVehicle = function(id) {
-        if (id) {
-            window.open('/pages/drivers.html?id=' + encodeURIComponent(id), '_blank');
+        console.log('🔍 [Crew Button] Table - id:', id, 'type:', typeof id);
+        
+        var cleanId = id ? String(id).trim() : '';
+        
+        if (!cleanId || cleanId === 'undefined' || cleanId === 'null' || cleanId === '0' || cleanId.length < 10) {
+            console.error('❌ [Crew Button] Invalid vehicle ID from table:', id);
+            alert('⚠️ خطأ: معرف الوسيلة غير صالح.\n\nيرجى تحديث الصفحة والمحاولة مرة أخرى.');
+            return;
         }
+        
+        var url = '/pages/drivers.html?id=' + encodeURIComponent(cleanId);
+        console.log('🔗 [Crew Button] Opening:', url);
+        window.open(url, '_blank');
     };
     // 🔴 نهاية الدالتين
 
-})();
 </script>
 </div>
