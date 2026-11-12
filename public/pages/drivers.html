@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سائقو الوسيلة — الوسائل البرية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+        --gold-1: #f7d774; --gold-2: #e6b31e; --gold-glow: rgba(230, 179, 30, 0.35);
+        --navy-1: #0a1e38; --navy-2: #14304f;
+        --emerald: #10b981; --red: #ef4444; --blue: #3b82f6; --purple: #8b5cf6;
+        --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+        --slate-300: #cbd5e1; --slate-400: #94a3b8; --slate-500: #64748b;
+        --slate-600: #475569; --slate-700: #334155; --slate-900: #0f172a;
+        --radius: 16px; --radius-sm: 11px; --font: 'Cairo', sans-serif;
+    }
+    body { font-family: var(--font); background: linear-gradient(135deg, #eef2f7 0%, #f8fafc 50%, #eef2f7 100%); min-height: 100vh; direction: rtl; padding: 20px; }
+    .container { max-width: 1600px; margin: 0 auto; }
+
+    /* HEADER */
+    .header {
+        background: linear-gradient(135deg, var(--navy-1), var(--navy-2));
+        border-radius: var(--radius); padding: 24px 32px;
+        display: flex; justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 20px; margin-bottom: 22px;
+        box-shadow: 0 20px 60px rgba(10,30,56,0.35);
+    }
+    .header-left { display: flex; align-items: center; gap: 18px; }
+    .header-icon {
+        width: 64px; height: 64px; border-radius: 18px;
+        background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 28px; color: var(--navy-1);
+    }
+    .header-text h1 {
+        font-size: 26px; font-weight: 900;
+        background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .header-text p { font-size: 13px; color: #94a3b8; font-weight: 600; }
+    .header-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn { padding: 12px 22px; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; }
+    .btn-print { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: var(--navy-1); }
+    .btn-print:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--gold-glow); }
+    .btn-secondary { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+    .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px; }
+    .stat-card { background: white; border-radius: var(--radius); padding: 20px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .stat-icon { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .stat-value { font-size: 24px; font-weight: 900; color: var(--navy-1); }
+    .stat-label { font-size: 11px; font-weight: 800; color: var(--slate-500); }
+    .vessel .stat-icon { background: rgba(230,179,30,0.15); color: var(--gold-2); }
+    .license .stat-icon { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .phone .stat-icon { background: rgba(16,185,129,0.15); color: var(--emerald); }
+    .user .stat-icon { background: rgba(139,92,246,0.15); color: var(--purple); }
+
+    /* FORM */
+    .card { background: white; border-radius: var(--radius); padding: 24px; margin-bottom: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .form-title { font-size: 17px; font-weight: 900; color: var(--navy-1); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .form-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group label { font-size: 11px; font-weight: 800; color: var(--slate-600); margin-bottom: 6px; }
+    .form-control { padding: 11px 14px; background: var(--slate-50); border: 2px solid var(--slate-200); border-radius: var(--radius-sm); font-family: var(--font); font-size: 13px; }
+    .form-control:focus { border-color: var(--gold-2); outline: none; }
+    .form-actions { grid-column: 1 / -1; display: flex; gap: 12px; margin-top: 10px; }
+    .btn-primary { background: linear-gradient(135deg, var(--emerald), #059669); color: white; }
+    .btn-outline { background: var(--slate-100); color: var(--slate-700); border: 1.5px solid var(--slate-300); }
+
+    /* TABLE */
+    .table-card { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .table-header { padding: 18px 24px; background: linear-gradient(135deg, var(--navy-1), var(--navy-2)); color: var(--gold-1); font-weight: 900; }
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    thead th { padding: 14px; font-size: 11px; font-weight: 900; color: var(--gold-1); text-align: center; background: linear-gradient(135deg, var(--navy-1), var(--navy-2)); white-space: nowrap; }
+    tbody td { padding: 12px; text-align: center; font-size: 13px; border-bottom: 1px solid var(--slate-100); }
+    tbody tr:hover { background: rgba(230,179,30,0.05); }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; }
+    .badge-gold { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: var(--navy-1); }
+    .badge-blue { background: rgba(59,130,246,0.15); color: #2563eb; }
+    .badge-empty { background: var(--slate-50); color: var(--slate-400); }
+    .btn-sm { width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer; margin: 0 2px; }
+    .btn-sm-edit { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .btn-sm-delete { background: rgba(239,68,68,0.15); color: var(--red); }
+    .empty-state { text-align: center; padding: 60px; color: var(--slate-500); }
+    .toast { position: fixed; bottom: 20px; left: 20px; padding: 14px 22px; border-radius: 12px; color: white; font-weight: 800; z-index: 9999; animation: slideIn 0.3s ease; }
+    .toast.success { background: var(--emerald); }
+    .toast.error { background: var(--red); }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* PRINT */
+    #tn-print-header { display: none; }
+    @media print {
+        body { background: white !important; padding: 0 !important; }
+        .header-actions, .card, .toast, .btn-sm { display: none !important; }
+        .header { box-shadow: none; background: none; color: #000; border-bottom: 2px solid #000; border-radius: 0; padding: 10px 0; margin-bottom: 10px; }
+        .header-icon { display: none; }
+        .header-text h1 { color: #000; -webkit-text-fill-color: #000; font-size: 18pt; }
+        .header-text p { color: #333; }
+        .stats-grid { display: none !important; }
+        .table-card { box-shadow: none; border: 1px solid #ccc; }
+        .table-header { background: #eee !important; color: #000 !important; }
+        thead th { background: #eee !important; color: #000 !important; border: 1px solid #ccc; }
+        tbody td { border: 1px solid #ddd; }
+        #tn-print-header { display: block !important; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        #tn-print-header .tn-h-row { display: flex; justify-content: space-between; align-items: flex-start; font-size: 9pt; font-weight: 700; }
+        #tn-print-header .tn-h-right { text-align: right; }
+        #tn-print-header .tn-h-center { text-align: center; font-size: 14pt; font-weight: 900; color: #000; }
+        #tn-print-header .tn-h-left { text-align: left; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <!-- الترويسة الرسمية للطباعة -->
+    <div id="tn-print-header">
+        <div class="tn-h-row">
+            <div class="tn-h-right">
+                الجمهورية التونسية<br>
+                وزارة الداخلية<br>
+                الإدارة العامة للحرس الوطني<br>
+                الإدارة العامة لحرس الحدود<br>
+                إدارة إسناد الوحدات البحرية
+            </div>
+            <div class="tn-h-center">سائقو الوسيلة</div>
+            <div class="tn-h-left">
+                العوينة في: __________<br>
+                ع/ ______ /دد
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="header-left">
+            <div class="header-icon"><i class="fas fa-id-card"></i></div>
+            <div class="header-text">
+                <h1>سائقو الوسيلة</h1>
+                <p id="vesselName">جاري التحميل...</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-print" onclick="printDrivers()"><i class="fas fa-print"></i> طباعة</button>
+            <button class="btn btn-secondary" onclick="window.close()"><i class="fas fa-arrow-right"></i> رجوع</button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card vessel">
+            <div class="stat-icon"><i class="fas fa-truck"></i></div>
+            <div><div class="stat-value" id="statVesselName">—</div><div class="stat-label">الوسيلة</div></div>
+        </div>
+        <div class="stat-card license">
+            <div class="stat-icon"><i class="fas fa-id-badge"></i></div>
+            <div><div class="stat-value" id="statLicenses">0</div><div class="stat-label">عدد السائقين</div></div>
+        </div>
+        <div class="stat-card phone">
+            <div class="stat-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div><div class="stat-value" id="statAssignment">—</div><div class="stat-label">مكان التعيين</div></div>
+        </div>
+        <div class="stat-card user">
+            <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
+            <div><div class="stat-value" id="statCurrentUser">—</div><div class="stat-label">المسؤول</div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="form-title"><i class="fas fa-user-plus"></i> <span id="formTitle">إضافة سائق جديد</span></div>
+        <div class="form-body">
+            <div class="form-group">
+                <label>اسم السائق <span style="color:red;">*</span></label>
+                <input type="text" id="fFirstName" class="form-control" placeholder="الاسم">
+            </div>
+            <div class="form-group">
+                <label>لقب السائق <span style="color:red;">*</span></label>
+                <input type="text" id="fLastName" class="form-control" placeholder="اللقب">
+            </div>
+            <div class="form-group">
+                <label>الرقم الشخصي</label>
+                <input type="text" id="fCin" class="form-control" placeholder="البطاقة الوطنية">
+            </div>
+            <div class="form-group">
+                <label>رقم رخصة السياقة</label>
+                <input type="text" id="fLicense" class="form-control" placeholder="رقم الرخصة">
+            </div>
+            <div class="form-group">
+                <label>تاريخ رخصة السياقة</label>
+                <input type="date" id="fLicenseDate" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>صنف رخصة السياقة</label>
+                <input type="text" id="fLicenseCat" class="form-control" placeholder="B, C, D...">
+            </div>
+            <div class="form-group">
+                <label>مكان تعيين الوسيلة</label>
+                <input type="text" id="fAssignment" class="form-control" placeholder="مكان التعيين">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" id="addBtn" onclick="addDriver()"><i class="fas fa-plus"></i> إضافة السائق</button>
+                <button class="btn btn-outline" id="cancelBtn" style="display:none;" onclick="cancelEdit()"><i class="fas fa-times"></i> إلغاء</button>
+                <button class="btn btn-outline" onclick="clearForm()"><i class="fas fa-eraser"></i> مسح</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-header"><i class="fas fa-list"></i> قائمة السائقين المعينين (<span id="tableCount">0</span>)</div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>اسم ولقب السائق</th>
+                        <th>الرقم الشخصي</th>
+                        <th>رقم رخصة السياقة</th>
+                        <th>تاريخ الرخصة</th>
+                        <th>الصنف</th>
+                        <th>مكان التعيين</th>
+                        <th>إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="driversTableBody">
+                    <tr><td colspan="7" class="empty-state">جاري التحميل...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+    var vehicleId = null, vehicleName = '', allDrivers = [], editingId = null, vehicleAssignment = '';
+
+    function $(s) { return document.querySelector(s); }
+    function getToken() { return localStorage.getItem('marine_token') || localStorage.getItem('token') || localStorage.getItem('authToken') || ''; }
+    function getCsrf() { try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch(e) { return ''; } }
+    function escapeHtml(s) { if (s == null) return ''; return String(s).replace(/[&<>"']/g, function(m) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]; }); }
+    function toast(msg, type) { type = type || 'info'; var t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = msg; document.body.appendChild(t); setTimeout(function() { t.remove(); }, 3000); }
+    function formatDate(d) { if (!d) return '—'; try { var date = new Date(d); return String(date.getDate()).padStart(2,'0') + '/' + String(date.getMonth()+1).padStart(2,'0') + '/' + date.getFullYear(); } catch(e) { return '—'; } }
+
+    function init() {
+        var token = getToken();
+        if (!token) { document.body.innerHTML = '<div style="text-align:center;padding:80px;color:#ef4444;font-size:20px;">⚠️ يجب تسجيل الدخول أولاً</div>'; return; }
+        var params = new URLSearchParams(window.location.search);
+        vehicleId = params.get('id');
+        if (!vehicleId) { document.body.innerHTML = '<div style="text-align:center;padding:80px;color:#ef4444;font-size:20px;">⚠️ لم يتم تحديد الوسيلة</div>'; return; }
+        loadVehicleInfo();
+        loadDrivers();
+    }
+
+    async function loadVehicleInfo() {
+        try {
+            var res = await fetch('/api/vehicles', { headers: { 'Authorization': 'Bearer ' + getToken() } });
+            var list = await res.json();
+            var v = list.find(function(x) { return String(x._id || x.id) === String(vehicleId); });
+            if (v) { 
+                vehicleName = v.plateNumber || v.name || 'وسيلة'; 
+                vehicleAssignment = v.assignment || v.zone || v.supplyPlace || '—';
+                $('#vesselName').textContent = 'الوسيلة: ' + vehicleName; 
+                $('#statVesselName').textContent = vehicleName; 
+                $('#statAssignment').textContent = vehicleAssignment;
+                document.title = 'سائقو: ' + vehicleName; 
+            }
+            else { $('#vesselName').textContent = 'الوسيلة غير موجودة'; $('#statVesselName').textContent = '—'; }
+        } catch (e) { $('#vesselName').textContent = 'خطأ في التحميل'; $('#statVesselName').textContent = '—'; }
+    }
+
+    async function loadDrivers() {
+        var tbody = $('#driversTableBody');
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">جاري التحميل...</td></tr>';
+        try {
+            var res = await fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/drivers', { headers: { 'Authorization': 'Bearer ' + getToken() } });
+            if (!res.ok) {
+                res = await fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/crew', { headers: { 'Authorization': 'Bearer ' + getToken() } });
+            }
+            var data = await res.json();
+            allDrivers = (data && data.drivers) || (data && data.crew) || [];
+            updateStats();
+            renderDrivers();
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state">فشل التحميل: ' + escapeHtml(e.message) + '</td></tr>'; }
+    }
+
+    function updateStats() {
+        $('#statLicenses').textContent = allDrivers.length;
+        try { var cu = JSON.parse(localStorage.getItem('marine_user') || 'null'); $('#statCurrentUser').textContent = cu ? (cu.name || cu.username || '—') : '—'; } catch(e) { $('#statCurrentUser').textContent = '—'; }
+    }
+
+    function renderDrivers() {
+        var tbody = $('#driversTableBody');
+        $('#tableCount').textContent = allDrivers.length;
+        if (!allDrivers.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fas fa-users" style="font-size:48px;opacity:0.3;display:block;margin-bottom:10px;"></i>لا يوجد سائقون مسجلون</td></tr>'; return; }
+        tbody.innerHTML = allDrivers.map(function(d) {
+            var fullName = ((d.firstName || '') + ' ' + (d.lastName || '')).trim() || '—';
+            return '<tr>' +
+                '<td><strong>' + escapeHtml(fullName) + '</strong></td>' +
+                '<td>' + (d.cin ? escapeHtml(d.cin) : '—') + '</td>' +
+                '<td>' + (d.license ? '<span class="badge badge-blue">' + escapeHtml(d.license) + '</span>' : '<span class="badge badge-empty">—</span>') + '</td>' +
+                '<td>' + formatDate(d.licenseDate) + '</td>' +
+                '<td>' + (d.licenseCat ? '<span class="badge badge-gold">' + escapeHtml(d.licenseCat) + '</span>' : '<span class="badge badge-empty">—</span>') + '</td>' +
+                '<td>' + (d.assignment ? escapeHtml(d.assignment) : '—') + '</td>' +
+                '<td><button class="btn-sm btn-sm-edit" onclick="editDriver(\'' + d.id + '\')"><i class="fas fa-edit"></i></button>' +
+                '<button class="btn-sm btn-sm-delete" onclick="deleteDriver(\'' + d.id + '\')"><i class="fas fa-trash"></i></button></td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    window.addDriver = async function() {
+        var firstName = ($('#fFirstName').value || '').trim(), lastName = ($('#fLastName').value || '').trim();
+        if (!firstName) { toast('الاسم مطلوب', 'error'); return; }
+        if (!lastName) { toast('اللقب مطلوب', 'error'); return; }
+        var data = {
+            firstName: firstName, lastName: lastName,
+            cin: ($('#fCin').value || '').trim(),
+            license: ($('#fLicense').value || '').trim(),
+            licenseDate: $('#fLicenseDate').value || null,
+            licenseCat: ($('#fLicenseCat').value || '').trim(),
+            assignment: ($('#fAssignment').value || '').trim()
+        };
+        var btn = $('#addBtn'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+        try {
+            var res = await fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/drivers', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken(), 'X-CSRF-Token': getCsrf() }, body: JSON.stringify(data) });
+            if (!res.ok) { res = await fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/crew', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken(), 'X-CSRF-Token': getCsrf() }, body: JSON.stringify(data) }); }
+            if (!res.ok) throw new Error('فشل الحفظ');
+            toast('تمت إضافة السائق', 'success'); clearForm(); loadDrivers();
+        } catch (e) { toast(e.message, 'error'); } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> إضافة السائق'; }
+    };
+
+    window.editDriver = function(id) {
+        var d = allDrivers.find(function(x) { return x.id === id; });
+        if (!d) return;
+        editingId = id;
+        $('#fFirstName').value = d.firstName || ''; $('#fLastName').value = d.lastName || '';
+        $('#fCin').value = d.cin || ''; $('#fLicense').value = d.license || '';
+        $('#fLicenseDate').value = d.licenseDate ? String(d.licenseDate).split('T')[0] : '';
+        $('#fLicenseCat').value = d.licenseCat || ''; $('#fAssignment').value = d.assignment || vehicleAssignment;
+        $('#formTitle').textContent = 'تعديل: ' + ((d.firstName || '') + ' ' + (d.lastName || '')).trim();
+        var btn = $('#addBtn'); btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث السائق'; btn.onclick = updateDriver; $('#cancelBtn').style.display = 'inline-flex'; window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    async function updateDriver() {
+        if (!editingId) return;
+        var data = {
+            firstName: ($('#fFirstName').value || '').trim(), lastName: ($('#fLastName').value || '').trim(),
+            cin: ($('#fCin').value || '').trim(), license: ($('#fLicense').value || '').trim(),
+            licenseDate: $('#fLicenseDate').value || null,
+            licenseCat: ($('#fLicenseCat').value || '').trim(),
+            assignment: ($('#fAssignment').value || '').trim()
+        };
+        try {
+            var res = await fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/drivers/' + encodeURIComponent(editingId), { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken(), 'X-CSRF-Token': getCsrf() }, body: JSON.stringify(data) });
+            if (!res.ok) { res = await fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/crew/' + encodeURIComponent(editingId), { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken(), 'X-CSRF-Token': getCsrf() }, body: JSON.stringify(data) }); }
+            if (!res.ok) throw new Error('فشل التحديث');
+            toast('تم التحديث', 'success'); cancelEdit(); loadDrivers();
+        } catch (e) { toast(e.message, 'error'); }
+    }
+
+    window.cancelEdit = function() { editingId = null; clearForm(); $('#formTitle').textContent = 'إضافة سائق جديد'; var btn = $('#addBtn'); btn.innerHTML = '<i class="fas fa-plus"></i> إضافة السائق'; btn.onclick = addDriver; $('#cancelBtn').style.display = 'none'; };
+
+    window.deleteDriver = async function(id) {
+        if (!confirm('هل تريد حذف هذا السائق؟')) return;
+        try {
+            var res = await fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/drivers/' + encodeURIComponent(id), { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken(), 'X-CSRF-Token': getCsrf() } });
+            if (!res.ok) { res = await fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/crew/' + encodeURIComponent(id), { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken(), 'X-CSRF-Token': getCsrf() } }); }
+            toast('تم الحذف', 'success'); loadDrivers();
+        } catch (e) { toast(e.message, 'error'); }
+    };
+
+    window.clearForm = function() { ['fFirstName','fLastName','fCin','fLicense','fLicenseDate','fLicenseCat'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; }); $('#fAssignment').value = vehicleAssignment; };
+
+    window.printDrivers = function() {
+        if (!allDrivers.length) { toast('لا يوجد سائقون للطباعة', 'error'); return; }
+        var printData = {
+            type: 'drivers',
+            title: 'سائقو: ' + vehicleName,
+            subtitle: 'Drivers Registry',
+            sectionTitle: 'قائمة السائقين المعينين',
+            stats: [
+                { value: allDrivers.length, label: '👥 السائقون', type: 'gold' },
+                { value: vehicleAssignment, label: '📍 مكان التعيين', type: 'info' }
+            ],
+            columns: ['اسم ولقب السائق','الرقم الشخصي','رقم رخصة السياقة','تاريخ الرخصة','الصنف','مكان التعيين'],
+            rows: allDrivers.map(function(d) {
+                return [
+                    ((d.firstName || '') + ' ' + (d.lastName || '')).trim(),
+                    d.cin || '—',
+                    d.license || '—',
+                    d.licenseDate ? formatDate(d.licenseDate) : '—',
+                    d.licenseCat || '—',
+                    d.assignment || vehicleAssignment
+                ];
+            })
+        };
+        localStorage.setItem('print_data', JSON.stringify(printData));
+        window.open('/print.html?type=drivers&key=print_data', '_blank');
+    };
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+</body>
+</html>
