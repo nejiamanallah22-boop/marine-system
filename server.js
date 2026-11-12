@@ -103,8 +103,8 @@ function loadModels() {
         console.log('✅ Models loaded'); return m;
     } catch (e) { console.error('❌ Models:', e.message); process.exit(1); }
 }
-
-let User, Vessel, Vehicle, Maintenance, Log, Ticket, Note, Notification, UserSettings, SystemLogo;
+let User, Vessel, Vehicle, Driver, Maintenance, Log, Ticket, Note, Notification, UserSettings, SystemLogo;
+//                            
 try {
     const m = loadModels();
     User = m.User; Vessel = m.Vessel; Maintenance = m.Maintenance; Log = m.Log; Ticket = m.Ticket;
