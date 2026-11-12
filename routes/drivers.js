@@ -1,5 +1,4 @@
 // routes/drivers.js
-// ✅ متوافق 100% مع server.js الخاص بك
 const mongoose = require('mongoose');
 
 module.exports = function(app, deps) {
@@ -26,6 +25,22 @@ module.exports = function(app, deps) {
     }
 
     // ═══════════════════════════════════════════════════════
+    // 🛠️ Helper: البحث عن الوسيلة بـ _id أو id المخصص
+    // ═══════════════════════════════════════════════════════
+    async function findVehicle(vehicleId) {
+        if (!vehicleId || typeof vehicleId !== 'string') return null;
+        const clean = vehicleId.trim();
+        if (!clean || clean.length > 100) return null;
+        
+        // إذا كان ObjectId صالح (24 hex) → ابحث بـ _id
+        if (/^[a-f0-9]{24}$/i.test(clean) && mongoose.Types.ObjectId.isValid(clean)) {
+            return await Vehicle.findById(clean);
+        }
+        // وإلا → ابحث بالـ id المخصص (string)
+        return await Vehicle.findOne({ id: clean });
+    }
+
+    // ═══════════════════════════════════════════════════════
     // 🔍 GET /api/vehicles/:vehicleId/drivers
     // ═══════════════════════════════════════════════════════
     app.get(
@@ -36,21 +51,22 @@ module.exports = function(app, deps) {
             try {
                 const { vehicleId } = req.params;
 
-                if (!mongoose.Types.ObjectId.isValid(vehicleId)) {
-                    return res.status(400).json({ success: false, error: 'معرف الوسيلة غير صالح' });
-                }
-
-                const vehicle = await Vehicle.findById(vehicleId).select('plateNumber name').lean();
+                const vehicle = await findVehicle(vehicleId);
                 if (!vehicle) {
                     return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
                 }
 
-                const drivers = await Driver.find({ vehicleId }).sort({ createdAt: -1 }).lean();
+                // البحث عن السائقين بـ _id الفعلي
+                const drivers = await Driver
+                    .find({ vehicleId: vehicle._id })
+                    .sort({ createdAt: -1 })
+                    .lean();
 
                 res.json({
                     success: true,
                     vehicle: {
-                        id: vehicle._id.toString(),
+                        id: vehicle.id,
+                        _id: vehicle._id.toString(),
                         name: vehicle.plateNumber || vehicle.name || '—'
                     },
                     count: drivers.length,
@@ -93,17 +109,14 @@ module.exports = function(app, deps) {
                 if (!lastName || !String(lastName).trim()) {
                     return res.status(400).json({ success: false, error: 'لقب السائق مطلوب' });
                 }
-                if (!mongoose.Types.ObjectId.isValid(vehicleId)) {
-                    return res.status(400).json({ success: false, error: 'معرف الوسيلة غير صالح' });
-                }
 
-                const vehicle = await Vehicle.findById(vehicleId);
+                const vehicle = await findVehicle(vehicleId);
                 if (!vehicle) {
                     return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
                 }
 
                 const driver = new Driver({
-                    vehicleId,
+                    vehicleId: vehicle._id,  // ← _id الفعلي دائماً
                     firstName: String(firstName).trim().substring(0, 100),
                     lastName: String(lastName).trim().substring(0, 100),
                     cin: String(cin || '').trim().substring(0, 20),
@@ -152,11 +165,16 @@ module.exports = function(app, deps) {
                 const { vehicleId, driverId } = req.params;
                 const { firstName, lastName, cin, license, licenseDate, licenseCat, assignment } = req.body;
 
-                if (!mongoose.Types.ObjectId.isValid(vehicleId) || !mongoose.Types.ObjectId.isValid(driverId)) {
-                    return res.status(400).json({ success: false, error: 'معرف غير صالح' });
+                if (!mongoose.Types.ObjectId.isValid(driverId)) {
+                    return res.status(400).json({ success: false, error: 'معرف السائق غير صالح' });
                 }
 
-                const driver = await Driver.findOne({ _id: driverId, vehicleId });
+                const vehicle = await findVehicle(vehicleId);
+                if (!vehicle) {
+                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+                }
+
+                const driver = await Driver.findOne({ _id: driverId, vehicleId: vehicle._id });
                 if (!driver) {
                     return res.status(404).json({ success: false, error: 'السائق غير موجود' });
                 }
@@ -191,11 +209,16 @@ module.exports = function(app, deps) {
             try {
                 const { vehicleId, driverId } = req.params;
 
-                if (!mongoose.Types.ObjectId.isValid(vehicleId) || !mongoose.Types.ObjectId.isValid(driverId)) {
-                    return res.status(400).json({ success: false, error: 'معرف غير صالح' });
+                if (!mongoose.Types.ObjectId.isValid(driverId)) {
+                    return res.status(400).json({ success: false, error: 'معرف السائق غير صالح' });
                 }
 
-                const driver = await Driver.findOneAndDelete({ _id: driverId, vehicleId });
+                const vehicle = await findVehicle(vehicleId);
+                if (!vehicle) {
+                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+                }
+
+                const driver = await Driver.findOneAndDelete({ _id: driverId, vehicleId: vehicle._id });
                 if (!driver) {
                     return res.status(404).json({ success: false, error: 'السائق غير موجود' });
                 }
@@ -208,9 +231,5 @@ module.exports = function(app, deps) {
         }
     );
 
-    console.log('✅ [DRIVERS] All routes registered successfully:');
-    console.log('   GET    /api/vehicles/:vehicleId/drivers');
-    console.log('   POST   /api/vehicles/:vehicleId/drivers');
-    console.log('   PUT    /api/vehicles/:vehicleId/drivers/:driverId');
-    console.log('   DELETE /api/vehicles/:vehicleId/drivers/:driverId');
+    console.log('✅ [DRIVERS] All routes registered successfully');
 };
