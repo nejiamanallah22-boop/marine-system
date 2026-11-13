@@ -3,170 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>محروقات الوسيلة — الأسطول البحري</title>
+<title>كشف المحروقات — منظومة الوسائل البحرية</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-/* ═══════════════════════════════════════════════════════════ */
-/* 🎨 BASE & VARIABLES (نفس متغيرات صفحة الطاقم) */
-/* ═══════════════════════════════════════════════════════════ */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
+/* نفس التصميم الداكن والفخم لصفحاتك */
 :root {
     --gold-1: #f7d774; --gold-2: #e6b31e; --gold-3: #b8860b;
     --navy-1: #0a1e38; --navy-2: #14304f;
-    --emerald: #10b981; --red: #ef4444; --blue: #3b82f6; --purple: #8b5cf6;
+    --emerald: #10b981; --red: #ef4444; --blue: #3b82f6;
     --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
-    --slate-400: #94a3b8; --slate-500: #64748b; --slate-600: #475569;
-    --slate-700: #334155; --slate-900: #0f172a;
+    --slate-400: #94a3b8; --slate-500: #64748b; --slate-700: #334155; --slate-900: #0f172a;
     --radius: 16px; --radius-sm: 11px; --radius-lg: 22px;
     --font: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
     --shadow-md: 0 6px 24px rgba(10, 30, 56, 0.10);
-    --shadow-lg: 0 20px 50px rgba(10, 30, 56, 0.18);
 }
-
-body {
-    font-family: var(--font);
-    background: linear-gradient(135deg, #eef2f7 0%, #f8fafc 50%, #eef2f7 100%);
-    color: var(--slate-900); min-height: 100vh; direction: rtl; padding: 20px;
-    -webkit-font-smoothing: antialiased;
-}
-
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: linear-gradient(135deg, #eef2f7 0%, #f8fafc 50%, #eef2f7 100%); color: var(--slate-900); min-height: 100vh; direction: rtl; padding: 20px; }
 .container { max-width: 1600px; margin: 0 auto; }
 
-/* ═══════════════════════════════════════════════════════════ */
-/* 🏛️ HEADER */
-/* ═══════════════════════════════════════════════════════════ */
-.header {
-    background: linear-gradient(135deg, var(--navy-1), var(--navy-2));
-    border-radius: var(--radius-lg); padding: 26px 34px; margin-bottom: 22px;
-    display: flex; justify-content: space-between; align-items: center;
-    box-shadow: 0 24px 70px rgba(10, 30, 56, 0.35); position: relative; overflow: hidden;
-}
-.header::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-    background: linear-gradient(90deg, transparent, var(--gold-2), var(--gold-1), var(--gold-2), transparent);
-}
-.header-left { display: flex; align-items: center; gap: 20px; z-index: 2; }
-.header-icon {
-    width: 70px; height: 70px; border-radius: 20px;
-    background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 30px; color: var(--navy-1); box-shadow: 0 10px 36px rgba(230, 179, 30, 0.35);
-}
-.header-text h1 {
-    font-size: 28px; font-weight: 900;
-    background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    margin-bottom: 5px;
-}
-.header-text p { font-size: 13px; color: var(--slate-400); font-weight: 600; }
+/* Header */
+.header { background: linear-gradient(135deg, var(--navy-1), var(--navy-2)); border-radius: var(--radius-lg); padding: 26px 34px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 24px 70px rgba(10, 30, 56, 0.35); }
+.header-left { display: flex; align-items: center; gap: 20px; }
+.header-icon { width: 70px; height: 70px; border-radius: 20px; background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--navy-1); }
+.header-text h1 { font-size: 28px; font-weight: 900; color: var(--gold-1); margin-bottom: 5px; }
+.header-text p { font-size: 13px; color: var(--slate-400); }
 
-/* ═══════════════════════════════════════════════════════════ */
-/* 📊 STATS */
-/* ═══════════════════════════════════════════════════════════ */
+/* Stats */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px; }
-.stat-card {
-    background: white; border-radius: var(--radius); padding: 22px;
-    display: flex; align-items: center; gap: 16px;
-    box-shadow: var(--shadow-md); border: 1px solid var(--slate-200);
-    border-right: 4px solid var(--blue);
-}
+.stat-card { background: white; border-radius: var(--radius); padding: 22px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow-md); border-right: 4px solid var(--blue); }
 .stat-card.actual { border-right-color: var(--emerald); }
 .stat-card.fraud { border-right-color: var(--red); }
-.stat-icon {
-    width: 56px; height: 56px; border-radius: 15px;
-    display: flex; align-items: center; justify-content: center; font-size: 23px;
-}
-.stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
-.stat-icon.emerald { background: rgba(16, 185, 129, 0.15); color: var(--emerald); }
-.stat-icon.red { background: rgba(239, 68, 68, 0.15); color: var(--red); }
-.stat-value { font-size: 28px; font-weight: 900; color: var(--navy-1); line-height: 1.15; }
-.stat-label { font-size: 11px; font-weight: 800; color: var(--slate-500); text-transform: uppercase; }
+.stat-icon { width: 56px; height: 56px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 23px; }
+.stat-icon.blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+.stat-icon.emerald { background: rgba(16,185,129,0.15); color: var(--emerald); }
+.stat-icon.red { background: rgba(239,68,68,0.15); color: var(--red); }
+.stat-value { font-size: 28px; font-weight: 900; color: var(--navy-1); }
+.stat-label { font-size: 11px; font-weight: 800; color: var(--slate-500); }
 
-/* ═══════════════════════════════════════════════════════════ */
-/* 📝 CARDS & FORM */
-/* ═══════════════════════════════════════════════════════════ */
+/* Cards & Forms */
 .card { background: white; border-radius: var(--radius); padding: 26px; margin-bottom: 22px; box-shadow: var(--shadow-md); border: 1px solid var(--slate-200); }
-.card-title { font-size: 17px; font-weight: 900; color: var(--navy-1); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--slate-100); padding-bottom: 15px; }
+.card-title { font-size: 17px; font-weight: 900; color: var(--navy-1); margin-bottom: 20px; border-bottom: 2px solid var(--slate-100); padding-bottom: 15px; display: flex; align-items: center; gap: 10px; }
 .card-title i { color: var(--gold-2); }
-
-.form-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
 .form-group label { font-size: 11.5px; font-weight: 900; color: var(--slate-600); margin-bottom: 8px; display: block; }
-.form-control { padding: 12px; border: 2px solid var(--slate-200); border-radius: var(--radius-sm); width: 100%; font-family: var(--font); font-weight: 600; transition: all 0.3s; background: var(--slate-50); color: var(--slate-900); }
-.form-control:focus { border-color: var(--gold-2); outline: none; background: white; box-shadow: 0 0 0 4px rgba(230,179,30,0.15); }
+.form-control { padding: 12px; border: 2px solid var(--slate-200); border-radius: var(--radius-sm); width: 100%; font-family: var(--font); font-weight: 600; background: var(--slate-50); }
+.form-control:focus { border-color: var(--gold-2); outline: none; background: white; }
 
-/* محرك التحليل */
+/* Audit Box */
 .audit-box { grid-column: 1 / -1; padding: 15px; border-radius: 8px; margin-top: 10px; display: none; }
-.audit-box.success { display: block; background: rgba(16, 185, 129, 0.1); border-right: 4px solid var(--emerald); color: #065f46; }
-.audit-box.danger { display: block; background: rgba(239, 68, 68, 0.1); border-right: 4px solid var(--red); color: #991b1b; }
-.audit-box h4 { margin-bottom: 8px; font-size: 15px; }
-.audit-box p { font-size: 13px; margin-bottom: 5px; font-weight: 600; }
+.audit-box.success { display: block; background: rgba(16,185,129,0.1); border-right: 4px solid var(--emerald); color: #065f46; }
+.audit-box.danger { display: block; background: rgba(239,68,68,0.1); border-right: 4px solid var(--red); color: #991b1b; }
 
-/* أزرار */
-.btn { padding: 12px 24px; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 13.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 9px; transition: all 0.3s; }
-.btn-primary { background: linear-gradient(135deg, var(--emerald), #059669); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4); }
+/* Buttons */
+.btn { padding: 12px 24px; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 13.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 9px; }
+.btn-primary { background: linear-gradient(135deg, var(--emerald), #059669); color: white; }
 .btn-outline { background: var(--slate-100); color: var(--slate-700); border: 1.5px solid var(--slate-300); }
-.btn-outline:hover { background: var(--slate-200); }
-.btn-print { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: var(--navy-1); box-shadow: 0 4px 12px rgba(230, 179, 30, 0.3); }
-.btn-print:hover { transform: translateY(-2px); }
+.btn-print { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: var(--navy-1); }
 
-/* ═══════════════════════════════════════════════════════════ */
-/* 📈 CHART & FILTER */
-/* ═══════════════════════════════════════════════════════════ */
-.filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: var(--slate-50); padding: 15px; border-radius: var(--radius-sm); border: 1px solid var(--slate-200); align-items: center; }
-.filter-bar input[type="date"] { padding: 8px; border: 1px solid var(--slate-300); border-radius: 6px; font-family: var(--font); }
-.chart-container { position: relative; height: 350px; width: 100%; }
-
-/* ═══════════════════════════════════════════════════════════ */
-/* 📋 TABLE */
-/* ═══════════════════════════════════════════════════════════ */
-.table-card { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--slate-200); }
+/* Table */
+.table-card { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-md); }
 .table-header { padding: 22px 28px; background: linear-gradient(135deg, var(--navy-1), var(--navy-2)); display: flex; justify-content: space-between; align-items: center; }
-.table-title { font-size: 16px; font-weight: 900; color: var(--gold-1); display: flex; align-items: center; gap: 10px; }
-.table-wrapper { overflow-x: auto; }
-.fuel-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 800px; }
-.fuel-table thead { background: var(--slate-100); }
-.fuel-table th { padding: 14px 12px; color: var(--slate-700); font-size: 11px; font-weight: 900; border-bottom: 2px solid var(--slate-300); text-align: center; }
-.fuel-table tbody tr { border-bottom: 1px solid var(--slate-100); transition: 0.2s; cursor: pointer; }
-.fuel-table tbody tr:hover { background: rgba(230, 179, 30, 0.05); }
-.fuel-table td { padding: 14px 10px; text-align: center; color: var(--slate-700); font-weight: 600; }
+.table-title { color: var(--gold-1); font-weight: 900; }
+.fuel-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+.fuel-table th { padding: 14px; background: var(--slate-100); border-bottom: 2px solid var(--slate-300); font-size: 12px; }
+.fuel-table td { padding: 14px; text-align: center; border-bottom: 1px solid var(--slate-100); font-weight: 600; }
+.badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+.badge-success { background: rgba(16,185,129,0.15); color: var(--emerald); }
+.badge-danger { background: rgba(239,68,68,0.15); color: var(--red); }
 
-.badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; }
-.badge-success { background: rgba(16, 185, 129, 0.15); color: var(--emerald); }
-.badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--red); }
-
-/* ═══════════════════════════════════════════════════════════ */
-/* 🪟 MODAL (نافذة التفاصيل) */
-/* ═══════════════════════════════════════════════════════════ */
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 30, 56, 0.7); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(10,30,56,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
 .modal-overlay.active { display: flex; }
-.modal-content { background: white; border-radius: var(--radius); width: 100%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; animation: scaleIn 0.3s ease; }
-@keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.modal-header { padding: 20px; background: linear-gradient(135deg, var(--navy-1), var(--navy-2)); color: var(--gold-1); display: flex; justify-content: space-between; align-items: center; }
-.modal-title { font-size: 18px; font-weight: 900; }
-.modal-close { background: transparent; border: none; color: var(--gold-1); font-size: 20px; cursor: pointer; }
+.modal-content { background: white; border-radius: var(--radius); max-width: 600px; width: 100%; animation: scaleIn 0.3s ease; }
+@keyframes scaleIn { from { transform: scale(0.9); } to { transform: scale(1); } }
+.modal-header { padding: 20px; background: var(--navy-1); color: var(--gold-1); display: flex; justify-content: space-between; }
 .modal-body { padding: 20px; }
-
-/* ═══════════════════════════════════════════════════════════ */
-/* 📱 RESPONSIVE */
-/* ═══════════════════════════════════════════════════════════ */
-@media (max-width: 900px) {
-    .header { padding: 22px; flex-direction: column; text-align: center; }
-    .header-left { flex-direction: column; }
-    .header-actions { width: 100%; justify-content: center; margin-top: 15px; }
-    .form-body { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 600px) {
-    body { padding: 12px; }
-    .stats-grid { grid-template-columns: 1fr 1fr; }
-    .form-body { grid-template-columns: 1fr; }
-    .header-text h1 { font-size: 22px; }
-}
 </style>
 </head>
 <body>
@@ -176,194 +89,132 @@ body {
         <div class="header-left">
             <div class="header-icon"><i class="fas fa-gas-pump"></i></div>
             <div class="header-text">
-                <h1>إدارة المحروقات</h1>
+                <h1>كشف المحروقات</h1>
                 <p id="vesselName"><i class="fas fa-circle-notch fa-spin"></i> جاري التحميل...</p>
             </div>
         </div>
-        <div class="header-actions" style="display: flex; gap: 10px;">
-            <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
-            <button class="btn btn-outline" onclick="window.location.href='/pages/fleet.html'"><i class="fas fa-arrow-right"></i> رجوع</button>
-        </div>
+        <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+        <button class="btn btn-outline" onclick="window.location.href='/pages/fleet.html'"><i class="fas fa-arrow-right"></i> رجوع</button>
     </div>
 
     <!-- STATS -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon blue"><i class="fas fa-tachometer-alt"></i></div>
-            <div>
-                <div class="stat-value" id="statTotalLiters">0</div>
-                <div class="stat-label">إجمالي المطلوب (لتر)</div>
-            </div>
+            <div><div class="stat-value" id="statTotalLiters">0</div><div class="stat-label">إجمالي المطلوب (لتر)</div></div>
         </div>
         <div class="stat-card actual">
             <div class="stat-icon emerald"><i class="fas fa-check-circle"></i></div>
-            <div>
-                <div class="stat-value" id="statActualLiters">0</div>
-                <div class="stat-label">الاستهلاك الفعلي (لتر)</div>
-            </div>
+            <div><div class="stat-value" id="statActualLiters">0</div><div class="stat-label">الاستهلاك الفعلي (لتر)</div></div>
         </div>
         <div class="stat-card fraud">
             <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
-            <div>
-                <div class="stat-value" id="statFraudDocs">0</div>
-                <div class="stat-label">وثائق مشبوهة</div>
-            </div>
+            <div><div class="stat-value" id="statFraudDocs">0</div><div class="stat-label">وثائق مشبوهة</div></div>
         </div>
     </div>
 
     <!-- ADD FORM -->
     <div class="card">
         <div class="card-title"><i class="fas fa-file-invoice"></i> تسجيل وثيقة تموين جديدة</div>
-        <div class="form-body" id="formBody">
+        <div id="formBody" style="display: grid; gap: 15px;">
             
-            <div class="form-group" style="grid-column: 1 / -1; max-width: 200px;">
+            <div class="form-group" style="max-width: 200px;">
                 <label>تاريخ الوثيقة</label>
                 <input type="date" id="fDate" class="form-control">
             </div>
 
-            <!-- 🔴 إجمالي الوثيقة -->
-            <div style="grid-column: 1 / -1; background: rgba(230, 179, 30, 0.08); border: 1.5px dashed var(--gold-2); padding: 15px; border-radius: 8px; margin: 5px 0;">
-                <h4 style="color: var(--gold-3); margin-bottom: 10px; font-size: 14px;"><i class="fas fa-calculator"></i> إجمالي الوثيقة (كما هو مكتوب في ورقة الإدارة)</h4>
+            <!-- إجمالي الوثيقة -->
+            <div style="background: rgba(230,179,30,0.08); border: 1.5px dashed var(--gold-2); padding: 15px; border-radius: 8px;">
+                <h4 style="color: var(--gold-3); margin-bottom: 10px; font-size: 14px;">إجمالي الوثيقة (من ورقة الإدارة)</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>إجمالي ساعات العمل المقطوعة *</label>
-                        <input type="number" id="fDocTotalHours" class="form-control" placeholder="مثال: 150" oninput="liveAudit()">
-                    </div>
-                    <div class="form-group">
-                        <label>إجمالي الوقود المطلوب (لتر) *</label>
-                        <input type="number" id="fDocTotalLiters" class="form-control" placeholder="مثال: 1000" oninput="liveAudit()">
-                    </div>
+                    <div class="form-group"><label>إجمالي ساعات العمل *</label><input type="number" id="fDocTotalHours" class="form-control" oninput="liveAudit()"></div>
+                    <div class="form-group"><label>إجمالي الوقود المطلوب (لتر) *</label><input type="number" id="fDocTotalLiters" class="form-control" oninput="liveAudit()"></div>
                 </div>
             </div>
 
-            <!-- 🔴 المحرك الأيمن (أو الوحيد) -->
-            <div style="grid-column: 1 / -1; border-right: 4px solid var(--blue); padding-right: 15px; margin-top: 10px;">
-                <h4 style="color: var(--blue); margin-bottom: 10px; font-size: 14px;"><i class="fas fa-cog"></i> بيانات المحرك <span id="rightEngineLabel">(أو الوحيد)</span></h4>
+            <!-- المحرك الأيمن -->
+            <div style="border-right: 4px solid var(--blue); padding-right: 15px;">
+                <h4 style="color: var(--blue); margin-bottom: 10px; font-size: 14px;"><i class="fas fa-cog"></i> المحرك <span id="rightEngineLabel">(أو الوحيد)</span></h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>عداد الساعات الكلي</label>
-                        <input type="number" id="fTotalHoursR" class="form-control" placeholder="169" oninput="liveAudit()">
-                    </div>
-                    <div class="form-group">
-                        <label>الساعات المقطوعة</label>
-                        <input type="number" id="fUsedHoursR" class="form-control" placeholder="75" oninput="liveAudit()">
-                    </div>
-                    <div class="form-group">
-                        <label>الوقود المطلوب (لتر)</label>
-                        <input type="number" id="fRequestedLitersR" class="form-control" placeholder="500" oninput="liveAudit()">
-                    </div>
+                    <div class="form-group"><label>عداد الساعات</label><input type="number" id="fTotalHoursR" class="form-control" oninput="liveAudit()"></div>
+                    <div class="form-group"><label>الساعات المقطوعة</label><input type="number" id="fUsedHoursR" class="form-control" oninput="liveAudit()"></div>
+                    <div class="form-group"><label>الوقود (لتر)</label><input type="number" id="fRequestedLitersR" class="form-control" oninput="liveAudit()"></div>
                 </div>
             </div>
 
-            <!-- 🔴 المحرك الأيسر (يظهر فقط إذا كان للقارب محركان) -->
-            <div id="engineLeftSection" style="grid-column: 1 / -1; border-right: 4px solid var(--emerald); padding-right: 15px; margin-top: 10px; display: none;">
-                <h4 style="color: var(--emerald); margin-bottom: 10px; font-size: 14px;"><i class="fas fa-cog"></i> بيانات المحرك الأيسر</h4>
+            <!-- المحرك الأيسر -->
+            <div id="engineLeftSection" style="border-right: 4px solid var(--emerald); padding-right: 15px; display: none;">
+                <h4 style="color: var(--emerald); margin-bottom: 10px; font-size: 14px;"><i class="fas fa-cog"></i> المحرك الأيسر</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>عداد الساعات الكلي</label>
-                        <input type="number" id="fTotalHoursL" class="form-control" placeholder="169" oninput="liveAudit()">
-                    </div>
-                    <div class="form-group">
-                        <label>الساعات المقطوعة</label>
-                        <input type="number" id="fUsedHoursL" class="form-control" placeholder="75" oninput="liveAudit()">
-                    </div>
-                    <div class="form-group">
-                        <label>الوقود المطلوب (لتر)</label>
-                        <input type="number" id="fRequestedLitersL" class="form-control" placeholder="500" oninput="liveAudit()">
-                    </div>
+                    <div class="form-group"><label>عداد الساعات</label><input type="number" id="fTotalHoursL" class="form-control" oninput="liveAudit()"></div>
+                    <div class="form-group"><label>الساعات المقطوعة</label><input type="number" id="fUsedHoursL" class="form-control" oninput="liveAudit()"></div>
+                    <div class="form-group"><label>الوقود (لتر)</label><input type="number" id="fRequestedLitersL" class="form-control" oninput="liveAudit()"></div>
                 </div>
             </div>
 
-            <!-- صندوق التحليل -->
+            <!-- كاشف التلاعب -->
             <div class="audit-box" id="auditBox"></div>
 
-            <!-- أزرار -->
-            <div style="grid-column: 1 / -1; display: flex; gap: 10px; margin-top: 10px;">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="btn btn-primary" id="addBtn" onclick="saveFuelDoc()"><i class="fas fa-save"></i> حفظ الوثيقة</button>
                 <button class="btn btn-outline" onclick="clearForm()"><i class="fas fa-eraser"></i> مسح</button>
             </div>
         </div>
     </div>
 
-    <!-- CHART & FILTER -->
+    <!-- CHART -->
     <div class="card">
-        <div class="card-title"><i class="fas fa-chart-bar"></i> التحليل البياني للاستهلاك</div>
-        <div class="filter-bar">
-            <div style="display:flex; gap:10px; align-items:center;">
-                <label style="font-size:12px; font-weight:bold; color:#64748b;">من:</label>
-                <input type="date" id="filterStart">
-                <label style="font-size:12px; font-weight:bold; color:#64748b;">إلى:</label>
-                <input type="date" id="filterEnd">
-                <button class="btn btn-outline" onclick="applyCustomFilter()">تطبيق</button>
-            </div>
-            <div style="display:flex; gap:5px; margin-right:auto;">
-                <button class="btn btn-outline" onclick="quickFilter('week')">هذا الأسبوع</button>
-                <button class="btn btn-outline" onclick="quickFilter('month')">هذا الشهر</button>
-                <button class="btn btn-outline" onclick="quickFilter('all')">الكل</button>
-            </div>
+        <div class="card-title"><i class="fas fa-chart-bar"></i> التحليل البياني</div>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <input type="date" id="filterStart" class="form-control" style="width: auto;">
+            <input type="date" id="filterEnd" class="form-control" style="width: auto;">
+            <button class="btn btn-outline" onclick="applyCustomFilter()">تطبيق</button>
+            <button class="btn btn-outline" onclick="quickFilter('month')">هذا الشهر</button>
         </div>
-        <div class="chart-container"><canvas id="fuelChart"></canvas></div>
+        <div style="height: 350px;"><canvas id="fuelChart"></canvas></div>
     </div>
 
     <!-- TABLE -->
     <div class="table-card">
         <div class="table-header">
             <div class="table-title"><i class="fas fa-list"></i> سجل وثائق التموين</div>
-            <span class="table-card-count" id="tableCount" style="background: var(--gold-2); padding: 5px 14px; border-radius: 20px; font-weight: bold; font-size: 12px;">0</span>
+            <span id="tableCount" style="background: var(--gold-2); padding: 5px 14px; border-radius: 20px; color: var(--navy-1); font-weight: bold;">0</span>
         </div>
-        <div class="table-wrapper">
+        <div style="overflow-x: auto;">
             <table class="fuel-table">
-                <thead>
-                    <tr>
-                        <th>التاريخ</th>
-                        <th>إجمالي الساعات</th>
-                        <th>إجمالي الوقود</th>
-                        <th>عدد المحركات</th>
-                        <th>المعدل الإجمالي</th>
-                        <th>الحالة</th>
-                    </tr>
-                </thead>
-                <tbody id="fuelTableBody">
-                    <tr><td colspan="6" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:var(--gold-2);"></i><p style="margin-top:10px;">جاري التحميل...</p></td></tr>
-                </tbody>
+                <thead><tr><th>التاريخ</th><th>إجمالي الساعات</th><th>إجمالي الوقود</th><th>المحركات</th><th>المعدل</th><th>الحالة</th></tr></thead>
+                <tbody id="fuelTableBody"><tr><td colspan="6" style="padding:40px; text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr></tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- 🪟 MODAL (نافذة عرض التفاصيل) -->
+<!-- MODAL -->
 <div class="modal-overlay" id="detailsModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 class="modal-title">تفاصيل الوثيقة</h3>
-            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            <h3 style="margin:0;">تفاصيل الوثيقة</h3>
+            <button onclick="closeModal()" style="background:none; border:none; color:var(--gold-1); font-size:20px; cursor:pointer;"><i class="fas fa-times"></i></button>
         </div>
-        <div class="modal-body" id="modalBody">
-            <!-- سيتم تعبئته بالجافاسكريبت -->
-        </div>
+        <div class="modal-body" id="modalBody"></div>
     </div>
 </div>
 
 <script>
 (function() {
-    'use strict';
     var boatId = new URLSearchParams(window.location.search).get('id');
     var isTwinEngine = false;
-    var boatStandards = { standardRate: 13.33, tankCapacity: 1000 };
-    var myChart = null;
-    var allDocsData = [];
+    var standards = { standardRate: 13.33, tankCapacity: 1000 };
+    var myChart = null, allDocs = [];
 
     function getToken() { return localStorage.getItem('marine_token') || localStorage.getItem('token') || ''; }
     function getCsrf() { try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch(e) { return ''; } }
-    function formatDate(d) { return new Date(d).toLocaleDateString('ar-EG'); }
 
     async function init() {
-        if (!boatId) {
-            document.body.innerHTML = '<h1 style="text-align:center;margin-top:50px;color:#ef4444;">⚠️ لم يتم تحديد المركب</h1>';
-            return;
-        }
+        if (!boatId) return alert('⚠️ لم يتم تحديد المركب');
         document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
         
+        // جلب اسم القارب وعدد المحركات
         try {
             const res = await fetch('/api/vessels', { headers: { 'Authorization': 'Bearer ' + getToken() } });
             const vessels = await res.json();
@@ -378,65 +229,39 @@ body {
             }
         } catch(e) {}
 
-        await loadStandards();
+        // جلب المعايير
+        try {
+            const res = await fetch('/api/fuel/standards/' + boatId, { headers: { 'Authorization': 'Bearer ' + getToken() } });
+            if (res.ok) standards = await res.json();
+        } catch(e) {}
+
         loadDocs();
     }
 
-    async function loadStandards() {
-        try {
-            const res = await fetch('/api/fuel/standards/' + boatId, { headers: { 'Authorization': 'Bearer ' + getToken() } });
-            if (res.ok) boatStandards = await res.json();
-        } catch(e) {}
-    }
-
     window.liveAudit = function() {
-        const docTotalHours = parseFloat(document.getElementById('fDocTotalHours').value) || 0;
-        const docTotalLiters = parseFloat(document.getElementById('fDocTotalLiters').value) || 0;
-
-        const hoursR = parseFloat(document.getElementById('fTotalHoursR').value) || 0;
-        const usedR  = parseFloat(document.getElementById('fUsedHoursR').value) || 0;
-        const litR   = parseFloat(document.getElementById('fRequestedLitersR').value) || 0;
-
-        let hoursL = 0, usedL = 0, litL = 0;
+        const docH = parseFloat(document.getElementById('fDocTotalHours').value) || 0;
+        const docL = parseFloat(document.getElementById('fDocTotalLiters').value) || 0;
+        const uR = parseFloat(document.getElementById('fUsedHoursR').value) || 0;
+        const lR = parseFloat(document.getElementById('fRequestedLitersR').value) || 0;
+        let uL = 0, lL = 0;
         if (isTwinEngine) {
-            hoursL = parseFloat(document.getElementById('fTotalHoursL').value) || 0;
-            usedL  = parseFloat(document.getElementById('fUsedHoursL').value) || 0;
-            litL   = parseFloat(document.getElementById('fRequestedLitersL').value) || 0;
+            uL = parseFloat(document.getElementById('fUsedHoursL').value) || 0;
+            lL = parseFloat(document.getElementById('fRequestedLitersL').value) || 0;
         }
 
-        let msgs = [];
-        let isFraud = false;
+        let msgs = [], isFraud = false;
 
-        // ✅ فحص 1: مجموع الساعات
-        const sumUsedHours = usedR + usedL;
-        if (docTotalHours > 0 && Math.abs(sumUsedHours - docTotalHours) > 0.5) {
-            isFraud = true;
-            msgs.push(`🚨 <b>تعارض الساعات:</b> مجموع المحركات (${sumUsedHours}) لا يطابق إجمالي الوثيقة (${docTotalHours}).`);
+        // تعارض الساعات
+        if (docH > 0 && Math.abs((uR + uL) - docH) > 0.5) {
+            isFraud = true; msgs.push(`🚨 <b>تعارض الساعات:</b> مجموع المحركات (${uR+uL}) لا يطابق إجمالي الوثيقة (${docH}).`);
         }
-
-        // ✅ فحص 2: مجموع الوقود
-        const sumLiters = litR + litL;
-        if (docTotalLiters > 0 && Math.abs(sumLiters - docTotalLiters) > 0.5) {
-            isFraud = true;
-            msgs.push(`🚨 <b>تعارض الكميات:</b> مجموع المحركات (${sumLiters}) لا يطابق إجمالي الوثيقة (${docTotalLiters}).`);
+        // تعارض الوقود
+        if (docL > 0 && Math.abs((lR + lL) - docL) > 0.5) {
+            isFraud = true; msgs.push(`🚨 <b>تعارض الكميات:</b> مجموع المحركات (${lR+lL}) لا يطابق إجمالي الوثيقة (${docL}).`);
         }
-
-        // ✅ فحص 3: تجاوز الخزان
-        if (docTotalLiters > boatStandards.tankCapacity) {
-            isFraud = true;
-            msgs.push(`🚨 <b>تجاوز الخزان:</b> الإجمالي (${docTotalLiters}) أكبر من سعة الخزان (${boatStandards.tankCapacity}).`);
-        }
-
-        // ✅ فحص 4: استهلاك كل محرك
-        if (usedR > 0 && litR > 0) {
-            let rate = litR / usedR;
-            let dev = ((rate - boatStandards.standardRate) / boatStandards.standardRate) * 100;
-            if (dev > 15) { isFraud = true; msgs.push(`⚠️ <b>استهلاك مرتفع (أيمن):</b> ${rate.toFixed(2)} لتر/ساعة (+${dev.toFixed(1)}%).`); }
-        }
-        if (isTwinEngine && usedL > 0 && litL > 0) {
-            let rate = litL / usedL;
-            let dev = ((rate - boatStandards.standardRate) / boatStandards.standardRate) * 100;
-            if (dev > 15) { isFraud = true; msgs.push(`⚠️ <b>استهلاك مرتفع (أيسر):</b> ${rate.toFixed(2)} لتر/ساعة (+${dev.toFixed(1)}%).`); }
+        // تجاوز الخزان
+        if (docL > standards.tankCapacity) {
+            isFraud = true; msgs.push(`🚨 <b>تجاوز الخزان:</b> (${docL}) أكبر من السعة (${standards.tankCapacity}).`);
         }
 
         const box = document.getElementById('auditBox');
@@ -444,231 +269,109 @@ body {
             box.className = 'audit-box ' + (isFraud ? 'danger' : 'success');
             box.innerHTML = `<h4>${isFraud ? '🚨 شبهة تلاعب!' : '✅ تحقق ناجح'}</h4>` + msgs.map(m => `<p>${m}</p>`).join('');
         } else {
-            box.className = 'audit-box';
-            box.innerHTML = '';
+            box.className = 'audit-box'; box.innerHTML = '';
         }
     };
 
     window.clearForm = function() {
-        ['fDocTotalHours','fDocTotalLiters','fTotalHoursR','fUsedHoursR','fRequestedLitersR','fTotalHoursL','fUsedHoursL','fRequestedLitersL'].forEach(id => {
-            if(document.getElementById(id)) document.getElementById(id).value = '';
-        });
+        ['fDocTotalHours','fDocTotalLiters','fTotalHoursR','fUsedHoursR','fRequestedLitersR','fTotalHoursL','fUsedHoursL','fRequestedLitersL'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
         document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('auditBox').className = 'audit-box';
-        document.getElementById('auditBox').innerHTML = '';
+        document.getElementById('auditBox').className = 'audit-box'; document.getElementById('auditBox').innerHTML = '';
     };
 
     window.saveFuelDoc = async function() {
-        const dateVal = document.getElementById('fDate').value;
-        const docTotalHours = parseFloat(document.getElementById('fDocTotalHours').value) || 0;
-        const docTotalLiters = parseFloat(document.getElementById('fDocTotalLiters').value) || 0;
+        const payload = {
+            boatId, date: document.getElementById('fDate').value,
+            docTotalHours: parseFloat(document.getElementById('fDocTotalHours').value) || 0,
+            docTotalLiters: parseFloat(document.getElementById('fDocTotalLiters').value) || 0,
+            engineCount: isTwinEngine ? 2 : 1,
+            engines: {
+                right: { totalHours: parseFloat(document.getElementById('fTotalHoursR').value)||0, usedHours: parseFloat(document.getElementById('fUsedHoursR').value)||0, requestedLiters: parseFloat(document.getElementById('fRequestedLitersR').value)||0 },
+                left: isTwinEngine ? { totalHours: parseFloat(document.getElementById('fTotalHoursL').value)||0, usedHours: parseFloat(document.getElementById('fUsedHoursL').value)||0, requestedLiters: parseFloat(document.getElementById('fRequestedLitersL').value)||0 } : null
+            }
+        };
 
-        const hoursR = parseFloat(document.getElementById('fTotalHoursR').value) || 0;
-        const usedR  = parseFloat(document.getElementById('fUsedHoursR').value) || 0;
-        const litR   = parseFloat(document.getElementById('fRequestedLitersR').value) || 0;
-
-        let hoursL = null, usedL = null, litL = null;
-        if (isTwinEngine) {
-            hoursL = parseFloat(document.getElementById('fTotalHoursL').value) || 0;
-            usedL  = parseFloat(document.getElementById('fUsedHoursL').value) || 0;
-            litL   = parseFloat(document.getElementById('fRequestedLitersL').value) || 0;
-        }
-
-        if (!docTotalHours || !docTotalLiters) { alert('الرجاء إدخال إجمالي الوثيقة'); return; }
-
-        var btn = document.getElementById('addBtn');
-        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
-
+        var btn = document.getElementById('addBtn'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
         try {
-            var res = await fetch('/api/fuel/documents', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken(), 'X-CSRF-Token': getCsrf() },
-                body: JSON.stringify({
-                    boatId, date: dateVal,
-                    docTotalHours, docTotalLiters,
-                    engineCount: isTwinEngine ? 2 : 1,
-                    engines: {
-                        right: { totalHours: hoursR, usedHours: usedR, requestedLiters: litR },
-                        left: isTwinEngine ? { totalHours: hoursL, usedHours: usedL, requestedLiters: litL } : null
-                    }
-                })
-            });
+            const res = await fetch('/api/fuel/documents', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken(), 'X-CSRF-Token': getCsrf() }, body: JSON.stringify(payload) });
             if (!res.ok) throw new Error('فشل الحفظ');
-            
-            alert('تم حفظ الوثيقة بنجاح');
-            clearForm();
-            loadStandards();
-            loadDocs();
-        } catch (e) {
-            alert(e.message);
-        } finally {
-            btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> حفظ الوثيقة';
-        }
+            alert('✅ تم الحفظ بنجاح'); clearForm(); loadDocs();
+        } catch(e) { alert('❌ ' + e.message); }
+        finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> حفظ الوثيقة'; }
     };
 
     async function loadDocs(start, end) {
-        var tbody = document.getElementById('fuelTableBody');
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
         try {
-            var url = '/api/fuel/documents/' + boatId;
+            let url = '/api/fuel/documents/' + boatId;
             if (start && end) url += '?start=' + start + '&end=' + end;
-            var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + getToken() } });
-            var docs = await res.json();
-            
-            allDocsData = docs;
-            renderTable(docs); 
-            updateStats(docs); 
-            renderChart(docs);
-        } catch (e) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">خطأ في التحميل</td></tr>'; }
+            const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + getToken() } });
+            allDocs = await res.json();
+            renderTable(); renderChart();
+        } catch(e) {}
     }
 
-    function updateStats(docs) {
-        var total = 0, actual = 0, fraud = 0;
-        docs.forEach(d => { 
-            total += d.docTotalLiters || 0; 
-            actual += (d.docTotalHours || 0) * boatStandards.standardRate; 
-            if (d.isFraud) fraud++; 
-        });
-        document.getElementById('statTotalLiters').textContent = total.toFixed(0);
-        document.getElementById('statActualLiters').textContent = actual.toFixed(0);
-        document.getElementById('statFraudDocs').textContent = fraud;
-    }
-
-    function renderTable(docs) {
-        var tbody = document.getElementById('fuelTableBody');
-        document.getElementById('tableCount').textContent = docs.length;
-        
-        if (!docs.length) { 
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#64748b;">لا توجد وثائق مسجلة.</td></tr>'; 
-            return; 
-        }
-        
-        tbody.innerHTML = docs.map(d => {
-            var badge = d.isFraud ? '<span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> مشبوه</span>' : '<span class="badge badge-success"><i class="fas fa-check"></i> سليم</span>';
-            return '<tr onclick="showDetails(\'' + d._id + '\')">' +
-                '<td>' + formatDate(d.date) + '</td>' +
-                '<td>' + d.docTotalHours + ' ساعة</td>' +
-                '<td>' + d.docTotalLiters + ' لتر</td>' +
-                '<td>' + (d.engineCount === 2 ? 'محركان' : 'محرك واحد') + '</td>' +
-                '<td>' + d.totalActualRate.toFixed(2) + ' لتر/ساعة</td>' +
-                '<td>' + badge + '</td>' +
-            '</tr>';
-        }).join('');
+    function renderTable() {
+        const tbody = document.getElementById('fuelTableBody');
+        document.getElementById('tableCount').textContent = allDocs.length;
+        if (!allDocs.length) { tbody.innerHTML = '<tr><td colspan="6" style="padding:40px; text-align:center;">لا توجد وثائق.</td></tr>'; return; }
+        tbody.innerHTML = allDocs.map(d => `
+            <tr onclick="showDetails('${d._id}')" style="cursor:pointer;">
+                <td>${new Date(d.date).toLocaleDateString('ar-EG')}</td>
+                <td>${d.docTotalHours}</td>
+                <td>${d.docTotalLiters} لتر</td>
+                <td>${d.engineCount === 2 ? 'محركان' : 'محرك واحد'}</td>
+                <td>${d.totalActualRate ? d.totalActualRate.toFixed(2) : 0}</td>
+                <td>${d.isFraud ? '<span class="badge badge-danger">مشبوه</span>' : '<span class="badge badge-success">سليم</span>'}</td>
+            </tr>
+        `).join('');
     }
 
     window.showDetails = function(id) {
-        const doc = allDocsData.find(d => String(d._id) === String(id));
-        if (!doc) return;
-        
-        let html = `
-            <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--slate-200);">
-                <p style="color: var(--slate-500); font-size: 12px; margin-bottom: 5px;">التاريخ</p>
-                <p style="font-weight: bold; font-size: 16px;">${formatDate(doc.date)}</p>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                <div style="background: var(--slate-50); padding: 15px; border-radius: 8px;">
-                    <p style="color: var(--slate-500); font-size: 12px; margin-bottom: 5px;">إجمالي الوثيقة</p>
-                    <p style="font-weight: bold; color: var(--blue);">${doc.docTotalHours} ساعة</p>
-                    <p style="font-weight: bold; color: var(--blue);">${doc.docTotalLiters} لتر</p>
-                </div>
-                <div style="background: ${doc.isFraud ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)'}; padding: 15px; border-radius: 8px;">
-                    <p style="color: var(--slate-500); font-size: 12px; margin-bottom: 5px;">الحالة</p>
-                    <p style="font-weight: bold; color: ${doc.isFraud ? '#ef4444' : '#10b981'};">${doc.isFraud ? '🚨 مشبوه' : '✅ سليم'}</p>
-                    ${doc.fraudReason ? `<p style="font-size: 11px; margin-top: 5px; color: #ef4444;">${doc.fraudReason}</p>` : ''}
-                </div>
-            </div>
-        `;
-
-        // تفاصيل المحركين
-        const engines = [
-            { name: 'المحرك الأيمن', icon: 'fa-cog', color: 'blue', data: doc.engines.right },
-            { name: 'المحرك الأيسر', icon: 'fa-cog', color: 'emerald', data: doc.engines.left }
-        ];
-
-        engines.forEach(eng => {
-            if (eng.data) {
-                html += `
-                    <div style="background: var(--slate-50); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-right: 3px solid var(--${eng.color});">
-                        <h4 style="color: var(--${eng.color}); margin-bottom: 10px; font-size: 14px;"><i class="fas ${eng.icon}"></i> ${eng.name}</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 12px;">
-                            <div><span style="color: var(--slate-500);">العداد:</span> <b>${eng.data.totalHours}</b></div>
-                            <div><span style="color: var(--slate-500);">الساعات:</span> <b>${eng.data.usedHours}</b></div>
-                            <div><span style="color: var(--slate-500);">الوقود:</span> <b>${eng.data.requestedLiters} لتر</b></div>
-                        </div>
-                        <div style="margin-top: 10px; font-size: 12px; color: ${eng.data.deviation > 15 ? '#ef4444' : '#10b981'};">
-                            <i class="fas fa-chart-line"></i> معدل الاستهلاك: <b>${eng.data.actualRate ? eng.data.actualRate.toFixed(2) : '-'} لتر/ساعة</b> (${eng.data.deviation ? eng.data.deviation.toFixed(1) : 0}%)
-                        </div>
-                    </div>
-                `;
-            }
-        });
-
+        const d = allDocs.find(x => String(x._id) === String(id)); if (!d) return;
+        let html = `<p style="margin-bottom:15px;"><b>التاريخ:</b> ${new Date(d.date).toLocaleDateString('ar-EG')}</p>
+                    <p style="margin-bottom:10px;"><b>إجمالي الوثيقة:</b> ${d.docTotalHours} ساعة / ${d.docTotalLiters} لتر</p>
+                    <hr style="margin-bottom:15px; border:0; border-top:1px solid #e2e8f0;">`;
+        if (d.engines.right) html += `<div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:10px; border-right:3px solid #3b82f6;"><b>المحرك الأيمن:</b> ${d.engines.right.usedHours} ساعة / ${d.engines.right.requestedLiters} لتر</div>`;
+        if (d.engines.left) html += `<div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:10px; border-right:3px solid #10b981;"><b>المحرك الأيسر:</b> ${d.engines.left.usedHours} ساعة / ${d.engines.left.requestedLiters} لتر</div>`;
+        if (d.fraudReason) html += `<div style="background:rgba(239,68,68,0.1); color:#ef4444; padding:10px; border-radius:8px; margin-top:15px; font-size:12px;"><b>سبب الشبهة:</b> ${d.fraudReason}</div>`;
         document.getElementById('modalBody').innerHTML = html;
         document.getElementById('detailsModal').classList.add('active');
     };
 
-    window.closeModal = function() {
-        document.getElementById('detailsModal').classList.remove('active');
-    };
+    window.closeModal = function() { document.getElementById('detailsModal').classList.remove('active'); };
 
-    function renderChart(docs) {
-        var ctx = document.getElementById('fuelChart').getContext('2d');
-        if (myChart) myChart.destroy();
-        if (!docs.length) return;
-
-        var sorted = docs.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+    function renderChart() {
+        const ctx = document.getElementById('fuelChart').getContext('2d');
+        if (myChart) myChart.destroy(); if (!allDocs.length) return;
+        const sorted = allDocs.slice().sort((a,b) => new Date(a.date) - new Date(b.date));
         myChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: sorted.map(d => formatDate(d.date)),
+                labels: sorted.map(d => new Date(d.date).toLocaleDateString('ar-EG')),
                 datasets: [
-                    { 
-                        label: 'المعدل الفعلي (لتر/ساعة)', 
-                        data: sorted.map(d => d.totalActualRate), 
-                        backgroundColor: sorted.map(d => d.isFraud ? '#ef4444' : '#3b82f6'), 
-                        borderRadius: 5, order: 2 
-                    },
-                    { 
-                        label: 'الحد المعياري', 
-                        data: sorted.map(() => boatStandards.standardRate), 
-                        type: 'line', borderColor: '#f59e0b', borderWidth: 2, borderDash: [5, 5], pointRadius: 0, fill: false, order: 1 
-                    }
+                    { label: 'المعدل الفعلي', data: sorted.map(d => d.totalActualRate), backgroundColor: sorted.map(d => d.isFraud ? '#ef4444' : '#3b82f6'), borderRadius: 5 },
+                    { label: 'المعيار', data: sorted.map(() => standards.standardRate), type: 'line', borderColor: '#f59e0b', borderDash: [5,5], pointRadius: 0, fill: false }
                 ]
             },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#1e293b', font: { family: 'Cairo' } } } },
-                scales: {
-                    x: { ticks: { color: '#64748b', font: { family: 'Cairo' } }, grid: { color: '#e2e8f0' } },
-                    y: { beginAtZero: true, ticks: { color: '#64748b', font: { family: 'Cairo' } }, grid: { color: '#e2e8f0' } }
-                }
-            }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { family: 'Cairo' } } } } }
         });
     }
 
     window.quickFilter = function(type) {
-        var start = new Date(), end = new Date();
-        if (type === 'week') start.setDate(end.getDate() - 7);
-        else if (type === 'month') start.setMonth(end.getMonth() - 1);
-        else if (type === 'all') { start = new Date(2000, 0, 1); }
-        
+        let start = new Date(), end = new Date();
+        if (type === 'month') start.setMonth(end.getMonth() - 1);
+        if (type === 'all') start = new Date(2000, 0, 1);
         document.getElementById('filterStart').value = start.toISOString().split('T')[0];
         document.getElementById('filterEnd').value = end.toISOString().split('T')[0];
         loadDocs(start.toISOString().split('T')[0], end.toISOString().split('T')[0]);
     };
 
     window.applyCustomFilter = function() {
-        var start = document.getElementById('filterStart').value;
-        var end = document.getElementById('filterEnd').value;
-        if (!start || !end) { alert('الرجاء تحديد تاريخ البداية والنهاية'); return; }
-        loadDocs(start, end);
+        const s = document.getElementById('filterStart').value, e = document.getElementById('filterEnd').value;
+        if (s && e) loadDocs(s, e);
     };
 
-    // إغلاق النافذة عند الضغط خارجها
-    document.getElementById('detailsModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
-
+    document.getElementById('detailsModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
     init();
 })();
 </script>
