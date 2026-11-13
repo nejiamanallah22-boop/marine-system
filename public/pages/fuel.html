@@ -202,7 +202,7 @@ td.d{color:var(--t1)}
     <div class="grid g3">
       <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc" onchange="toggleSetupEngineFields()"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div></div>
       <div class="fg"><label for="setupTankCapacity">سعة الخزان</label><div class="field has-unit"><i class="fas fa-oil-can"></i><input type="number" id="setupTankCapacity" class="fc" value="1000" min="1"><span class="unit">لتر</span></div></div>
-      <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري</label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" value="13.33" step="0.01" min="0.01"><span class="unit">لتر/س</span></div></div>
+      <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري</label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" placeholder="مثال: 10" step="0.01" min="0.01" required><span class="unit">لتر/س</span></div></div>
     </div>
     <div class="grid g2" id="setupEngineDetails" style="margin-top:16px" hidden>
       <div class="fg"><label for="setupEngineRight">المحرك الأيمن</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineRight" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
@@ -328,7 +328,8 @@ td.d{color:var(--t1)}
   'use strict';
   var boatId = new URLSearchParams(window.location.search).get('id');
   var isTwin = false, step = 1, maxStep = 2, saving = false;
-  var standards = { standardRate: 13.33, tankCapacity: 1000, engineCount: 1 };
+  // تم إزالة الرقم 13.33 الافتراضي، وتركه 0 حتى يتم إعداده من قبل المستخدم
+  var standards = { standardRate: 0, tankCapacity: 1000, engineCount: 1 };
   var myChart = null, allDocs = [];
 
   function $(id) { return document.getElementById(id); }
@@ -362,7 +363,8 @@ td.d{color:var(--t1)}
       var v = (Array.isArray(vessels) ? vessels : (vessels.vessels || [])).find(function (x) { return String(x.id || x._id) === String(boatId); });
       if (v) {
         $('vesselName').innerHTML = '<i class="fas fa-anchor"></i> ' + esc(v.name);
-        ready = !!(v.engineCount && v.tankCapacity);
+        // التحقق من وجود الاستهلاك المعياري أيضاً
+        ready = !!(v.engineCount && v.tankCapacity && v.standardRate && v.standardRate > 0);
         isTwin = v.engineCount === 2;
       } else { $('vesselName').textContent = 'المركب غير موجود'; ready = false; }
     } catch (e) { $('vesselName').textContent = 'تعذّر تحميل بيانات المركب'; }
@@ -386,7 +388,9 @@ td.d{color:var(--t1)}
   window.saveEngineSetup = async function () {
     var tank = num('setupTankCapacity'), rate = num('setupStandardRate');
     if (!isFinite(tank) || tank <= 0) { $('setupTankCapacity').focus(); return toast('سعة الخزان يجب أن تكون أكبر من صفر', 'error'); }
-    if (!isFinite(rate) || rate <= 0) { $('setupStandardRate').focus(); return toast('الاستهلاك المعياري يجب أن يكون أكبر من صفر', 'error'); }
+    // التحقق الإجباري من الاستهلاك المعياري
+    if (!isFinite(rate) || rate <= 0) { $('setupStandardRate').focus(); return toast('الاستهلاك المعياري يجب أن يكون رقماً أكبر من صفر', 'error'); }
+    
     var payload = {
       engineCount: Number($('setupEngineCount').value), tankCapacity: tank, standardRate: rate,
       engineRight: $('setupEngineRight').value.trim().slice(0, 40), engineLeft: $('setupEngineLeft').value.trim().slice(0, 40)
