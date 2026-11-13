@@ -3183,6 +3183,8 @@
                 var actions = '';
                 actions += '<button class="btn-sm gallery" data-action="gallery" data-id="' + escapeHtml(id) + '" title="عرض الصور"><i class="fas fa-images"></i></button>';
                actions += '<button class="btn-sm crew" data-crew-open="' + escapeHtml(id) + '" title="إدارة الطاقم"><i class="fas fa-users"></i></button>';
+                // ⛽ زر كشف المحروقات (جديد)
+actions += '<button class="btn-sm fuel" data-fuel-open="' + escapeHtml(id) + '" title="كشف المحروقات" style="background: rgba(230, 179, 30, 0.15); color: #e6b31e; border: 1.5px solid rgba(230, 179, 30, 0.35); width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; transition: 0.3s;" onmouseover="this.style.background=\'#e6b31e\'; this.style.color=\'#060911\';" onmouseout="this.style.background=\'rgba(230, 179, 30, 0.15)\'; this.style.color=\'#e6b31e\';"><i class="fas fa-gas-pump"></i></button>';
                 if (editable) actions += '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>';
                 if (disposable) actions += '<button class="btn-sm dispose" onclick="openDisposeModal(\'' + id + '\')" title="طرح نهائي"><i class="fas fa-archive"></i></button>';
                 if (deletable) actions += '<button class="btn-sm delete" onclick="deleteItem(\'' + id + '\',\'' + escapeHtml(name) + '\')" title="حذف"><i class="fas fa-trash-alt"></i></button>';
@@ -3221,6 +3223,16 @@ mainBody.querySelectorAll('[data-crew-open]').forEach(function(el) {
         var id = this.getAttribute('data-crew-open');
         if (id) {
             window.open('/pages/crew.html?id=' + encodeURIComponent(id), '_blank');
+        }
+    });
+});
+            // ⛽ مستمع زر كشف المحروقات
+mainBody.querySelectorAll('[data-fuel-open]').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var id = this.getAttribute('data-fuel-open');
+        if (id) {
+            window.open('/pages/fuel.html?id=' + encodeURIComponent(id), '_blank');
         }
     });
 });
