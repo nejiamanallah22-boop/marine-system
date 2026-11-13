@@ -195,10 +195,10 @@ td.d{color:var(--t1)}
     </div>
   </header>
 
-  <!-- إعداد المركب: يظهر فقط إذا كان المركب غير جاهز -->
-  <section class="card" id="setupCard" hidden>
-    <div class="card-title"><i class="fas fa-cogs"></i> إعداد المركب (مرة واحدة)</div>
-    <div class="notice"><i class="fas fa-circle-info"></i><span>هذا المركب غير مهيأ بعد. أكمل الإعدادات التالية لتفعيل تسجيل وثائق التموين.</span></div>
+  <!-- إعداد المركب: يظهر دائماً لضمان إدخال الرقم -->
+  <section class="card" id="setupCard">
+    <div class="card-title"><i class="fas fa-cogs"></i> إعداد المركب (يُحفظ مرة واحدة)</div>
+    <div class="notice"><i class="fas fa-circle-info"></i><span>يرجى التأكد من سعة الخزان والاستهلاك المعياري (لتر/ساعة) قبل تسجيل الوثائق.</span></div>
     <div class="grid g3">
       <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc" onchange="toggleSetupEngineFields()"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div></div>
       <div class="fg"><label for="setupTankCapacity">سعة الخزان</label><div class="field has-unit"><i class="fas fa-oil-can"></i><input type="number" id="setupTankCapacity" class="fc" value="1000" min="1"><span class="unit">لتر</span></div></div>
@@ -217,8 +217,8 @@ td.d{color:var(--t1)}
     <div class="stat s3"><i class="fas fa-triangle-exclamation"></i><div><div class="v" id="statFraudDocs">0</div><div class="l">وثائق مشبوهة</div></div></div>
   </section>
 
-  <!-- نموذج الوثيقة بخطوات: يظهر فقط إذا كان المركب جاهزاً -->
-  <section class="card" id="entryCard" hidden>
+  <!-- نموذج الوثيقة: يظهر دائماً الآن -->
+  <section class="card" id="entryCard">
     <div class="card-title"><i class="fas fa-file-invoice"></i> تسجيل وثيقة تموين جديدة</div>
     <ol class="stepper" id="stepper"></ol>
 
@@ -355,21 +355,28 @@ td.d{color:var(--t1)}
   async function init() {
     if (!boatId) { toast('لم يتم تحديد المركب', 'error'); return; }
     $('fDate').value = today();
-    var ready = true;
     try {
       var res = await fetch('/api/vessels', { headers: auth() });
       var vessels = await res.json();
       var v = (Array.isArray(vessels) ? vessels : (vessels.vessels || [])).find(function (x) { return String(x.id || x._id) === String(boatId); });
       if (v) {
         $('vesselName').innerHTML = '<i class="fas fa-anchor"></i> ' + esc(v.name);
-        ready = !!(v.engineCount && v.tankCapacity && v.standardRate && v.standardRate > 0);
+        // تعبئة الإعدادات إن وجدت
+        if (v.engineCount) $('setupEngineCount').value = v.engineCount;
+        if (v.tankCapacity) $('setupTankCapacity').value = v.tankCapacity;
+        if (v.standardRate) $('setupStandardRate').value = v.standardRate;
+        if (v.engineRight) $('setupEngineRight').value = v.engineRight;
+        if (v.engineLeft) $('setupEngineLeft').value = v.engineLeft;
+        
         isTwin = v.engineCount === 2;
-      } else { $('vesselName').textContent = 'المركب غير موجود'; ready = false; }
+        if (isTwin) {
+            $('setupEngineDetails').hidden = false;
+            $('rightEngineLabel').textContent = '(الأيمن)';
+        }
+      } else { $('vesselName').textContent = 'المركب غير موجود'; }
     } catch (e) { $('vesselName').textContent = 'تعذّر تحميل بيانات المركب'; }
 
-    $('setupCard').hidden = ready;
-    $('entryCard').hidden = !ready;
-    if (ready) buildSteps();
+    buildSteps();
 
     try {
       var r = await fetch('/api/fuel/standards/' + boatId, { headers: auth() });
@@ -404,7 +411,6 @@ td.d{color:var(--t1)}
   /* ══ الخطوات ══ */
   function buildSteps() {
     maxStep = isTwin ? 3 : 2;
-    if (isTwin) $('rightEngineLabel').textContent = '(الأيمن)';
     var defs = [['الإجماليات'], [isTwin ? 'المحرك الأيمن' : 'المحرك']];
     if (isTwin) defs.push(['المحرك الأيسر']);
     $('stepper').innerHTML = defs.map(function (d, i) {
