@@ -6,48 +6,57 @@
 <title>كشف المحروقات — منظومة الوسائل البحرية</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 <style>
 :root {
     --gold-1: #f7d774; --gold-2: #e6b31e; --gold-3: #b8860b;
     --navy-1: #0a1e38; --navy-2: #14304f;
     --emerald: #10b981; --red: #ef4444; --blue: #3b82f6;
-    --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
-    --slate-500: #64748b; --slate-700: #334155; --slate-900: #0f172a;
+    --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0; --slate-300: #cbd5e1;
+    --slate-500: #64748b; --slate-600: #475569; --slate-700: #334155; --slate-900: #0f172a;
     --radius: 16px; --radius-sm: 11px;
     --font: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
     --shadow-md: 0 6px 24px rgba(10, 30, 56, 0.10);
+    --shadow-lg: 0 14px 34px rgba(10, 30, 56, .16);
+    --sp: 24px;
+    --ease: .25s cubic-bezier(.4, 0, .2, 1);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); min-height: 100vh; direction: rtl; padding: 20px; }
+[hidden] { display: none !important; }
+body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); min-height: 100vh; direction: rtl; padding: var(--sp); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.container { max-width: 1280px; margin: 0 auto; }
 
-/* احترافية الرأس */
-.header { background: linear-gradient(135deg, var(--navy-1), var(--navy-2)); border-radius: var(--radius); padding: 20px 30px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-md); }
+/* الرأس */
+.header { background: linear-gradient(135deg, var(--navy-1), var(--navy-2)); border-radius: var(--radius); padding: 20px 30px; margin-bottom: var(--sp); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: var(--shadow-md); border-bottom: 3px solid var(--gold-2); }
 .header-left { display: flex; align-items: center; gap: 15px; }
 .header-icon { width: 60px; height: 60px; border-radius: 15px; background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); display: flex; align-items: center; justify-content: center; font-size: 26px; color: var(--navy-1); }
 .header-text h1 { font-size: 24px; font-weight: 900; color: var(--gold-1); margin-bottom: 2px; }
 .header-text p { font-size: 13px; color: #cbd5e1; font-weight: 600; }
+.header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
 /* الإحصائيات */
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px; }
-.stat-card { background: white; border-radius: var(--radius); padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow-md); border-right: 4px solid var(--blue); }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: var(--sp); }
+.stat-card { background: white; border-radius: var(--radius); padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow-md); border-right: 4px solid var(--blue); transition: transform var(--ease), box-shadow var(--ease); }
+.stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
 .stat-card.actual { border-right-color: var(--emerald); }
 .stat-card.fraud { border-right-color: var(--red); }
-.stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
 .stat-icon.blue { background: rgba(59,130,246,0.15); color: var(--blue); }
 .stat-icon.emerald { background: rgba(16,185,129,0.15); color: var(--emerald); }
 .stat-icon.red { background: rgba(239,68,68,0.15); color: var(--red); }
 .stat-value { font-size: 26px; font-weight: 900; color: var(--navy-1); }
 .stat-label { font-size: 12px; font-weight: 700; color: var(--slate-500); }
 
-/* البطاقات العامة */
-.card { background: white; border-radius: var(--radius); padding: 25px; margin-bottom: 22px; box-shadow: var(--shadow-md); border: 1px solid var(--slate-200); }
+/* البطاقات */
+.card { background: white; border-radius: var(--radius); padding: var(--sp); margin-bottom: var(--sp); box-shadow: var(--shadow-md); border: 1px solid var(--slate-200); transition: box-shadow var(--ease); }
+.card:hover { box-shadow: var(--shadow-lg); }
 .card-title { font-size: 16px; font-weight: 900; color: var(--navy-1); margin-bottom: 20px; border-bottom: 2px solid var(--slate-100); padding-bottom: 15px; display: flex; align-items: center; gap: 10px; }
 .card-title i { color: var(--gold-2); }
 
 /* النماذج */
 .form-group label { font-size: 12px; font-weight: 800; color: var(--slate-600); margin-bottom: 8px; display: block; }
-.form-control { padding: 12px; border: 2px solid var(--slate-200); border-radius: var(--radius-sm); width: 100%; font-family: var(--font); font-weight: 700; background: var(--slate-50); font-size: 14px; }
+.form-control { padding: 12px; border: 2px solid var(--slate-200); border-radius: var(--radius-sm); width: 100%; font-family: var(--font); font-weight: 700; background: var(--slate-50); font-size: 14px; transition: border-color var(--ease), box-shadow var(--ease), background var(--ease); }
+.form-control:hover { border-color: var(--slate-300); }
 .form-control:focus { border-color: var(--gold-2); outline: none; background: white; box-shadow: 0 0 0 3px rgba(230,179,30,0.15); }
 
 /* صناديق التنبيه */
@@ -58,10 +67,14 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
 .audit-box p { font-size: 13px; margin-bottom: 3px; font-weight: 600; }
 
 /* الأزرار */
-.btn { padding: 12px 24px; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 14px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; }
+.btn { padding: 12px 24px; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 14px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform var(--ease), box-shadow var(--ease), background var(--ease); }
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(10, 30, 56, .18); }
+.btn:active { transform: none; }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+.btn:focus-visible { outline: 3px solid rgba(230, 179, 30, .5); outline-offset: 2px; }
 .btn-primary { background: linear-gradient(135deg, var(--emerald), #059669); color: white; }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
 .btn-outline { background: var(--slate-100); color: var(--slate-700); border: 1.5px solid var(--slate-300); }
+.btn-outline:hover:not(:disabled) { background: var(--slate-200); }
 .btn-gold { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: var(--navy-1); }
 
 /* الجدول */
@@ -69,18 +82,21 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
 .table-header { padding: 20px 25px; background: linear-gradient(135deg, var(--navy-1), var(--navy-2)); display: flex; justify-content: space-between; align-items: center; }
 .table-title { color: var(--gold-1); font-weight: 900; font-size: 15px; }
 .fuel-table { width: 100%; border-collapse: collapse; min-width: 800px; }
-.fuel-table th { padding: 14px; background: var(--slate-100); border-bottom: 2px solid var(--slate-300); font-size: 12px; font-weight: 800; color: var(--slate-600); }
+.fuel-table th { padding: 14px; background: var(--slate-100); border-bottom: 2px solid var(--slate-300); font-size: 12px; font-weight: 800; color: var(--slate-600); white-space: nowrap; }
 .fuel-table td { padding: 14px; text-align: center; border-bottom: 1px solid var(--slate-100); font-weight: 700; font-size: 13px; }
+.fuel-table tbody tr { transition: background var(--ease); }
+.fuel-table tbody tr:hover { background: #fffbeb; }
 
-/* شارات الحالة */
+/* الشارات */
 .badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-block; }
 .badge-success { background: rgba(16,185,129,0.15); color: var(--emerald); }
 .badge-danger { background: rgba(239,68,68,0.15); color: var(--red); }
 
-/* تنسيق لوحة المقارنة */
+/* المقارنة */
 .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-.compare-card { background: var(--slate-50); border-radius: 12px; padding: 15px; border: 1px solid var(--slate-200); }
-.compare-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--slate-200); }
+.compare-card { background: var(--slate-50); border-radius: 12px; padding: 15px; border: 1px solid var(--slate-200); transition: box-shadow var(--ease); }
+.compare-card:hover { box-shadow: var(--shadow-lg); }
+.compare-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--slate-200); }
 .compare-title { font-size: 13px; font-weight: 800; color: var(--navy-1); }
 .compare-badge { font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 800; }
 .compare-badge.up { background: rgba(239,68,68,0.15); color: var(--red); }
@@ -89,9 +105,35 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
 .compare-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
 .compare-label { color: var(--slate-500); font-weight: 600; }
 .compare-value { font-weight: 800; color: var(--navy-1); }
+.vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+.vs-box { background: #fff; border: 1px solid var(--slate-200); border-radius: 12px; padding: 14px; }
+.vs-name { font-size: 12px; color: var(--slate-500); font-weight: 700; }
+.vs-meta { margin-top: 6px; font-size: 13px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.vs-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 22px 12px; text-align: center; }
+.vs-empty i { font-size: 26px; color: #94a3b8; }
+.vs-empty .pill { padding: 9px 18px; border-radius: 99px; background: rgba(100,116,139,.12); color: var(--slate-500); font-weight: 800; font-size: 13px; }
 
 /* الرسم البياني */
-.chart-container { position: relative; height: 300px; width: 100%; }
+.chart-container { position: relative; height: 320px; width: 100%; }
+.chart-empty { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px; border: 1.5px dashed var(--slate-200); border-radius: 12px; color: var(--slate-500); font-weight: 700; font-size: 13px; }
+
+/* الهاتف */
+@media (max-width: 768px) {
+    :root { --sp: 16px; }
+    body { padding: 12px; }
+    .header { padding: 16px; }
+    .header-text h1 { font-size: 20px; }
+    .header-icon { width: 48px; height: 48px; font-size: 21px; }
+    .header-actions { width: 100%; }
+    .header-actions .btn { flex: 1; }
+    .stat-value { font-size: 22px; }
+    .compare-grid, .vs-grid { grid-template-columns: 1fr; }
+    .card [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    .card input[type="date"][style*="width"] { width: 100% !important; }
+    .chart-container { height: 260px; }
+    .table-header { padding: 16px; }
+}
+@media print { .header-actions, #engineSetupCard, .btn { display: none !important; } body { background: #fff; } .card, .table-card, .stat-card { box-shadow: none; } }
 </style>
 </head>
 <body>
@@ -105,20 +147,20 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
                 <p id="vesselName"><i class="fas fa-circle-notch fa-spin"></i> جاري التحميل...</p>
             </div>
         </div>
-        <div style="display: flex; gap: 10px;">
+        <div class="header-actions">
             <button class="btn btn-gold" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
             <button class="btn btn-outline" onclick="window.close()" style="background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.2);"><i class="fas fa-times"></i> إغلاق</button>
         </div>
     </div>
 
-    <!-- إعدادات المحرك (تظهر فقط إذا لم يتم إعدادها سابقاً) -->
+    <!-- إعدادات المحرك -->
     <div class="card" id="engineSetupCard" style="display: none; border-right: 4px solid var(--gold-2);">
         <div class="card-title"><i class="fas fa-cogs"></i> إعدادات المحرك (تُحفظ مرة واحدة)</div>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
             <div class="form-group"><label>عدد المحركات</label><select id="setupEngineCount" class="form-control" onchange="toggleSetupEngineFields()"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div>
             <div class="form-group"><label>سعة الخزان (لتر)</label><input type="number" id="setupTankCapacity" class="form-control" value="1000"></div>
             <div class="form-group"><label>الاستهلاك المعياري (لتر/ساعة)</label><input type="number" id="setupStandardRate" class="form-control" value="13.33" step="0.01"></div>
-            <div id="setupEngineDetails" style="display: none; grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div id="setupEngineDetails" style="display: none; grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div class="form-group"><label>المحرك الأيمن</label><input type="text" id="setupEngineRight" class="form-control" placeholder="اسم/رقم"></div>
                 <div class="form-group"><label>المحرك الأيسر</label><input type="text" id="setupEngineLeft" class="form-control" placeholder="اسم/رقم"></div>
             </div>
@@ -137,13 +179,11 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
     <div class="card">
         <div class="card-title"><i class="fas fa-file-invoice"></i> تسجيل وثيقة تموين جديدة</div>
         <div style="display: grid; gap: 20px;">
-            
             <div class="form-group" style="max-width: 200px;">
                 <label>تاريخ الوثيقة</label>
                 <input type="date" id="fDate" class="form-control">
             </div>
 
-            <!-- إجمالي الوثيقة -->
             <div style="background: rgba(230,179,30,0.05); border: 1.5px dashed var(--gold-2); padding: 15px; border-radius: 8px;">
                 <h4 style="color: var(--gold-3); margin-bottom: 12px; font-size: 14px;"><i class="fas fa-calculator"></i> إجمالي الوثيقة (من ورقة الإدارة)</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
@@ -152,7 +192,6 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
                 </div>
             </div>
 
-            <!-- المحرك الأيمن (أو الوحيد) -->
             <div style="border-right: 4px solid var(--blue); padding-right: 15px; margin-top: 5px;">
                 <h4 style="color: var(--blue); margin-bottom: 12px; font-size: 14px;"><i class="fas fa-cog"></i> المحرك <span id="rightEngineLabel">(الوحيد)</span></h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
@@ -162,7 +201,6 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
                 </div>
             </div>
 
-            <!-- المحرك الأيسر (إذا كان مزدوجاً) -->
             <div id="engineLeftSection" style="border-right: 4px solid var(--emerald); padding-right: 15px; display: none; margin-top: 5px;">
                 <h4 style="color: var(--emerald); margin-bottom: 12px; font-size: 14px;"><i class="fas fa-cog"></i> المحرك الأيسر</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
@@ -172,21 +210,19 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
                 </div>
             </div>
 
-            <!-- كاشف التلاعب -->
             <div class="audit-box" id="auditBox"></div>
 
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
                 <button class="btn btn-primary" id="addBtn" onclick="saveFuelDoc()"><i class="fas fa-save"></i> حفظ الوثيقة</button>
                 <button class="btn btn-outline" onclick="clearForm()"><i class="fas fa-eraser"></i> مسح</button>
             </div>
         </div>
     </div>
 
-    <!-- 🔴 لوحة المقارنة التحليلية -->
+    <!-- لوحة المقارنة التحليلية -->
     <div class="card">
         <div class="card-title"><i class="fas fa-balance-scale"></i> لوحة المقارنة التحليلية</div>
         <div class="compare-grid">
-            <!-- الشهر -->
             <div class="compare-card">
                 <div class="compare-header">
                     <span class="compare-title">📅 الشهر الحالي vs الماضي</span>
@@ -195,7 +231,6 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
                 <div class="compare-row"><span class="compare-label">الشهر الحالي:</span><span class="compare-value" id="currentMonthValue">0</span></div>
                 <div class="compare-row"><span class="compare-label">الشهر الماضي:</span><span class="compare-value" id="lastMonthValue">0</span></div>
             </div>
-            <!-- الأسبوع -->
             <div class="compare-card">
                 <div class="compare-header">
                     <span class="compare-title">📆 الأسبوع الحالي vs الماضي</span>
@@ -205,22 +240,22 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
                 <div class="compare-row"><span class="compare-label">الأسبوع الماضي:</span><span class="compare-value" id="lastWeekValue">0</span></div>
             </div>
         </div>
-        <!-- مقارنة مركب آخر -->
         <div class="compare-card" style="border-right: 4px solid var(--blue);">
             <div class="compare-header">
                 <span class="compare-title">🚢 مقارنة مع مركب من نفس الفئة</span>
-                <span class="compare-badge" id="otherVesselBadge">—</span>
+                <span class="compare-badge neutral" id="otherVesselBadge" hidden></span>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid var(--slate-200);">
-                    <div style="font-size: 12px; color: var(--slate-500);">المركب الحالي: <b id="currentVesselName">—</b></div>
-                    <div style="margin-top: 5px; font-size: 12px;">الوقود: <b id="currentVesselLiters">0</b> | المعدل: <b id="currentVesselRate">0</b></div>
+            <div class="vs-grid" id="otherVesselGrid" hidden>
+                <div class="vs-box">
+                    <div class="vs-name">المركب الحالي: <b id="currentVesselName">—</b></div>
+                    <div class="vs-meta"><span>الوقود: <b id="currentVesselLiters">0</b></span><span>المعدل: <b id="currentVesselRate">0</b></span></div>
                 </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid var(--slate-200);">
-                    <div style="font-size: 12px; color: var(--slate-500);">المركب المقارن: <b id="otherVesselName">—</b></div>
-                    <div style="margin-top: 5px; font-size: 12px;">الوقود: <b id="otherVesselLiters">0</b> | المعدل: <b id="otherVesselRate">0</b></div>
+                <div class="vs-box">
+                    <div class="vs-name">المركب المقارن: <b id="otherVesselName">—</b></div>
+                    <div class="vs-meta"><span>الوقود: <b id="otherVesselLiters">0</b></span><span>المعدل: <b id="otherVesselRate">0</b></span></div>
                 </div>
             </div>
+            <div class="vs-empty" id="otherVesselEmpty"><i class="fas fa-circle-notch fa-spin"></i><span class="pill">جاري التحميل...</span></div>
         </div>
     </div>
 
@@ -234,7 +269,8 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
             <button class="btn btn-outline" onclick="quickFilter('month')">هذا الشهر</button>
             <button class="btn btn-outline" onclick="quickFilter('all')">الكل</button>
         </div>
-        <div class="chart-container"><canvas id="fuelChart"></canvas></div>
+        <div class="chart-empty" id="chartEmpty" hidden><i class="fas fa-chart-column"></i> لا توجد بيانات للفترة المحددة</div>
+        <div class="chart-container" hidden><canvas id="fuelChart"></canvas></div>
     </div>
 
     <!-- TABLE -->
@@ -261,17 +297,18 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
 
     function getToken() { return localStorage.getItem('marine_token') || localStorage.getItem('token') || ''; }
     function getCsrf() { try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch(e) { return ''; } }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(m) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]; }); }
 
     async function init() {
         if (!boatId) return alert('⚠️ لم يتم تحديد المركب');
         document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
-        
+
         try {
             const res = await fetch('/api/vessels', { headers: { 'Authorization': 'Bearer ' + getToken() } });
             const vessels = await res.json();
             const v = vessels.find(x => String(x.id || x._id) === String(boatId));
             if (v) {
-                document.getElementById('vesselName').innerHTML = '<i class="fas fa-anchor"></i> ' + v.name;
+                document.getElementById('vesselName').innerHTML = '<i class="fas fa-anchor"></i> ' + esc(v.name);
                 if (!v.engineCount || !v.tankCapacity) {
                     document.getElementById('engineSetupCard').style.display = 'block';
                 } else {
@@ -293,7 +330,6 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
         loadOtherVesselCompare();
     }
 
-    // إعدادات المحرك
     window.toggleSetupEngineFields = function() {
         const count = document.getElementById('setupEngineCount').value;
         document.getElementById('setupEngineDetails').style.display = (count === '2') ? 'grid' : 'none';
@@ -319,14 +355,13 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
         } catch(e) { alert('❌ ' + e.message); }
     };
 
-    // 🟢 التحقق الذكي (تم إصلاحه ليتجاهل الفراغات)
     window.liveAudit = function() {
         const docH = parseFloat(document.getElementById('fDocTotalHours').value);
         const docL = parseFloat(document.getElementById('fDocTotalLiters').value);
         const uR = parseFloat(document.getElementById('fUsedHoursR').value) || 0;
         const lR = parseFloat(document.getElementById('fRequestedLitersR').value) || 0;
         let uL = 0, lL = 0;
-        
+
         if (isTwinEngine) {
             uL = parseFloat(document.getElementById('fUsedHoursL').value) || 0;
             lL = parseFloat(document.getElementById('fRequestedLitersL').value) || 0;
@@ -334,24 +369,17 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
 
         let msgs = [], isFraud = false;
 
-        // لا تظهر التنبيهات إلا إذا تم إدخال الإجمالي وتفاصيل المحرك
         if (!isNaN(docH) && !isNaN(docL)) {
-            
-            // التحقق من الساعات فقط إذا تم إدخال ساعات المحرك
             if ((uR > 0 || uL > 0) && Math.abs((uR + uL) - docH) > 0.5) {
-                isFraud = true; 
+                isFraud = true;
                 msgs.push(`تعارض في الساعات: مجموع المحركات (${uR+uL}) لا يطابق الإجمالي (${docH}).`);
             }
-            
-            // التحقق من الكميات فقط إذا تم إدخال وقود المحرك
             if ((lR > 0 || lL > 0) && Math.abs((lR + lL) - docL) > 0.5) {
-                isFraud = true; 
+                isFraud = true;
                 msgs.push(`تعارض في الكميات: مجموع المحركات (${lR+lL}) لا يطابق الإجمالي (${docL}).`);
             }
-
-            // تجاوز الخزان
             if (docL > standards.tankCapacity) {
-                isFraud = true; 
+                isFraud = true;
                 msgs.push(`تجاوز الخزان: (${docL}) أكبر من السعة (${standards.tankCapacity}).`);
             }
 
@@ -360,7 +388,7 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
                 box.className = 'audit-box ' + (isFraud ? 'danger' : 'success');
                 box.innerHTML = `<h4>${isFraud ? '🚨 شبهة تلاعب!' : '✅ تحقق ناجح'}</h4>` + msgs.map(m => `<p>${m}</p>`).join('');
             } else {
-                box.className = 'audit-box'; 
+                box.className = 'audit-box';
                 box.innerHTML = '';
             }
         }
@@ -369,7 +397,7 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
     window.clearForm = function() {
         ['fDocTotalHours','fDocTotalLiters','fTotalHoursR','fUsedHoursR','fRequestedLitersR','fTotalHoursL','fUsedHoursL','fRequestedLitersL'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
         document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('auditBox').className = 'audit-box'; 
+        document.getElementById('auditBox').className = 'audit-box';
         document.getElementById('auditBox').innerHTML = '';
     };
 
@@ -386,39 +414,39 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
             docTotalLiters: docL,
             engineCount: isTwinEngine ? 2 : 1,
             engines: {
-                right: { 
-                    totalHours: parseFloat(document.getElementById('fTotalHoursR').value)||0, 
-                    usedHours: parseFloat(document.getElementById('fUsedHoursR').value)||0, 
-                    requestedLiters: parseFloat(document.getElementById('fRequestedLitersR').value)||0 
+                right: {
+                    totalHours: parseFloat(document.getElementById('fTotalHoursR').value)||0,
+                    usedHours: parseFloat(document.getElementById('fUsedHoursR').value)||0,
+                    requestedLiters: parseFloat(document.getElementById('fRequestedLitersR').value)||0
                 },
-                left: isTwinEngine ? { 
-                    totalHours: parseFloat(document.getElementById('fTotalHoursL').value)||0, 
-                    usedHours: parseFloat(document.getElementById('fUsedHoursL').value)||0, 
-                    requestedLiters: parseFloat(document.getElementById('fRequestedLitersL').value)||0 
+                left: isTwinEngine ? {
+                    totalHours: parseFloat(document.getElementById('fTotalHoursL').value)||0,
+                    usedHours: parseFloat(document.getElementById('fUsedHoursL').value)||0,
+                    requestedLiters: parseFloat(document.getElementById('fRequestedLitersL').value)||0
                 } : null
             }
         };
 
-        var btn = document.getElementById('addBtn'); 
-        btn.disabled = true; 
+        var btn = document.getElementById('addBtn');
+        btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
-        
+
         try {
-            const res = await fetch('/api/fuel/documents', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken(), 'X-CSRF-Token': getCsrf() }, 
-                body: JSON.stringify(payload) 
+            const res = await fetch('/api/fuel/documents', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken(), 'X-CSRF-Token': getCsrf() },
+                body: JSON.stringify(payload)
             });
             if (!res.ok) throw new Error('فشل الحفظ');
-            alert('✅ تم الحفظ بنجاح'); 
-            clearForm(); 
+            alert('✅ تم الحفظ بنجاح');
+            clearForm();
             loadDocs();
             loadOtherVesselCompare();
-        } catch(e) { 
-            alert('❌ ' + e.message); 
-        } finally { 
-            btn.disabled = false; 
-            btn.innerHTML = '<i class="fas fa-save"></i> حفظ الوثيقة'; 
+        } catch(e) {
+            alert('❌ ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> حفظ الوثيقة';
         }
     };
 
@@ -427,11 +455,12 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
             let url = '/api/fuel/documents/' + boatId;
             if (start && end) url += '?start=' + start + '&end=' + end;
             const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + getToken() } });
-            allDocs = await res.json();
+            const data = await res.json();
+            allDocs = Array.isArray(data) ? data : [];
             renderTable();
             updateStats();
             renderChart();
-            renderPeriodComparison(); 
+            renderPeriodComparison();
         } catch(e) {}
     }
 
@@ -446,23 +475,22 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
     function renderTable() {
         const tbody = document.getElementById('fuelTableBody');
         document.getElementById('tableCount').textContent = allDocs.length;
-        if (!allDocs.length) { 
-            tbody.innerHTML = '<tr><td colspan="6" style="padding:40px; text-align:center;">لا توجد وثائق مسجلة.</td></tr>'; 
-            return; 
+        if (!allDocs.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="padding:40px; text-align:center;">لا توجد وثائق مسجلة.</td></tr>';
+            return;
         }
         tbody.innerHTML = allDocs.map(d => `
             <tr>
                 <td>${new Date(d.date).toLocaleDateString('ar-EG')}</td>
-                <td>${d.docTotalHours}</td>
-                <td>${d.docTotalLiters} لتر</td>
+                <td>${esc(d.docTotalHours)}</td>
+                <td>${esc(d.docTotalLiters)} لتر</td>
                 <td>${d.engineCount === 2 ? 'محركان' : 'محرك واحد'}</td>
-                <td>${d.totalActualRate ? d.totalActualRate.toFixed(2) : 0}</td>
+                <td>${d.totalActualRate ? Number(d.totalActualRate).toFixed(2) : 0}</td>
                 <td>${d.isFraud ? '<span class="badge badge-danger">مشبوه</span>' : '<span class="badge badge-success">سليم</span>'}</td>
             </tr>
         `).join('');
     }
 
-    // مقارنة الشهر والأسبوع
     function renderPeriodComparison() {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -487,60 +515,161 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
         document.getElementById('currentWeekValue').textContent = currentWeek.toFixed(0) + ' لتر';
         document.getElementById('lastWeekValue').textContent = lastWeek.toFixed(0) + ' لتر';
 
-        const monthDiff = currentMonth - lastMonth;
-        const weekDiff = currentWeek - lastWeek;
-        const monthBadge = document.getElementById('monthCompareBadge');
-        const weekBadge = document.getElementById('weekCompareBadge');
-
-        if (monthDiff > 0) { monthBadge.className = 'compare-badge up'; monthBadge.textContent = '📈 +' + ((monthDiff / (lastMonth || 1)) * 100).toFixed(1) + '%'; }
-        else if (monthDiff < 0) { monthBadge.className = 'compare-badge down'; monthBadge.textContent = '📉 ' + Math.abs((monthDiff / (lastMonth || 1)) * 100).toFixed(1) + '%'; }
-        else { monthBadge.className = 'compare-badge neutral'; monthBadge.textContent = '➖ 0%'; }
-
-        if (weekDiff > 0) { weekBadge.className = 'compare-badge up'; weekBadge.textContent = '📈 +' + ((weekDiff / (lastWeek || 1)) * 100).toFixed(1) + '%'; }
-        else if (weekDiff < 0) { weekBadge.className = 'compare-badge down'; weekBadge.textContent = '📉 ' + Math.abs((weekDiff / (lastWeek || 1)) * 100).toFixed(1) + '%'; }
-        else { weekBadge.className = 'compare-badge neutral'; weekBadge.textContent = '➖ 0%'; }
+        function setBadge(el, cur, prev) {
+            const diff = cur - prev;
+            if (diff > 0) { el.className = 'compare-badge up'; el.textContent = '📈 +' + ((diff / (prev || 1)) * 100).toFixed(1) + '%'; }
+            else if (diff < 0) { el.className = 'compare-badge down'; el.textContent = '📉 ' + Math.abs((diff / (prev || 1)) * 100).toFixed(1) + '%'; }
+            else { el.className = 'compare-badge neutral'; el.textContent = '➖ 0%'; }
+        }
+        setBadge(document.getElementById('monthCompareBadge'), currentMonth, lastMonth);
+        setBadge(document.getElementById('weekCompareBadge'), currentWeek, lastWeek);
     }
 
     // مقارنة مركب آخر
     async function loadOtherVesselCompare() {
+        const grid = document.getElementById('otherVesselGrid');
+        const empty = document.getElementById('otherVesselEmpty');
+        const badge = document.getElementById('otherVesselBadge');
+
+        function showMessage(icon, text) {
+            grid.hidden = true;
+            badge.hidden = true;
+            empty.hidden = false;
+            empty.innerHTML = '<i class="fas ' + icon + '"></i><span class="pill">' + text + '</span>';
+        }
+
         try {
             const res = await fetch('/api/fuel/compare-vessel/' + boatId, { headers: { 'Authorization': 'Bearer ' + getToken() } });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
-            if (data.success) {
-                document.getElementById('currentVesselName').textContent = data.current.name;
-                document.getElementById('currentVesselLiters').textContent = data.current.totalLiters + ' لتر';
-                document.getElementById('currentVesselRate').textContent = data.current.rate.toFixed(2);
-                
-                document.getElementById('otherVesselName').textContent = data.other.name;
-                document.getElementById('otherVesselLiters').textContent = data.other.totalLiters + ' لتر';
-                document.getElementById('otherVesselRate').textContent = data.other.rate.toFixed(2);
-                
-                const diff = data.current.rate - data.other.rate;
-                const badge = document.getElementById('otherVesselBadge');
-                if (diff > 0) { badge.className = 'compare-badge up'; badge.textContent = 'استهلاك أعلى بـ ' + Math.abs(diff).toFixed(2); }
-                else if (diff < 0) { badge.className = 'compare-badge down'; badge.textContent = 'استهلاك أقل بـ ' + Math.abs(diff).toFixed(2); }
-                else { badge.className = 'compare-badge neutral'; badge.textContent = 'متطابق'; }
+
+            if (!data || !data.success || !data.other || !data.current) {
+                return showMessage('fa-ship', 'لا يوجد مركب مشابه في نفس الفئة');
             }
-        } catch(e) {}
+
+            const curRate = Number(data.current.rate) || 0;
+            const othRate = Number(data.other.rate) || 0;
+
+            if (curRate <= 0 || othRate <= 0) {
+                return showMessage('fa-circle-info', 'لا توجد بيانات كافية للمقارنة');
+            }
+
+            document.getElementById('currentVesselName').textContent = data.current.name || '—';
+            document.getElementById('currentVesselLiters').textContent = (Number(data.current.totalLiters) || 0) + ' لتر';
+            document.getElementById('currentVesselRate').textContent = curRate.toFixed(2);
+            document.getElementById('otherVesselName').textContent = data.other.name || '—';
+            document.getElementById('otherVesselLiters').textContent = (Number(data.other.totalLiters) || 0) + ' لتر';
+            document.getElementById('otherVesselRate').textContent = othRate.toFixed(2);
+
+            const diff = curRate - othRate;
+            const pct = Math.abs(diff / othRate * 100).toFixed(1);
+            if (diff > 0.005) { badge.className = 'compare-badge up'; badge.textContent = 'استهلاك أعلى بـ ' + diff.toFixed(2) + ' (+' + pct + '%)'; }
+            else if (diff < -0.005) { badge.className = 'compare-badge down'; badge.textContent = 'استهلاك أقل بـ ' + Math.abs(diff).toFixed(2) + ' (−' + pct + '%)'; }
+            else { badge.className = 'compare-badge neutral'; badge.textContent = 'متطابق'; }
+
+            empty.hidden = true;
+            grid.hidden = false;
+            badge.hidden = false;
+        } catch (e) {
+            showMessage('fa-triangle-exclamation', 'تعذّر تحميل بيانات المقارنة');
+        }
     }
 
-    // رسم بياني
+    // الرسم البياني
     function renderChart() {
-        const ctx = document.getElementById('fuelChart').getContext('2d');
-        if (myChart) myChart.destroy(); 
-        if (!allDocs.length) return;
-        
-        const sorted = allDocs.slice().sort((a,b) => new Date(a.date) - new Date(b.date));
-        myChart = new Chart(ctx, {
+        const container = document.querySelector('.chart-container');
+        const emptyEl = document.getElementById('chartEmpty');
+
+        if (myChart) { myChart.destroy(); myChart = null; }
+
+        if (!Array.isArray(allDocs) || !allDocs.length) {
+            container.hidden = true;
+            emptyEl.hidden = false;
+            return;
+        }
+        emptyEl.hidden = true;
+        container.hidden = false;
+
+        const C = { blue: '#3b82f6', red: '#ef4444', gold: '#e6b31e', navy: '#0a1e38', text: '#64748b', grid: 'rgba(148,163,184,.18)' };
+        Chart.defaults.font.family = "'Cairo','Segoe UI',Tahoma,sans-serif";
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = C.text;
+
+        const sorted = allDocs.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+        const rates = sorted.map(d => Number(d.totalActualRate) || 0);
+        const std = Number(standards.standardRate) || 0;
+        const shortDate = d => new Date(d.date).toLocaleDateString('ar-TN', { day: '2-digit', month: '2-digit' });
+        const fullDate = d => new Date(d.date).toLocaleDateString('ar-TN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+        myChart = new Chart(document.getElementById('fuelChart').getContext('2d'), {
             type: 'bar',
             data: {
-                labels: sorted.map(d => new Date(d.date).toLocaleDateString('ar-EG')),
+                labels: sorted.map(shortDate),
                 datasets: [
-                    { label: 'المعدل الفعلي', data: sorted.map(d => d.totalActualRate), backgroundColor: sorted.map(d => d.isFraud ? '#ef4444' : '#3b82f6'), borderRadius: 5 },
-                    { label: 'المعيار', data: sorted.map(() => standards.standardRate), type: 'line', borderColor: '#f59e0b', borderDash: [5,5], pointRadius: 0, fill: false }
+                    {
+                        label: 'المعدل الفعلي',
+                        data: rates,
+                        order: 1,
+                        backgroundColor: sorted.map(d => d.isFraud ? 'rgba(239,68,68,.9)' : 'rgba(59,130,246,.85)'),
+                        hoverBackgroundColor: sorted.map(d => d.isFraud ? C.red : C.blue),
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 38
+                    },
+                    {
+                        label: 'المعيار',
+                        data: sorted.map(() => std),
+                        type: 'line',
+                        order: 0,
+                        borderColor: C.gold,
+                        borderWidth: 2,
+                        borderDash: [6, 5],
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        fill: false
+                    }
                 ]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { family: 'Cairo' } } } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 700, easing: 'easeOutQuart' },
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        rtl: true, position: 'top', align: 'end',
+                        onClick: () => {},
+                        labels: {
+                            usePointStyle: true, boxWidth: 10, boxHeight: 10, padding: 16,
+                            generateLabels: () => [
+                                { text: 'سليم', fillStyle: C.blue, strokeStyle: C.blue, pointStyle: 'rectRounded', hidden: false, datasetIndex: 0 },
+                                { text: 'مشبوه', fillStyle: C.red, strokeStyle: C.red, pointStyle: 'rectRounded', hidden: false, datasetIndex: 0 },
+                                { text: 'المعيار', fillStyle: C.gold, strokeStyle: C.gold, pointStyle: 'line', hidden: false, datasetIndex: 1 }
+                            ]
+                        }
+                    },
+                    tooltip: {
+                        rtl: true, textDirection: 'rtl',
+                        backgroundColor: C.navy, titleColor: '#f7d774', bodyColor: '#fff',
+                        padding: 12, cornerRadius: 10, boxPadding: 6, usePointStyle: true,
+                        callbacks: {
+                            title: items => fullDate(sorted[items[0].dataIndex]),
+                            label: c => ' ' + c.dataset.label + ': ' + Number(c.parsed.y).toFixed(2) + ' لتر/ساعة',
+                            afterBody: items => sorted[items[0].dataIndex].isFraud ? ['⚠️ وثيقة مشبوهة'] : []
+                        }
+                    }
+                },
+                scales: {
+                    x: { reverse: true, grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+                    y: {
+                        position: 'right', beginAtZero: true,
+                        suggestedMax: Math.max(...rates, std) * 1.15,
+                        border: { display: false }, grid: { color: C.grid },
+                        ticks: { padding: 8, maxTicksLimit: 6 },
+                        title: { display: true, text: 'لتر / ساعة', font: { weight: '700' } }
+                    }
+                }
+            }
         });
     }
 
