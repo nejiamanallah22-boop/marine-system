@@ -10,6 +10,7 @@ module.exports = function(app, {
 
     // ═══════════════════════════════════════════════════════════
     // 1. جلب المعايير الخاصة بالقارب (عدد المحركات، سعة الخزان، الخ)
+    // GET /api/fuel/standards/:boatId
     // ═══════════════════════════════════════════════════════════
     app.get('/api/fuel/standards/:boatId', authenticateAccessToken, async (req, res) => {
         try {
@@ -34,6 +35,7 @@ module.exports = function(app, {
 
     // ═══════════════════════════════════════════════════════════
     // 2. حفظ وثيقة تموين جديدة (نظام الوثيقة الشاملة)
+    // POST /api/fuel/documents
     // ═══════════════════════════════════════════════════════════
     app.post('/api/fuel/documents', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
@@ -136,6 +138,7 @@ module.exports = function(app, {
 
     // ═══════════════════════════════════════════════════════════
     // 3. جلب وثائق قارب معين (مع فلترة زمنية اختيارية)
+    // GET /api/fuel/documents/:boatId?start=...&end=...
     // ═══════════════════════════════════════════════════════════
     app.get('/api/fuel/documents/:boatId', authenticateAccessToken, async (req, res) => {
         try {
@@ -160,6 +163,7 @@ module.exports = function(app, {
 
     // ═══════════════════════════════════════════════════════════
     // 4. مقارنة المركب الحالي مع مركب آخر من نفس الفئة
+    // GET /api/fuel/compare-vessel/:boatId
     // ═══════════════════════════════════════════════════════════
     app.get('/api/fuel/compare-vessel/:boatId', authenticateAccessToken, async (req, res) => {
         try {
