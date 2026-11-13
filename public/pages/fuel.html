@@ -328,7 +328,6 @@ td.d{color:var(--t1)}
   'use strict';
   var boatId = new URLSearchParams(window.location.search).get('id');
   var isTwin = false, step = 1, maxStep = 2, saving = false;
-  // تم إزالة الرقم 13.33 الافتراضي، وتركه 0 حتى يتم إعداده من قبل المستخدم
   var standards = { standardRate: 0, tankCapacity: 1000, engineCount: 1 };
   var myChart = null, allDocs = [];
 
@@ -363,13 +362,11 @@ td.d{color:var(--t1)}
       var v = (Array.isArray(vessels) ? vessels : (vessels.vessels || [])).find(function (x) { return String(x.id || x._id) === String(boatId); });
       if (v) {
         $('vesselName').innerHTML = '<i class="fas fa-anchor"></i> ' + esc(v.name);
-        // التحقق من وجود الاستهلاك المعياري أيضاً
         ready = !!(v.engineCount && v.tankCapacity && v.standardRate && v.standardRate > 0);
         isTwin = v.engineCount === 2;
       } else { $('vesselName').textContent = 'المركب غير موجود'; ready = false; }
     } catch (e) { $('vesselName').textContent = 'تعذّر تحميل بيانات المركب'; }
 
-    // إظهار نموذج واحد فقط: الإعداد أو التسجيل
     $('setupCard').hidden = ready;
     $('entryCard').hidden = !ready;
     if (ready) buildSteps();
@@ -388,7 +385,6 @@ td.d{color:var(--t1)}
   window.saveEngineSetup = async function () {
     var tank = num('setupTankCapacity'), rate = num('setupStandardRate');
     if (!isFinite(tank) || tank <= 0) { $('setupTankCapacity').focus(); return toast('سعة الخزان يجب أن تكون أكبر من صفر', 'error'); }
-    // التحقق الإجباري من الاستهلاك المعياري
     if (!isFinite(rate) || rate <= 0) { $('setupStandardRate').focus(); return toast('الاستهلاك المعياري يجب أن يكون رقماً أكبر من صفر', 'error'); }
     
     var payload = {
