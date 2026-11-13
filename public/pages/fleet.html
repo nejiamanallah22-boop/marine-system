@@ -402,28 +402,40 @@ body { font-family: var(--font); background: #eef2f7; color: var(--slate-900); m
     };
 
     window.saveFuelDoc = async function() {
-        const docH = parseFloat(document.getElementById('fDocTotalHours').value);
-        const docL = parseFloat(document.getElementById('fDocTotalLiters').value);
-        if (isNaN(docH) || isNaN(docL) || docH <= 0 || docL <= 0) {
-            return alert('⚠️ يرجى إدخال إجمالي الساعات والوقود');
+        function num(id) { return parseFloat(document.getElementById(id).value); }
+        function bad(id, msg) { alert(msg); var el = document.getElementById(id); if (el) el.focus(); return true; }
+
+        const date = document.getElementById('fDate').value;
+        if (!date) return bad('fDate', '⚠️ يرجى اختيار تاريخ الوثيقة');
+
+        // 1. الإجماليات
+        const docH = num('fDocTotalHours'), docL = num('fDocTotalLiters');
+        if (!isFinite(docH) || docH <= 0) return bad('fDocTotalHours', '⚠️ إجمالي ساعات العمل يجب أن يكون رقماً أكبر من صفر');
+        if (!isFinite(docL) || docL <= 0) return bad('fDocTotalLiters', '⚠️ إجمالي الوقود يجب أن يكون رقماً أكبر من صفر');
+
+        // 2. المحرك الأيمن (أو الوحيد)
+        const uR = num('fUsedHoursR'), lR = num('fRequestedLitersR');
+        const rName = isTwinEngine ? 'الأيمن' : 'الوحيد';
+        if (!isFinite(uR) || uR < 0) return bad('fUsedHoursR', '⚠️ يرجى إدخال ساعات المحرك ' + rName + ' بشكل صحيح');
+        if (!isFinite(lR) || lR < 0) return bad('fRequestedLitersR', '⚠️ يرجى إدخال وقود المحرك ' + rName + ' بشكل صحيح');
+
+        // 3. المحرك الأيسر
+        let uL = 0, lL = 0;
+        if (isTwinEngine) {
+            uL = num('fUsedHoursL'); lL = num('fRequestedLitersL');
+            if (!isFinite(uL) || uL < 0) return bad('fUsedHoursL', '⚠️ يرجى إدخال ساعات المحرك الأيسر بشكل صحيح');
+            if (!isFinite(lL) || lL < 0) return bad('fRequestedLitersL', '⚠️ يرجى إدخال وقود المحرك الأيسر بشكل صحيح');
         }
 
+        const tH = function(id) { const v = num(id); return isFinite(v) && v >= 0 ? v : 0; };
         const payload = {
-            boatId, date: document.getElementById('fDate').value,
+            boatId, date: date,
             docTotalHours: docH,
             docTotalLiters: docL,
             engineCount: isTwinEngine ? 2 : 1,
             engines: {
-                right: {
-                    totalHours: parseFloat(document.getElementById('fTotalHoursR').value)||0,
-                    usedHours: parseFloat(document.getElementById('fUsedHoursR').value)||0,
-                    requestedLiters: parseFloat(document.getElementById('fRequestedLitersR').value)||0
-                },
-                left: isTwinEngine ? {
-                    totalHours: parseFloat(document.getElementById('fTotalHoursL').value)||0,
-                    usedHours: parseFloat(document.getElementById('fUsedHoursL').value)||0,
-                    requestedLiters: parseFloat(document.getElementById('fRequestedLitersL').value)||0
-                } : null
+                right: { totalHours: tH('fTotalHoursR'), usedHours: uR, requestedLiters: lR },
+                left: isTwinEngine ? { totalHours: tH('fTotalHoursL'), usedHours: uL, requestedLiters: lL } : null
             }
         };
 
