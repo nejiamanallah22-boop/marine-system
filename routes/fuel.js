@@ -6,6 +6,9 @@ const router = express.Router();
 const Vessel = require('../models/Vessel');
 const FuelDocument = require('../models/FuelDocument');
 
+// الميدلوير سيُمرَّر من server.js
+let authenticateAccessToken, csrfProtection;
+
 /* ثوابت القواعد */
 const T = {
   INFLATION: 0.15,
@@ -136,6 +139,19 @@ router.get('/standards/:boatId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+/* ───────── جلب وثائق القارب ───────── */
+router.get('/documents/:boatId', async (req, res) => {
+  try {
+    const { start, end } = req.query;
+    let query = { boatId: req.params.boatId };
+    if (start && end) {
+      query.date = { $gte: new Date(start), $lte: new Date(end) };
+    }
+    const docs = await FuelDocument.find(query).sort({ date: -1 });
+    res.json(docs);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 /* ───────── تقرير التدقيق ───────── */
 router.get('/audit-report/:boatId', async (req, res) => {
   try {
@@ -240,4 +256,11 @@ router.get('/compare-vessel/:boatId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-module.exports = router;
+/* ═══════════════════════════════════════════════════════════
+   تصدير function يستقبل الميدلوير من server.js
+   ═══════════════════════════════════════════════════════════ */
+module.exports = function(app, middlewares) {
+    authenticateAccessToken = middlewares.authenticateAccessToken;
+    csrfProtection = middlewares.csrfProtection;
+    app.use('/api/fuel', authenticateAccessToken, router);
+};
