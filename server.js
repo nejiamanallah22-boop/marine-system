@@ -1,4 +1,4 @@
-// ============================================================
+منه// ============================================================
 // 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v11.1.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
@@ -3598,10 +3598,10 @@ function formatMaintenance(log) {
     } catch (e) {
         console.error('❌ [CREW] Failed to load:', e.message);
     }
-        // ⛽ FUEL ROUTES — إدارة المحروقات
+            // ⛽ FUEL ROUTES — إدارة المحروقات
     try {
         const fuelRoutes = require('./routes/fuel');
-        app.use('/api/fuel', fuelRoutes);
+        app.use('/api/fuel', authenticateAccessToken, fuelRoutes);
         console.log('✅ [FUEL] Routes registered');
     } catch (e) {
         console.error('❌ [FUEL] Failed to load:', e.message);
