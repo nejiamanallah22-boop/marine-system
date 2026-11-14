@@ -1,30 +1,21 @@
 /**
  * routes/fuel.js — محرك التدقيق لوثائق تموين المحروقات (9 قواعد)
- *
- * افتراضات (عدّلها حسب مشروعك):
- *  - التركيب: app.use('/api/fuel', require('./routes/fuel'))
- *  - authenticateAccessToken و csrfProtection يُصدَّران من ../middleware/auth
- *  - نموذج Vessel: id, name, cat, len, engineCount, tankCapacity, standardRate
- *    وحقل اختياري inactivePeriods: [{ from, to, reason }] لأيام التوقف/الصيانة.
- *  - للربط بمنظومة الصيانة: router.setMaintenanceChecker(async (boatId, date) => bool|string)
- *  - النظام يرصد «شبهة» ولا يثبت سرقة؛ القرار النهائي للمراجعة البشرية.
  */
 const express = require('express');
 const router = express.Router();
-const { authenticateAccessToken, csrfProtection } = require('../middleware/auth');
 const Vessel = require('../models/Vessel');
 const FuelDocument = require('../models/FuelDocument');
 
 /* ثوابت القواعد */
 const T = {
-  INFLATION: 0.15,      // (5) تجاوز المعيار 15% فأكثر
-  FULL_TANK: 0.9,       // (6) كمية ≥ 90% من السعة
-  SHORT_HOURS: 10,      // (6) ... مع ساعات عمل < 10
-  SIGMA: 2,             // (9) انحرافان معياريان
-  MIN_HIST: 5,          // (9) أقل عدد وثائق تاريخية للمركب
+  INFLATION: 0.15,
+  FULL_TANK: 0.9,
+  SHORT_HOURS: 10,
+  SIGMA: 2,
+  MIN_HIST: 5,
   METER_EPS: 0.01, SUM_EPS: 0.5,
-  WEEKEND: [5, 6],      // (7) جمعة وسبت (getUTCDay) — عدّلها إن اختلفت عطلتكم
-  FRAUD: 60, WARN: 30   // أحمر > 60 · أصفر 30–60 · أخضر < 30
+  WEEKEND: [5, 6],
+  FRAUD: 60, WARN: 30
 };
 const DAY = 864e5;
 const n = v => (Number.isFinite(+v) ? +v : 0);
@@ -41,7 +32,7 @@ function stats(a) {
   return { n: c, mean, sd: Math.sqrt(a.reduce((s, x) => s + (x - mean) ** 2, 0) / c) };
 }
 
-/* تنظيف بيانات المحرك القادمة من العميل */
+/* تنظيف بيانات المحرك */
 function cleanEngine(e) {
   const g = k => (Number.isFinite(+e?.[k]) && +e[k] >= 0 ? +e[k] : 0);
   return { totalHours: g('totalHours'), usedHours: g('usedHours'), requestedLiters: g('requestedLiters') };
@@ -49,8 +40,6 @@ function cleanEngine(e) {
 
 /**
  * يطبق القواعد التسع على وثيقة.
- * ctx = { vessel, prev, sameDay, hist, maintenance }
- * يعيد { flags, byRule, riskScore, isFraud, fraudReason }
  */
 function analyze(doc, ctx) {
   const flags = [];
@@ -65,30 +54,30 @@ function analyze(doc, ctx) {
     const cur = n(e.totalHours), old = n(ctx.prev.engines?.[k]?.totalHours);
     if (cur > 0 && old > 0 && cur < old - T.METER_EPS) add('METER_ROLLBACK', 40, `عداد المحرك ${name} (${cur}) أقل من القراءة السابقة (${old})`);
   }
-  // 2) + 3) تعارض ساعات / كميات المحركات مع إجمالي الوثيقة
+  // 2) + 3) تعارض ساعات / كميات
   const sh = eng.reduce((s, x) => s + n(x[2].usedHours), 0), sl = eng.reduce((s, x) => s + n(x[2].requestedLiters), 0);
   if (sh > 0 && Math.abs(sh - hours) > T.SUM_EPS) add('HOURS_MISMATCH', 25, `مجموع ساعات المحركات (${sh}) ≠ الإجمالي (${hours})`);
   if (sl > 0 && Math.abs(sl - liters) > T.SUM_EPS) add('LITERS_MISMATCH', 25, `مجموع وقود المحركات (${sl}) ≠ الإجمالي (${liters})`);
   // 4) تجاوز سعة الخزان
   if (tank > 0 && liters > tank) add('TANK_OVERFLOW', 35, `الكمية (${liters}) أكبر من سعة الخزان (${tank})`);
-  // 5) استهلاك وهمي: ≥ 115% من المعيار
+  // 5) استهلاك وهمي
   if (std > 0 && rate >= std * (1 + T.INFLATION)) {
     const over = (rate / std - 1) * 100;
     add('RATE_INFLATED', Math.min(35, over), `المعدل ${rate.toFixed(2)} يتجاوز المعيار ${std} بنسبة ${over.toFixed(0)}%`);
   }
-  // 6) تضخم الكمية: ≥ 90% من السعة مع أقل من 10 ساعات
+  // 6) تضخم الكمية
   if (tank > 0 && liters >= T.FULL_TANK * tank && hours < T.SHORT_HOURS)
     add('VOLUME_INFLATION', 25, `تموين ${liters} لتر (≥ 90% من الخزان) مقابل ${hours} ساعة فقط`);
-  // 7) رحلة وهمية: عطلة أسبوعية أو فترة توقف/صيانة
+  // 7) رحلة وهمية
   const reasons = [];
   if (T.WEEKEND.includes(d.getUTCDay())) reasons.push('يوم عطلة أسبوعية');
   const off = (v.inactivePeriods || []).find(p => d >= new Date(p.from) && d <= new Date(p.to));
   if (off) reasons.push('فترة توقف مسجلة' + (off.reason ? ` (${off.reason})` : ''));
   if (ctx.maintenance) reasons.push(typeof ctx.maintenance === 'string' ? ctx.maintenance : 'يوم صيانة مسجل');
   if (reasons.length) add('PHANTOM_TRIP', 30, `وثيقة في ${reasons.join(' / ')}`);
-  // 8) تموين متكرر في نفس اليوم
+  // 8) تموين متكرر
   if (ctx.sameDay.length) add('DOUBLE_DIP', 20, `وثيقة أخرى لنفس المركب في نفس اليوم${ctx.sameDay[0].documentNumber ? ' (رقم ' + ctx.sameDay[0].documentNumber + ')' : ''}`);
-  // 9) انحراف عن متوسط المركب التاريخي
+  // 9) انحراف إحصائي
   const h = ctx.hist;
   if (h && h.n >= T.MIN_HIST && h.sd > 0 && Math.abs(rate - h.mean) > T.SIGMA * h.sd)
     add('STAT_ANOMALY', 20, `المعدل ${rate.toFixed(2)} يبعد أكثر من ${T.SIGMA} انحراف معياري عن متوسط المركب ${h.mean.toFixed(2)}`);
@@ -99,7 +88,7 @@ function analyze(doc, ctx) {
   return { flags, byRule, riskScore, isFraud: riskScore > T.FRAUD, fraudReason: flags.map(f => f.msg).join(' | ') };
 }
 
-/* يجمع سياق التحليل: السابقة، نفس اليوم، تاريخ المركب، الصيانة */
+/* يجمع سياق التحليل */
 async function buildContext(doc, vessel) {
   const d = new Date(doc.date), s = dayStart(d);
   const own = { boatId: doc.boatId, _id: { $ne: doc._id } };
@@ -112,8 +101,8 @@ async function buildContext(doc, vessel) {
   return { vessel, prev, sameDay, hist: stats(histDocs.map(x => x.totalActualRate)), maintenance };
 }
 
-/* ───────── تسجيل وثيقة + تحليلها ───────── */
-router.post('/documents', authenticateAccessToken, csrfProtection, async (req, res) => {
+/* ───────── تسجيل وثيقة ───────── */
+router.post('/documents', async (req, res) => {
   try {
     const b = req.body || {};
     const hours = +b.docTotalHours, liters = +b.docTotalLiters, date = new Date(b.date);
@@ -135,7 +124,7 @@ router.post('/documents', authenticateAccessToken, csrfProtection, async (req, r
 });
 
 /* ───────── معايير القارب ───────── */
-router.get('/standards/:boatId', authenticateAccessToken, async (req, res) => {
+router.get('/standards/:boatId', async (req, res) => {
   try {
     const v = await Vessel.findOne({ id: req.params.boatId }).lean();
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
@@ -147,8 +136,8 @@ router.get('/standards/:boatId', authenticateAccessToken, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ───────── تقرير التدقيق لمركب ───────── */
-router.get('/audit-report/:boatId', authenticateAccessToken, async (req, res) => {
+/* ───────── تقرير التدقيق ───────── */
+router.get('/audit-report/:boatId', async (req, res) => {
   try {
     const v = await Vessel.findOne({ id: req.params.boatId }).lean();
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
@@ -173,10 +162,9 @@ router.get('/audit-report/:boatId', authenticateAccessToken, async (req, res) =>
         warned: docs.filter(d => d.riskScore >= T.WARN && d.riskScore <= T.FRAUD).length,
         avgRisk: docs.length ? riskSum / docs.length : 0,
         expectedLiters: hasStd ? expected : null,
-        varianceLiters: hasStd ? liters - expected : null,                       // موجب = فائض · سالب = توفير
+        varianceLiters: hasStd ? liters - expected : null,
         variancePct: hasStd && expected > 0 ? ((liters - expected) / expected) * 100 : null,
         excessLiters: hasStd ? excess : null,
-        // رصيد تقديري: تراكم (المُموَّن − المتوقع) محصوراً بين 0 والسعة، ويفترض خزاناً فارغاً قبل أول وثيقة
         balanceLiters: hasStd && tank > 0 && docs.length ? bal : null,
         balancePct: hasStd && tank > 0 && docs.length ? (bal / tank) * 100 : null
       },
@@ -188,7 +176,7 @@ router.get('/audit-report/:boatId', authenticateAccessToken, async (req, res) =>
 });
 
 /* ───────── ملخص الأسطول ───────── */
-router.get('/fleet-summary', authenticateAccessToken, async (req, res) => {
+router.get('/fleet-summary', async (req, res) => {
   try {
     const vessels = await Vessel.find().select('id standardRate').lean();
     const std = Object.fromEntries(vessels.map(v => [v.id, n(v.standardRate)]));
@@ -204,8 +192,8 @@ router.get('/fleet-summary', authenticateAccessToken, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ───────── اكتشاف الاستهلاك المعياري من الفئة ───────── */
-router.get('/auto-standard/:boatId', authenticateAccessToken, async (req, res) => {
+/* ───────── اكتشاف الاستهلاك المعياري ───────── */
+router.get('/auto-standard/:boatId', async (req, res) => {
   try {
     const v = await Vessel.findOne({ id: req.params.boatId }).lean();
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
@@ -227,8 +215,8 @@ router.get('/auto-standard/:boatId', authenticateAccessToken, async (req, res) =
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ───────── مقارنة مع مركب مشابه (نفس الفئة، وإلا طول مقارب ±15%) ───────── */
-router.get('/compare-vessel/:boatId', authenticateAccessToken, async (req, res) => {
+/* ───────── مقارنة مع مركب مشابه ───────── */
+router.get('/compare-vessel/:boatId', async (req, res) => {
   try {
     const cur = await Vessel.findOne({ id: req.params.boatId }).lean();
     if (!cur) return res.status(404).json({ error: 'المركب غير موجود' });
