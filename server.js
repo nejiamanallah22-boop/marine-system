@@ -3598,10 +3598,12 @@ function formatMaintenance(log) {
     } catch (e) {
         console.error('❌ [CREW] Failed to load:', e.message);
     }
-            // ⛽ FUEL ROUTES — إدارة المحروقات
+        // ⛽ FUEL ROUTES — إدارة المحروقات
     try {
-        const fuelRoutes = require('./routes/fuel');
-        app.use('/api/fuel', authenticateAccessToken, fuelRoutes);
+        require('./routes/fuel')(app, {
+            authenticateAccessToken,
+            csrfProtection
+        });
         console.log('✅ [FUEL] Routes registered');
     } catch (e) {
         console.error('❌ [FUEL] Failed to load:', e.message);
