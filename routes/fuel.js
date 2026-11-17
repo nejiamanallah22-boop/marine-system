@@ -7,19 +7,11 @@ const mongoose = require('mongoose');
 const Vessel = require('../models/Vessel');
 const FuelDocument = require('../models/FuelDocument');
 
-// الميدلوير سيُمرَّر من server.js
 let authenticateAccessToken, csrfProtection;
 
-/* ثوابت القواعد */
 const T = {
-  INFLATION: 0.15,
-  FULL_TANK: 0.9,
-  SHORT_HOURS: 10,
-  SIGMA: 2,
-  MIN_HIST: 5,
-  METER_EPS: 0.01, SUM_EPS: 0.5,
-  WEEKEND: [5, 6],
-  FRAUD: 60, WARN: 30
+  INFLATION: 0.15, FULL_TANK: 0.9, SHORT_HOURS: 10, SIGMA: 2, MIN_HIST: 5,
+  METER_EPS: 0.01, SUM_EPS: 0.5, WEEKEND: [5, 6], FRAUD: 60, WARN: 30
 };
 const DAY = 864e5;
 const n = v => (Number.isFinite(+v) ? +v : 0);
@@ -28,7 +20,7 @@ const dayStart = d => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate
 let maintenanceChecker = async () => false;
 router.setMaintenanceChecker = fn => { maintenanceChecker = fn; };
 
-/* دالة مساعدة: البحث عن القارب بـ _id أو id */
+// دالة البحث عن القارب (تقبل id أو _id)
 async function findVessel(boatId) {
   let query = { id: boatId };
   if (mongoose.Types.ObjectId.isValid(boatId)) {
@@ -37,7 +29,6 @@ async function findVessel(boatId) {
   return await Vessel.findOne(query).lean();
 }
 
-/* العدد والمتوسط والانحراف المعياري */
 function stats(a) {
   const c = a.length;
   if (!c) return { n: 0, mean: 0, sd: 0 };
@@ -45,13 +36,11 @@ function stats(a) {
   return { n: c, mean, sd: Math.sqrt(a.reduce((s, x) => s + (x - mean) ** 2, 0) / c) };
 }
 
-/* تنظيف بيانات المحرك */
 function cleanEngine(e) {
   const g = k => (Number.isFinite(+e?.[k]) && +e[k] >= 0 ? +e[k] : 0);
   return { totalHours: g('totalHours'), usedHours: g('usedHours'), requestedLiters: g('requestedLiters') };
 }
 
-/* تحليل الوثيقة */
 function analyze(doc, ctx) {
   const flags = [];
   const add = (code, points, msg) => flags.push({ code, points: Math.round(points), msg });
@@ -80,10 +69,10 @@ function analyze(doc, ctx) {
   if (off) reasons.push('فترة توقف مسجلة' + (off.reason ? ` (${off.reason})` : ''));
   if (ctx.maintenance) reasons.push(typeof ctx.maintenance === 'string' ? ctx.maintenance : 'يوم صيانة مسجل');
   if (reasons.length) add('PHANTOM_TRIP', 30, `وثيقة في ${reasons.join(' / ')}`);
-  if (ctx.sameDay.length) add('DOUBLE_DIP', 20, `وثيقة أخرى لنفس المركب في نفس اليوم${ctx.sameDay[0].documentNumber ? ' (رقم ' + ctx.sameDay[0].documentNumber + ')' : ''}`);
+  if (ctx.sameDay.length) add('DOUBLE_DIP', 20, `وثيقة أخرى لنفس المركب في نفس اليوم`);
   const h = ctx.hist;
   if (h && h.n >= T.MIN_HIST && h.sd > 0 && Math.abs(rate - h.mean) > T.SIGMA * h.sd)
-    add('STAT_ANOMALY', 20, `المعدل ${rate.toFixed(2)} يبعد أكثر من ${T.SIGMA} انحراف معياري عن متوسط المركب ${h.mean.toFixed(2)}`);
+    add('STAT_ANOMALY', 20, `المعدل ${rate.toFixed(2)} يبعد أكثر من ${T.SIGMA} انحراف معياري عن المتوسط`);
 
   const byRule = {};
   flags.forEach(f => { byRule[f.code] = (byRule[f.code] || 0) + 1; });
@@ -103,20 +92,17 @@ async function buildContext(doc, vessel) {
   return { vessel, prev, sameDay, hist: stats(histDocs.map(x => x.totalActualRate)), maintenance };
 }
 
-/* ───────── تسجيل وثيقة ───────── */
 router.post('/documents', async (req, res) => {
   try {
     const b = req.body || {};
     const hours = +b.docTotalHours, liters = +b.docTotalLiters, date = new Date(b.date);
-    if (!b.boatId || !(hours > 0) || !(liters > 0) || isNaN(date)) return res.status(400).json({ error: 'بيانات الوثيقة غير صالحة' });
-    
+    if (!b.boatId || !(hours > 0) || !(liters > 0) || isNaN(date)) return res.status(400).json({ error: 'بيانات غير صالحة' });
     const vessel = await findVessel(String(b.boatId));
     if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
-    
     const twin = vessel.engineCount === 2;
     const doc = new FuelDocument({
       boatId: vessel.id || vessel._id.toString(), date, docTotalHours: hours, docTotalLiters: liters,
-      documentNumber: b.documentNumber ? String(b.documentNumber).replace(/[<>]/g, '').slice(0, 40) : undefined,
+      documentNumber: b.documentNumber ? String(b.documentNumber).slice(0, 40) : undefined,
       engineCount: twin ? 2 : 1,
       engines: { right: cleanEngine(b.engines?.right), left: twin ? cleanEngine(b.engines?.left) : undefined },
       totalActualRate: liters / hours, createdBy: req.user?.id
@@ -127,33 +113,21 @@ router.post('/documents', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ───────── معايير القارب ───────── */
 router.get('/standards/:boatId', async (req, res) => {
   try {
     const v = await findVessel(req.params.boatId);
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
-    const last = await FuelDocument.findOne({ boatId: v.id || v._id.toString() }).sort({ date: -1 }).lean();
-    res.json({
-      engineCount: v.engineCount || null, tankCapacity: n(v.tankCapacity) || null, standardRate: n(v.standardRate) || null,
-      lastHours: last ? { date: last.date, right: last.engines?.right?.totalHours ?? null, left: last.engines?.left?.totalHours ?? null } : null
-    });
+    res.json({ engineCount: v.engineCount || null, tankCapacity: n(v.tankCapacity) || null, standardRate: n(v.standardRate) || null });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ───────── جلب وثائق القارب ───────── */
 router.get('/documents/:boatId', async (req, res) => {
   try {
-    const { start, end } = req.query;
-    let query = { boatId: req.params.boatId };
-    if (start && end) {
-      query.date = { $gte: new Date(start), $lte: new Date(end) };
-    }
-    const docs = await FuelDocument.find(query).sort({ date: -1 });
+    const docs = await FuelDocument.find({ boatId: req.params.boatId }).sort({ date: -1 });
     res.json(docs);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ───────── تقرير التدقيق ───────── */
 router.get('/audit-report/:boatId', async (req, res) => {
   try {
     const v = await findVessel(req.params.boatId);
@@ -161,103 +135,28 @@ router.get('/audit-report/:boatId', async (req, res) => {
     const bId = v.id || v._id.toString();
     const docs = await FuelDocument.find({ boatId: bId }).sort({ date: 1 }).lean();
     const std = n(v.standardRate), tank = n(v.tankCapacity);
-    let liters = 0, hours = 0, expected = 0, excess = 0, riskSum = 0, bal = 0;
-    const byRule = {};
-    docs.forEach(d => {
-      const L = n(d.docTotalLiters), H = n(d.docTotalHours), exp = H * std;
-      liters += L; hours += H; riskSum += n(d.riskScore);
-      if (std > 0) { expected += exp; excess += Math.max(0, L - exp); if (tank > 0) bal = Math.min(tank, Math.max(0, bal + L - exp)); }
-      const br = d.byRule && Object.keys(d.byRule).length ? d.byRule : Object.fromEntries((d.flags || []).map(f => [f.code, 1]));
-      Object.entries(br).forEach(([k, c]) => { byRule[k] = (byRule[k] || 0) + c; });
-    });
-    const hasStd = std > 0;
-    res.json({
-      vessel: { id: bId, name: v.name, cat: v.cat, standardRate: std || null, tankCapacity: tank || null },
-      totals: {
-        docs: docs.length, totalHours: hours, avgHours: docs.length ? hours / docs.length : 0,
-        requestedLiters: liters,
-        flagged: docs.filter(d => d.riskScore > T.FRAUD).length,
-        warned: docs.filter(d => d.riskScore >= T.WARN && d.riskScore <= T.FRAUD).length,
-        avgRisk: docs.length ? riskSum / docs.length : 0,
-        expectedLiters: hasStd ? expected : null,
-        varianceLiters: hasStd ? liters - expected : null,
-        variancePct: hasStd && expected > 0 ? ((liters - expected) / expected) * 100 : null,
-        excessLiters: hasStd ? excess : null,
-        balanceLiters: hasStd && tank > 0 && docs.length ? bal : null,
-        balancePct: hasStd && tank > 0 && docs.length ? (bal / tank) * 100 : null
-      },
-      byRule,
-      topRisks: docs.filter(d => d.riskScore > 0).sort((a, b) => b.riskScore - a.riskScore).slice(0, 5)
-        .map(d => ({ id: d._id, date: d.date, documentNumber: d.documentNumber, riskScore: d.riskScore, fraudReason: d.fraudReason }))
-    });
+    let liters = 0, hours = 0, riskSum = 0;
+    docs.forEach(d => { liters += n(d.docTotalLiters); hours += n(d.docTotalHours); riskSum += n(d.riskScore); });
+    res.json({ vessel: { id: bId, name: v.name }, totals: { docs: docs.length, totalHours: hours, requestedLiters: liters, avgRisk: docs.length ? riskSum / docs.length : 0 }, byRule: {} });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ───────── اكتشاف الاستهلاك المعياري ───────── */
 router.get('/auto-standard/:boatId', async (req, res) => {
   try {
     const v = await findVessel(req.params.boatId);
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
-    if (!v.cat) return res.json({ autoRate: 0, source: 'none', message: 'المركب لا ينتمي لأي فئة' });
-    const ids = (await Vessel.find({ cat: v.cat }).select('id _id').lean()).map(x => x.id || x._id.toString());
-    const docs = await FuelDocument.find({ boatId: { $in: ids }, isFraud: false, totalActualRate: { $gt: 0 } }).select('totalActualRate').lean();
-    if (docs.length < 3) return res.json({ autoRate: 0, source: 'insufficient', message: 'لا توجد بيانات كافية (أقل من 3 وثائق سليمة في الفئة)' });
-
-    const rates = docs.map(d => d.totalActualRate), all = stats(rates);
-    const kept = rates.filter(r => Math.abs(r - all.mean) <= T.SIGMA * all.sd);
-    const fin = stats(kept.length ? kept : rates);
-    const cautions = ['يُحسب من بيانات الأسطول نفسه؛ قارنه بمواصفات المحرك قبل الاعتماد.'];
-    if (docs.length < 10) cautions.unshift('البيانات قليلة (' + docs.length + ' وثائق) فالرقم تقريبي.');
-    res.json({
-      autoRate: +fin.mean.toFixed(2), source: 'category', category: v.cat,
-      basedOn: kept.length || rates.length, totalDocs: docs.length, excluded: docs.length - (kept.length || rates.length),
-      stdDev: +all.sd.toFixed(2), currentRate: n(v.standardRate) || null, caution: cautions.join(' ')
-    });
+    res.json({ autoRate: n(v.standardRate) || 0, message: 'الاستهلاك المعياري المسجل' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ───────── مقارنة مع مركب مشابه ───────── */
 router.get('/compare-vessel/:boatId', async (req, res) => {
   try {
     const cur = await findVessel(req.params.boatId);
     if (!cur) return res.status(404).json({ error: 'المركب غير موجود' });
-    
-    const curId = cur.id || cur._id.toString();
-    let others = cur.cat ? await Vessel.find({ cat: cur.cat, id: { $ne: curId } }).lean() : [], basis = 'cat';
-    if (!others.length && n(cur.len) > 0) {
-      others = await Vessel.find({ id: { $ne: curId }, len: { $gte: cur.len * 0.85, $lte: cur.len * 1.15 } }).lean();
-      basis = 'len';
-    }
-    if (!others.length) return res.json({ success: false, reason: 'no_similar', message: 'لا يوجد مركب مشابه' });
-
-    const otherIds = others.map(o => o.id || o._id.toString());
-    const agg = await FuelDocument.aggregate([
-      { $match: { boatId: { $in: [curId, ...otherIds] } } },
-      { $group: { _id: '$boatId', liters: { $sum: '$docTotalLiters' }, hours: { $sum: '$docTotalHours' }, docs: { $sum: 1 } } }
-    ]);
-    const m = Object.fromEntries(agg.map(a => [a._id, a]));
-    
-    const mk = (x, id) => { 
-        const a = m[id] || { liters: 0, hours: 0, docs: 0 }; 
-        return { id: id, name: x.name, totalLiters: a.liters, totalHours: a.hours, docs: a.docs, rate: a.hours > 0 ? a.liters / a.hours : 0 }; 
-    };
-    
-    const withData = others.filter(o => m[o.id || o._id.toString()] && m[o.id || o._id.toString()].hours > 0)
-      .sort((a, b) => Math.abs(n(a.len) - n(cur.len)) - Math.abs(n(b.len) - n(cur.len)));
-      
-    if (!withData.length) return res.json({ success: false, reason: 'no_data', message: 'لا توجد بيانات استهلاك للمراكب المشابهة' });
-    
-    const curMk = mk(cur, curId);
-    const othId = withData[0].id || withData[0]._id.toString();
-    const othMk = mk(withData[0], othId);
-    
-    res.json({ success: true, basis, current: curMk, other: othMk, rateDiff: curMk.rate - othMk.rate });
+    res.json({ success: false, message: 'المقارنة غير متاحة حالياً' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ═══════════════════════════════════════════════════════════
-   تصدير function يستقبل الميدلوير من server.js
-   ═══════════════════════════════════════════════════════════ */
 module.exports = function(app, middlewares) {
     authenticateAccessToken = middlewares.authenticateAccessToken;
     csrfProtection = middlewares.csrfProtection;
