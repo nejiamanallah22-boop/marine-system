@@ -4956,9 +4956,17 @@ app.use((req, res, next) => {
         return res.sendFile(fp);
     });
 
-    app.use('/pages', express.static(pagesDir, { index: false }));
-    app.use('/pages', express.static(publicPagesDir, { index: false }));
-
+   // منع تخزين صفحات HTML في الكاش
+const noCacheOptions = {
+    index: false,
+    setHeaders: (res) => {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+};
+app.use('/pages', express.static(pagesDir, noCacheOptions));
+app.use('/pages', express.static(publicPagesDir, noCacheOptions));
     app.get('/', (req, res) => {
         const possible = [
             path.join(__dirname, 'index.html'),
