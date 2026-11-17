@@ -1,26 +1,88 @@
-/** models/FuelDocument.js — نموذج وثيقة تموين المحروقات */
 const mongoose = require('mongoose');
 
-const num = { type: Number, default: 0, min: 0 };
-const engineSchema = new mongoose.Schema({ totalHours: num, usedHours: num, requestedLiters: num }, { _id: false });
+const vesselSchema = new mongoose.Schema({
+    // --- الحقول الأساسية ---
+    id: { type: String, required: true, unique: true, index: true },
+    name: { type: String, required: true },
+    num: { type: String, default: '' },
+    len: { type: Number, default: 0 },
+    region: { type: String, default: '' },
+    zone: { type: String, default: '' },
+    port: { type: String, default: '' },
+    supp: { type: String, default: '' },
+    status: { type: String, default: 'صالح' },
+    stat: { type: String, default: 'صالح' },
+    break: { type: String, default: '' },
+    fDate: { type: Date },
+    eDate: { type: Date },
+    ref: { type: String, default: '' },
+    repairUnit: { type: String, default: '' },
+    cat: { type: String, default: '' },
+    
+    // --- الصور ---
+    images: [{
+        filename: String,
+        originalName: String,
+        url: String,
+        size: Number,
+        mimetype: String,
+        caption: String,
+        isPrimary: { type: Boolean, default: false },
+        source: { type: String, default: 'upload' },
+        uploadedAt: { type: Date, default: Date.now },
+        uploadedBy: String
+    }],
 
-const FuelDocumentSchema = new mongoose.Schema({
-  boatId: { type: String, required: true, index: true },
-  documentNumber: String,
-  date: { type: Date, required: true, index: true },
-  docTotalHours: { type: Number, required: true, min: 0 },
-  docTotalLiters: { type: Number, required: true, min: 0 },
-  engineCount: { type: Number, enum: [1, 2], default: 1 },
-  engines: { right: engineSchema, left: engineSchema },
-  totalActualRate: Number,              // لتر ÷ ساعة
-  riskScore: { type: Number, default: 0, min: 0, max: 100, index: true },
-  isFraud: { type: Boolean, default: false, index: true },   // riskScore > 60
-  fraudReason: String,                  // أسباب الشبهة مفصولة بـ " | "
-  byRule: { type: mongoose.Schema.Types.Mixed, default: {} },   // عدد المخالفات لكل قاعدة
-  flags: [{ _id: false, code: String, points: Number, msg: String }],
-  createdBy: String
+    // --- الطرح ---
+    disposalDate: { type: Date },
+    disposalReason: String,
+    disposalDecision: String,
+    disposedBy: String,
+    disposalNotes: String,
+    disposedAt: { type: Date },
+
+    // ✅ الحقول الجديدة الخاصة بإعدادات المحروقات
+    engineCount: { type: Number, default: 1, enum: [1, 2] },
+    tankCapacity: { type: Number, default: 0, min: 0 },
+    standardRate: { type: Number, default: 0, min: 0 },
+    engineRight: { type: String, default: '' },
+    engineLeft: { type: String, default: '' },
+
+    // --- إضافات ---
+    inactivePeriods: [{
+        from: Date,
+        to: Date,
+        reason: String
+    }],
+    createdBy: { type: String }
+
 }, { timestamps: true });
 
-FuelDocumentSchema.index({ boatId: 1, date: -1 });
+// دالة مساعدة لتعيين الصورة الرئيسية
+vesselSchema.methods.setPrimaryImage = function(imageId) {
+    this.images.forEach(img => {
+        img.isPrimary = (img._id.toString() === imageId);
+    });
+};
 
-module.exports = mongoose.models.FuelDocument || mongoose.model('FuelDocument', FuelDocumentSchema);
+// دالة مساعدة لحذف صورة
+vesselSchema.methods.removeImage = function(imageId) {
+    this.images = this.images.filter(img => img._id.toString() !== imageId);
+};
+
+// دالة مساعدة لاستعادة القارب من الطرح
+vesselSchema.methods.restore = function({ newStatus }) {
+    this.status = newStatus || 'صالح';
+    this.stat = newStatus || 'صالح';
+    this.disposalDate = null;
+    this.disposedAt = null;
+    this.disposalReason = '';
+    this.disposalDecision = '';
+    this.disposedBy = '';
+    this.disposalNotes = '';
+    this.break = '';
+    this.updatedAt = new Date();
+    return this.save();
+};
+
+module.exports = mongoose.models.Vessel || mongoose.model('Vessel', vesselSchema);
