@@ -28,7 +28,8 @@ router.get('/standards/:boatId', async (req, res) => {
     res.json({ 
         engineCount: v.engineCount || 1, 
         tankCapacity: v.tankCapacity || 0, 
-        standardRate: v.standardRate || 0 
+        standardRate: v.standardRate || 0,
+        fuelPrice: v.fuelPrice || 1.998
     });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -44,10 +45,13 @@ router.post('/documents', async (req, res) => {
       boatId: vessel.id || vessel._id.toString(), 
       date: new Date(b.date), 
       docTotalHours: Number(b.docTotalHours), 
-      docTotalLiters: Number(b.docTotalLiters),
+      docTotalLiters: Number(b.docTotalLiters),           // كمية المحروقات المستعملة
+      requestedLiters: Number(b.requestedLiters) || 0,   // الكمية المطلوبة (مرجعي)
       documentNumber: b.documentNumber || '',
       engineCount: vessel.engineCount || 1,
       engines: { right: b.engines?.right, left: b.engines?.left },
+      remainingTank: Number(b.remainingTank) || 0,
+      cardDinars: Number(b.cardDinars) || 0,
       totalActualRate: Number(b.docTotalLiters) / (Number(b.docTotalHours) || 1),
       riskScore: 0, 
       isFraud: false
@@ -76,6 +80,9 @@ router.put('/documents/:id', async (req, res) => {
         documentNumber: b.documentNumber,
         docTotalHours: Number(b.docTotalHours),
         docTotalLiters: Number(b.docTotalLiters),
+        requestedLiters: Number(b.requestedLiters) || 0,
+        remainingTank: Number(b.remainingTank) || 0,
+        cardDinars: Number(b.cardDinars) || 0,
         engines: b.engines,
         totalActualRate: Number(b.docTotalLiters) / (Number(b.docTotalHours) || 1)
       },
@@ -112,7 +119,7 @@ router.get('/audit-report/:boatId', async (req, res) => {
             docs: docs.length, totalHours: hours, avgHours: docs.length ? hours/docs.length : 0, 
             requestedLiters: liters, avgRisk: 0, flagged: 0, warned: 0, 
             expectedLiters: null, varianceLiters: null, variancePct: null, excessLiters: null, 
-            balanceLiters: null, balancePct: null 
+            balanceLiters: null, balancePct: null, cardLiters: null, cardDinars: null
         }, 
         byRule: {} 
     });
