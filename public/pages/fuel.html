@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b2239">
 <title>كشف المحروقات — منظومة الوسائل البحرية</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,7 +12,7 @@
 :root{
   --gold:#d4a017;--gold-l:#f3d77a;--gold-d:#9a7209;--gold-bg:#fbf3da;
   --navy:#0b2239;--navy-2:#123556;--navy-3:#1e3a5f;
-  --ok:#0f9d6b;--ok-bg:#e3f6ee;--bad:#d93f3f;--bad-bg:#fdeaea;--info:#2f6fd0;--info-bg:#e7effb;
+  --ok:#0f9d6b;--ok-bg:#e3f6ee;--bad:#d93f3f;--bad-bg:#fdeaea;--warn:#e0a800;--warn-bg:#fff6d6;--info:#2f6fd0;--info-bg:#e7effb;
   --bg:#f3f5f8;--card:#fff;--line:#e3e8ef;--line-2:#eef1f6;--t1:#0f1b2d;--t2:#475569;--t3:#8593a6;
   --r:16px;--r-s:11px;--sp:24px;
   --sh:0 1px 2px rgba(11,34,57,.05),0 6px 20px rgba(11,34,57,.07);--sh-l:0 16px 38px rgba(11,34,57,.16);
@@ -19,35 +20,45 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 [hidden]{display:none!important}
+html{scroll-behavior:smooth}
 body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100vh;padding:var(--sp);line-height:1.6;-webkit-font-smoothing:antialiased}
-.container{max-width:1280px;margin:0 auto;display:grid;gap:var(--sp)}
+.container{max-width:1320px;margin:0 auto;display:grid;gap:var(--sp)}
 :focus-visible{outline:3px solid rgba(212,160,23,.5);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-.header{position:relative;overflow:hidden;background:var(--navy);border-radius:20px;padding:24px 30px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:0 18px 50px rgba(11,34,57,.28)}
-.header::before{content:'';position:absolute;inset:0;background:radial-gradient(520px 260px at 0 0,rgba(212,160,23,.25),transparent 60%),repeating-linear-gradient(135deg,transparent 0 22px,rgba(255,255,255,.025) 22px 23px);pointer-events:none}
+/* ===== الرأس ===== */
+.header{position:relative;overflow:hidden;background:var(--navy);border-radius:20px;padding:26px 30px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:0 18px 50px rgba(11,34,57,.28)}
+.header::before{content:'';position:absolute;inset:0;background:radial-gradient(520px 260px at 0 0,rgba(212,160,23,.28),transparent 60%),radial-gradient(420px 220px at 100% 100%,rgba(47,111,208,.22),transparent 60%),repeating-linear-gradient(135deg,transparent 0 22px,rgba(255,255,255,.025) 22px 23px);pointer-events:none}
 .header::after{content:'';position:absolute;inset-inline:0;top:0;height:4px;background:linear-gradient(90deg,var(--gold-d),var(--gold-l),var(--gold-d))}
 .h-main{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
-.h-icon{width:58px;height:58px;border-radius:16px;background:linear-gradient(145deg,var(--gold-l),var(--gold));color:var(--navy);display:grid;place-items:center;font-size:25px;box-shadow:0 8px 24px rgba(212,160,23,.4)}
-.h-text h1{font-size:25px;font-weight:900;color:#fff;line-height:1.3}
-.h-text p{font-size:13px;color:#9fb3c8;font-weight:600}
+.h-icon{width:60px;height:60px;border-radius:17px;background:linear-gradient(145deg,var(--gold-l),var(--gold));color:var(--navy);display:grid;place-items:center;font-size:26px;box-shadow:0 8px 24px rgba(212,160,23,.45)}
+.h-text h1{font-size:26px;font-weight:900;color:#fff;line-height:1.3}
+.h-text p{font-size:13.5px;color:#9fb3c8;font-weight:700}
 .h-actions{display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1}
 
+/* ===== الأزرار ===== */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border:0;border-radius:var(--r-s);font:800 14px var(--font);cursor:pointer;transition:var(--ease);white-space:nowrap}
 .btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 20px rgba(11,34,57,.18)}
 .btn:active{transform:none}.btn:disabled{opacity:.6;cursor:not-allowed}
 .btn-gold{background:linear-gradient(145deg,var(--gold-l),var(--gold));color:var(--navy)}
 .btn-ghost{background:rgba(255,255,255,.1);color:#e6edf5;border:1px solid rgba(255,255,255,.22)}
 .btn-ok{background:var(--ok);color:#fff}
+.btn-bad{background:var(--bad);color:#fff}
 .btn-line{background:#fff;color:var(--t2);border:1.5px solid var(--line)}
 .btn-line:hover:not(:disabled){background:var(--bg)}
+.btn-sm{padding:8px 14px;font-size:12.5px}
 
+/* ===== البطاقات ===== */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp);box-shadow:var(--sh);transition:box-shadow var(--ease)}
 .card:hover{box-shadow:var(--sh-l)}
 .card-title{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:900;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--line-2)}
 .card-title i{color:var(--gold)}
 .notice{display:flex;gap:12px;align-items:flex-start;background:var(--gold-bg);border:1px solid #ecd68a;border-radius:12px;padding:14px 16px;color:#6b4e07;font-weight:700;font-size:13.5px;margin-bottom:18px}
 .notice i{margin-top:3px}
+.edit-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--info-bg);border:1px solid #bcd1f3;border-inline-start:4px solid var(--info);border-radius:12px;padding:12px 16px;margin-bottom:18px;font-weight:800;color:#1c4a99;font-size:13.5px}
+.edit-banner .btn{margin-inline-start:auto}
 
+/* ===== الحقول ===== */
 .grid{display:grid;gap:16px}
 .g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}
 .fg label{display:block;font-size:12.5px;font-weight:800;color:var(--t2);margin-bottom:6px}
@@ -60,9 +71,11 @@ select.fc{cursor:pointer}
 .fc:focus{outline:none;background:#fff;border-color:var(--gold);box-shadow:0 0 0 4px rgba(212,160,23,.18)}
 .field:focus-within>i{color:var(--gold-d)}
 .fc.err{border-color:var(--bad);background:var(--bad-bg)}
+.fc[readonly]{background:var(--line-2);color:var(--t2)}
 .unit{position:absolute;inset-inline-end:12px;top:50%;transform:translateY(-50%);font-size:11.5px;font-weight:800;color:var(--t3);pointer-events:none}
 .field.has-unit .fc{padding-inline-end:48px}
 
+/* ===== الخطوات ===== */
 .stepper{display:flex;gap:8px;list-style:none;margin-bottom:22px}
 .stepper li{flex:1}
 .stp{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font:800 13px var(--font);color:var(--t3);cursor:pointer;transition:var(--ease)}
@@ -77,12 +90,36 @@ select.fc{cursor:pointer}
 .pane-box.e1{border:1px solid var(--line);border-inline-start:4px solid var(--info);background:#fcfdff}
 .pane-box.e2{border:1px solid var(--line);border-inline-start:4px solid var(--navy-3);background:#fcfdff}
 .pane-box h4{font-size:14px;font-weight:900;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.pane-box .fg+.fg{margin-top:14px}
 .nav{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid var(--line-2)}
 .nav .sp{margin-inline-start:auto;display:flex;gap:10px;flex-wrap:wrap}
 .audit{margin-top:16px;border-radius:12px;padding:14px 16px;font-size:13px;font-weight:700}
 .audit.danger{background:var(--bad-bg);border-inline-start:4px solid var(--bad);color:#991b1b}
 .audit h4{font-size:14px;margin-bottom:4px}
+.audit p{margin-top:2px}
 
+/* ===== بطاقة المعدل التلقائي ===== */
+.rate-card{border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#0b2239,#16385f);color:#fff;position:relative;overflow:hidden;box-shadow:0 12px 30px rgba(11,34,57,.25)}
+.rate-card::before{content:'';position:absolute;inset:0;background:radial-gradient(360px 160px at 100% 0,rgba(212,160,23,.3),transparent 60%);pointer-events:none}
+.rate-top{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;position:relative}
+.rate-top .lbl{display:block;font-size:12px;font-weight:800;color:#9fb3c8}
+.rate-val{display:flex;align-items:baseline;gap:6px}
+.rate-val b{font-size:40px;font-weight:900;line-height:1.1;color:var(--gold-l);font-variant-numeric:tabular-nums}
+.rate-val small{font-size:13px;color:#cfdbe8;font-weight:800}
+.rate-side b{font-size:20px;font-weight:900;color:#fff}
+.rate-top .pill{margin-inline-start:auto}
+.rate-formula{font-size:12px;color:#9fb3c8;font-weight:700;margin-top:6px;position:relative}
+.gauge{position:relative;height:12px;border-radius:99px;background:rgba(255,255,255,.14);margin-top:16px;overflow:visible}
+.gauge>span{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--ok),#37d39a);transition:width .5s cubic-bezier(.4,0,.2,1),background .3s}
+.gauge>span.warn{background:linear-gradient(90deg,#e0a800,#ffd45a)}
+.gauge>span.bad{background:linear-gradient(90deg,#c62f2f,#ff7a7a)}
+.gauge>i{position:absolute;top:-5px;width:2px;height:22px;background:#fff;opacity:.85;transform:translateX(50%)}
+.gauge>i.thr{background:#ff9d9d}
+.gauge-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:11.5px;font-weight:700;color:#b7c7d8;position:relative}
+.gauge-legend span::before{content:'';display:inline-block;width:10px;height:3px;margin-inline-end:6px;vertical-align:middle;background:#fff}
+.gauge-legend .t::before{background:#ff9d9d}
+
+/* ===== المقارنة ===== */
 .cmp{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 .cc{background:linear-gradient(180deg,#fff,#fafbfd);border:1px solid var(--line);border-radius:14px;padding:18px;transition:var(--ease)}
 .cc:hover{box-shadow:var(--sh-l);transform:translateY(-3px)}
@@ -92,6 +129,7 @@ select.fc{cursor:pointer}
 .cc-h h3{font-size:14px;font-weight:800}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:800}
 .pill.up{background:var(--bad-bg);color:var(--bad)}.pill.down{background:var(--ok-bg);color:var(--ok)}.pill.neutral{background:rgba(100,116,139,.12);color:var(--t2)}
+.pill.ok{background:rgba(15,157,107,.18);color:#4fe0ae}.pill.warn{background:rgba(224,168,0,.2);color:#ffd45a}.pill.bad{background:rgba(217,63,63,.22);color:#ff9d9d}
 .cc-h .pill{margin-inline-start:auto}
 .cc-big{font-size:28px;font-weight:900;color:var(--navy)}
 .cc-big small{font-size:13px;color:var(--t3);font-weight:700}
@@ -105,47 +143,74 @@ select.fc{cursor:pointer}
 .empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 10px;text-align:center;color:var(--t3)}
 .empty>i{font-size:30px;color:#a6b3c4}
 
+/* ===== الرسم ===== */
 .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
 .filters .field{width:180px}
-.chart-box{position:relative;height:330px}
+.chart-box{position:relative;height:340px}
 .chart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;border:1.5px dashed var(--line);border-radius:14px;background:repeating-linear-gradient(135deg,#fafbfd 0 12px,#f6f8fb 12px 24px);color:var(--t3);font-weight:800}
 .chart-empty i{font-size:34px;color:var(--gold);opacity:.7}
 .chart-empty small{font-weight:600;font-size:12.5px}
 
+/* ===== الجدول ===== */
 .t-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
-.t-head{background:var(--navy);border-bottom:3px solid var(--gold);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.t-head{background:var(--navy);border-bottom:3px solid var(--gold);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .t-head h2{font-size:15px;font-weight:800;color:#fff;display:flex;gap:10px;align-items:center}
 .t-head h2 i{color:var(--gold-l)}
 .count{background:var(--gold);color:var(--navy);font-weight:900;font-size:13px;padding:2px 13px;border-radius:99px}
+.t-tools{display:flex;gap:10px;flex-wrap:wrap;padding:14px 24px;border-bottom:1px solid var(--line-2);background:#fafbfd;align-items:center}
+.t-tools .field{width:240px}
+.t-tools .field.sel{width:180px}
+.t-tools .btn{margin-inline-start:auto}
 .t-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:1120px}
+table{width:100%;border-collapse:collapse;min-width:1200px}
 th{background:#f6f8fb;padding:13px 12px;font-size:12px;font-weight:800;color:var(--t2);border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:13px 12px;text-align:center;font-size:13.5px;font-weight:700;color:var(--t2);border-bottom:1px solid var(--line-2)}
+td{padding:13px 12px;text-align:center;font-size:13.5px;font-weight:700;color:var(--t2);border-bottom:1px solid var(--line-2);background:#fff}
 tbody tr{transition:background var(--ease)}
-tbody tr:hover{background:#fffbee}
+tbody tr:hover td{background:#fffbee}
 tbody tr:last-child td{border-bottom:0}
+tbody tr.row-fraud td:first-child{box-shadow:inset -4px 0 0 var(--bad)}
 td.d{color:var(--t1)}
+th:last-child,td:last-child{position:sticky;inset-inline-end:0;box-shadow:6px 0 10px -6px rgba(11,34,57,.18)}
+th:last-child{background:#f6f8fb}
 .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:99px;font-size:12px;font-weight:800;cursor:help;border:0;font-family:var(--font)}
 .badge.ok{background:var(--ok-bg);color:var(--ok)}.badge.bad{background:var(--bad-bg);color:var(--bad)}
 .badge.bad i{animation:pulse 1.6s infinite}
 @keyframes pulse{50%{opacity:.4}}
+.acts{display:flex;gap:6px;justify-content:center}
+.btn-act{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border:0;border-radius:9px;font:800 12px var(--font);cursor:pointer;transition:var(--ease)}
+.btn-act:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(11,34,57,.15)}
+.btn-act.edit{background:var(--info-bg);color:var(--info)}
+.btn-act.edit:hover{background:var(--info);color:#fff}
+.btn-act.del{background:var(--bad-bg);color:var(--bad)}
+.btn-act.del:hover{background:var(--bad);color:#fff}
 .skel td{padding:16px}.skel span{display:block;height:14px;border-radius:7px;background:linear-gradient(90deg,#eef1f6 25%,#f8fafc 50%,#eef1f6 75%);background-size:200% 100%;animation:sk 1.2s infinite}
 @keyframes sk{to{background-position:-200% 0}}
-.tip{position:fixed;z-index:9999;max-width:290px;background:var(--navy);color:#fff;border-radius:12px;padding:12px 14px;font-size:12.5px;font-weight:600;box-shadow:0 16px 40px rgba(0,0,0,.3);pointer-events:none;line-height:1.7}
+.tip{position:fixed;z-index:9999;max-width:300px;background:var(--navy);color:#fff;border-radius:12px;padding:12px 14px;font-size:12.5px;font-weight:600;box-shadow:0 16px 40px rgba(0,0,0,.3);pointer-events:none;line-height:1.7}
 .tip h5{color:var(--gold-l);font-size:13px;margin-bottom:4px}
 .tip .r{display:flex;justify-content:space-between;gap:14px}.tip .r b{color:#fff}
 .tip .w{color:#ffb4b4;margin-top:4px}
 
+/* ===== إشعارات وحوار ===== */
 .toast{position:fixed;bottom:22px;inset-inline-start:22px;z-index:10000;display:flex;align-items:center;gap:10px;padding:13px 20px;border-radius:12px;color:#fff;font-weight:800;font-size:13.5px;max-width:380px;box-shadow:0 16px 40px rgba(0,0,0,.28);animation:up .35s cubic-bezier(.34,1.56,.64,1)}
 .toast.success{background:var(--ok)}.toast.error{background:var(--bad)}.toast.info{background:var(--info)}
 @keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.modal{position:fixed;inset:0;z-index:10001;display:grid;place-items:center;padding:16px;background:rgba(11,34,57,.55);backdrop-filter:blur(3px);animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{width:100%;max-width:420px;background:#fff;border-radius:18px;padding:26px;box-shadow:0 30px 70px rgba(0,0,0,.35);text-align:center;animation:pop .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.modal-ico{width:62px;height:62px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;font-size:26px;background:var(--gold-bg);color:var(--gold-d)}
+.modal-ico.danger{background:var(--bad-bg);color:var(--bad)}
+.modal-box h3{font-size:18px;font-weight:900;margin-bottom:6px}
+.modal-box p{font-size:13.5px;color:var(--t2);font-weight:600;margin-bottom:20px}
+.modal-box .row{display:flex;gap:10px}.modal-box .btn{flex:1}
 
+/* ===== لوحة القيادة ===== */
 .dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}
 .dc{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);transition:var(--ease)}
 .dc:hover{transform:translateY(-4px);box-shadow:var(--sh-l)}
 .dc .h{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--t2);margin-bottom:8px}
 .dc .h i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--bgc);color:var(--c)}
-.dc b.v{display:block;font-size:21px;font-weight:900;color:var(--navy);line-height:1.35}
+.dc b.v{display:block;font-size:22px;font-weight:900;color:var(--navy);line-height:1.35;font-variant-numeric:tabular-nums}
 .dc small{display:block;font-size:12px;color:var(--t3);font-weight:700}
 .dc.blue{--c:var(--info);--bgc:var(--info-bg)}.dc.gold{--c:var(--gold);--bgc:var(--gold-bg)}.dc.green{--c:var(--ok);--bgc:var(--ok-bg)}.dc.orange{--c:#e8830c;--bgc:#fdf0e0}
 .dc.teal{--c:#0e8f9b;--bgc:#e0f4f6}
@@ -153,43 +218,19 @@ td.d{color:var(--t1)}
 .dc .price{margin-top:8px}.dc .price .fc{padding:7px 10px;padding-inline-start:34px;font-size:13px}
 .tbar{height:8px;border-radius:9px;background:var(--line-2);margin-top:10px;overflow:hidden}
 .tbar span{display:block;height:100%;width:0;border-radius:9px;background:var(--ok);transition:width .7s,background .3s}
-.tbar span.low{background:var(--bad)}.tbar span.mid{background:#e0a800}.tbar span.high{background:var(--ok)}
-@media(max-width:1100px){.dash{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:768px){.dash{grid-template-columns:repeat(2,1fr)}.dc b.v{font-size:18px}}
-@media(max-width:420px){.dash{grid-template-columns:1fr}}
+.tbar span.low{background:var(--bad)}.tbar span.mid{background:var(--warn)}.tbar span.high{background:var(--ok)}
 .risk{display:inline-flex;align-items:center;gap:8px;min-width:104px;font-weight:800;font-size:12px}
 .risk i{flex:1;min-width:56px;height:7px;border-radius:9px;background:var(--line-2);position:relative;overflow:hidden}
 .risk i::after{content:'';position:absolute;inset-block:0;inset-inline-start:0;width:var(--w);background:var(--c);border-radius:9px}
-.risk.low{--c:var(--ok);color:var(--ok)}.risk.mid{--c:#e0a800;color:#a67c00}.risk.high{--c:var(--bad);color:var(--bad)}.risk.none{color:var(--t3)}
-.au-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
-.au{background:linear-gradient(180deg,#fff,#fafbfd);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
-.au span{display:block;font-size:12px;color:var(--t3);font-weight:800}.au b{font-size:18px;font-weight:900;color:var(--navy)}
-.au-row{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:end}
+.risk.low{--c:var(--ok);color:var(--ok)}.risk.mid{--c:var(--warn);color:#a67c00}.risk.high{--c:var(--bad);color:var(--bad)}.risk.none{color:var(--t3)}
 .rules{display:flex;gap:8px;flex-wrap:wrap}
 .chip{background:var(--gold-bg);color:var(--gold-d);border-radius:99px;padding:4px 12px;font-size:12px;font-weight:800}
 .detect{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .detect small{display:block;color:var(--t3);font-weight:700;font-size:12px}
 .detect .res{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--gold-bg);border:1px solid #ecd68a;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13px}
 .detect .res b{font-size:20px;color:var(--navy)}
-@media(max-width:768px){.au-grid{grid-template-columns:repeat(2,1fr)}.au-row{grid-template-columns:1fr}}
-@media(max-width:768px){
-  :root{--sp:16px}
-  body{padding:12px}
-  .header{padding:18px}.h-text h1{font-size:20px}.h-icon{width:48px;height:48px;font-size:21px}
-  .h-actions,.h-actions .btn{width:100%}
-  .g2,.g3,.cmp,.vs{grid-template-columns:1fr}
-  .stepper{gap:6px}.stp{flex-direction:column;gap:4px;padding:8px 4px;text-align:center;font-size:11.5px}
-  .nav .sp{margin:0;width:100%}.nav .btn{flex:1}
-  .filters .field{width:100%}
-  .chart-box{height:260px}
-  .toast{inset-inline:12px;bottom:12px;max-width:none}
-  table{min-width:0}table,tbody,tr,td{display:block;width:100%}thead{display:none}
-  tbody tr{margin:12px;width:auto;border:1px solid var(--line);border-radius:14px;padding:6px 14px;background:var(--card);box-shadow:var(--sh)}
-  td{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;padding:9px 0;border-bottom:1px dashed var(--line-2)}
-  td::before{content:attr(data-label);font-size:12px;color:var(--t3);font-weight:800}
-  td.st-empty{display:block;text-align:center}td.st-empty::before{content:none}
-}
-@media print{.h-actions,#entryCard,#setupCard,.filters,.nav{display:none!important}body{background:#fff}.card,.t-card,.stat{box-shadow:none}.tip{display:none}}
+
+/* ===== ملخص حي ===== */
 .sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:20px}
 .sm{background:linear-gradient(180deg,#fff,#fafbfd);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
 .sm span{display:block;font-size:11.5px;font-weight:800;color:var(--t3)}
@@ -205,7 +246,35 @@ td.d{color:var(--t1)}
 .mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 .mgrid.one{grid-template-columns:minmax(0,560px)}
 .used{margin-top:12px;font-size:13px;font-weight:800;color:var(--t2)}.used b{color:var(--navy);font-size:15px}
-@media(max-width:768px){.mgrid{grid-template-columns:1fr}.sum{grid-template-columns:repeat(2,1fr)}}
+
+/* ===== استجابة ===== */
+@media(max-width:1100px){.dash{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){
+  :root{--sp:16px}
+  body{padding:12px}
+  .dash{grid-template-columns:repeat(2,1fr)}.dc b.v{font-size:18px}
+  .header{padding:18px}.h-text h1{font-size:20px}.h-icon{width:48px;height:48px;font-size:21px}
+  .h-actions,.h-actions .btn{width:100%}
+  .g2,.g3,.cmp,.vs,.mgrid{grid-template-columns:1fr}
+  .sum{grid-template-columns:repeat(2,1fr)}
+  .stepper{gap:6px}.stp{flex-direction:column;gap:4px;padding:8px 4px;text-align:center;font-size:11.5px}
+  .nav .sp{margin:0;width:100%}.nav .btn{flex:1}
+  .filters .field,.t-tools .field,.t-tools .field.sel{width:100%}
+  .t-tools .btn{margin:0;width:100%}
+  .chart-box{height:260px}
+  .rate-val b{font-size:32px}.rate-top .pill{margin:0}
+  .toast{inset-inline:12px;bottom:12px;max-width:none}
+  table{min-width:0}table,tbody,tr,td{display:block;width:100%}thead{display:none}
+  tbody tr{margin:12px;width:auto;border:1px solid var(--line);border-radius:14px;padding:6px 14px;background:var(--card);box-shadow:var(--sh)}
+  tbody tr.row-fraud{border-color:#f1b3b3}
+  td{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;padding:9px 0;border-bottom:1px dashed var(--line-2);background:transparent!important;box-shadow:none!important;position:static!important}
+  td::before{content:attr(data-label);font-size:12px;color:var(--t3);font-weight:800}
+  td.st-empty{display:block;text-align:center}td.st-empty::before{content:none}
+  td.act-cell{justify-content:center;border-bottom:0;padding-top:12px}td.act-cell::before{content:none}
+  td.act-cell .acts{width:100%}td.act-cell .btn-act{flex:1;justify-content:center;padding:10px}
+}
+@media(max-width:420px){.dash{grid-template-columns:1fr}}
+@media print{.h-actions,#entryCard,#setupCard,.filters,.nav,.t-tools,.acts,th:last-child,td:last-child{display:none!important}body{background:#fff}.card,.t-card{box-shadow:none}.tip{display:none}table{min-width:0}}
 </style>
 </head>
 <body>
@@ -227,22 +296,22 @@ td.d{color:var(--t1)}
     <div class="card-title"><i class="fas fa-cogs"></i> إعداد المركب (مرة واحدة)</div>
     <div class="notice"><i class="fas fa-circle-info"></i><span>هذا المركب غير مهيأ بعد. أكمل الإعدادات التالية لتفعيل تسجيل وثائق التموين.</span></div>
     <div class="grid g3">
-      <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc" onchange="toggleSetupEngineFields()"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div></div>
-      <div class="fg"><label for="setupTankCapacity">سعة الخزان</label><div class="field has-unit"><i class="fas fa-oil-can"></i><input type="number" id="setupTankCapacity" class="fc" placeholder="سعة الخزان" min="1"><span class="unit">لتر</span></div></div>
-      <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري</label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" placeholder="لتر / ساعة" step="0.01" min="0.01"><span class="unit">لتر/س</span></div></div>
+      <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div></div>
+      <div class="fg"><label for="setupTankCapacity">سعة الخزان</label><div class="field has-unit"><i class="fas fa-oil-can"></i><input type="number" id="setupTankCapacity" class="fc" placeholder="سعة الخزان" min="1" inputmode="decimal"><span class="unit">لتر</span></div></div>
+      <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري</label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" placeholder="لتر / ساعة" step="0.01" min="0.01" inputmode="decimal"><span class="unit">لتر/س</span></div></div>
     </div>
     <div class="grid g2" id="setupEngineDetails" style="margin-top:16px" hidden>
       <div class="fg"><label for="setupEngineRight">المحرك الأيمن</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineRight" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
       <div class="fg"><label for="setupEngineLeft">المحرك الأيسر</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineLeft" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
     </div>
-    <div class="nav"><button class="btn btn-gold" onclick="saveEngineSetup()"><i class="fas fa-save"></i> حفظ الإعدادات</button></div>
+    <div class="nav"><button class="btn btn-gold" id="saveSetupBtn"><i class="fas fa-save"></i> حفظ الإعدادات</button></div>
   </section>
 
   <!-- لوحة القيادة -->
   <section class="dash" aria-label="لوحة القيادة">
     <div class="dc blue"><div class="h"><i class="fas fa-clock"></i>ساعات العمل</div><b class="v" id="dHours">جاري التحميل...</b><small id="dHoursAvg"></small></div>
     <div class="dc gold"><div class="h"><i class="fas fa-gas-pump"></i>الوقود المصروف</div><b class="v" id="dLiters">جاري التحميل...</b><small id="dCost"></small>
-      <div class="price field has-unit"><i class="fas fa-coins"></i><input type="number" id="fuelPrice" class="fc" min="0" step="0.001" placeholder="سعر اللتر" oninput="setPrice()" inputmode="decimal" aria-label="سعر اللتر"><span class="unit">د.ت</span></div></div>
+      <div class="price field has-unit"><i class="fas fa-coins"></i><input type="number" id="fuelPrice" class="fc" min="0" step="0.001" placeholder="سعر اللتر" inputmode="decimal" aria-label="سعر اللتر" readonly><span class="unit">د.ت</span></div></div>
     <div class="dc green"><div class="h"><i class="fas fa-battery-three-quarters"></i>المتبقي في الخزان</div><b class="v" id="dTank">جاري التحميل...</b><small id="dTankNote"></small><div class="tbar"><span id="dTankBar"></span></div></div>
     <div class="dc teal"><div class="h"><i class="fas fa-credit-card"></i>رصيد البطاقة الذكية</div><b class="v" id="dCardL">جاري التحميل...</b><small id="dCardD"></small></div>
     <div class="dc neutral" id="dCardVar"><div class="h"><i class="fas fa-scale-unbalanced"></i>الفائض / التوفير</div><b class="v" id="dVar">جاري التحميل...</b><small id="dVarPct"></small></div>
@@ -255,67 +324,78 @@ td.d{color:var(--t1)}
     <div class="rules" id="auRules"></div>
     <div class="detect">
       <div><b>الاستهلاك المعياري المقترح</b><small>يُحسب من وثائق سليمة في فئة المركب</small></div>
-      <button class="btn btn-line" onclick="detectAutoRate()"><i class="fas fa-wand-magic-sparkles"></i> اكتشاف تلقائي</button>
-      <div class="res" id="dtResult" hidden><b id="dtRate">0</b> لتر/ساعة <span id="dtNote" style="font-weight:700;color:var(--t2)"></span><button class="btn btn-gold" onclick="applyDetectedRate()"><i class="fas fa-check"></i> اعتماد</button></div>
+      <button class="btn btn-line" id="detectBtn"><i class="fas fa-wand-magic-sparkles"></i> اكتشاف تلقائي</button>
+      <div class="res" id="dtResult" hidden><b id="dtRate">0</b> لتر/ساعة <span id="dtNote" style="font-weight:700;color:var(--t2)"></span><button class="btn btn-gold btn-sm" id="applyBtn"><i class="fas fa-check"></i> اعتماد</button></div>
     </div>
   </section>
 
   <!-- نموذج الوثيقة -->
   <section class="card" id="entryCard" hidden>
-    <div class="card-title"><i class="fas fa-file-invoice"></i> تسجيل وثيقة تموين جديدة</div>
+    <div class="card-title"><i class="fas fa-file-invoice"></i> <span id="formTitle">تسجيل وثيقة تموين جديدة</span></div>
+    <div class="edit-banner" id="editBanner" hidden><i class="fas fa-pen-to-square"></i><span>أنت الآن في وضع تعديل وثيقة موجودة.</span><button type="button" class="btn btn-line btn-sm" id="cancelEditBtn"><i class="fas fa-xmark"></i> إلغاء التعديل</button></div>
     <ol class="stepper" id="stepper"></ol>
 
-    <!-- الخطوة 1: الأساسيات -->
+    <!-- الخطوة 1 -->
     <div class="pane" data-step="1">
       <div class="grid" style="gap:18px">
         <div class="grid g2" style="max-width:560px">
-          <div class="fg"><label for="fDate">تاريخ الوثيقة <span class="req">*</span></label><div class="field"><i class="fas fa-calendar-day"></i><input type="date" id="fDate" class="fc" onchange="liveAudit()"></div></div>
+          <div class="fg"><label for="fDate">تاريخ الوثيقة <span class="req">*</span></label><div class="field"><i class="fas fa-calendar-day"></i><input type="date" id="fDate" class="fc"></div></div>
           <div class="fg"><label for="fDocNumber">رقم الوثيقة</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="fDocNumber" class="fc" placeholder="اختياري" maxlength="40" autocomplete="off"></div></div>
         </div>
         <div class="pane-box">
           <h4 style="color:var(--gold-d)"><i class="fas fa-calculator"></i> معطيات الوثيقة</h4>
           <div class="grid g2">
-            <div class="fg"><label for="fDocTotalLiters">كمية المحروقات المستعملة (لتر) <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gas-pump"></i><input type="number" id="fDocTotalLiters" class="fc" oninput="liveAudit()" placeholder="900" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
-            <div class="fg"><label for="fDocTotalHours">ساعات العمل <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-clock"></i><input type="number" id="fDocTotalHours" class="fc" oninput="liveAudit()" placeholder="150" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+            <div class="fg"><label for="fDocTotalLiters">كمية المحروقات المستعملة (لتر) <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gas-pump"></i><input type="number" id="fDocTotalLiters" class="fc" placeholder="900" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
+            <div class="fg"><label for="fDocTotalHours">ساعات العمل <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-clock"></i><input type="number" id="fDocTotalHours" class="fc" placeholder="150" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
           </div>
+        </div>
+        <div class="rate-card" id="rateCard" aria-live="polite">
+          <div class="rate-top">
+            <div><span class="lbl">معدل الاستهلاك (يُحسب تلقائياً)</span><div class="rate-val"><b id="rateVal">—</b><small>لتر / ساعة</small></div></div>
+            <div class="rate-side"><span class="lbl">كلفة التعبئة</span><b id="costVal">—</b></div>
+            <span class="pill neutral" id="rateState">بانتظار الإدخال</span>
+          </div>
+          <div class="rate-formula">المعدل = كمية المحروقات المستعملة (لتر) ÷ ساعات العمل</div>
+          <div class="gauge" id="gauge"><span id="gFill"></span><i id="gStd" hidden></i><i class="thr" id="gThr" hidden></i></div>
+          <div class="gauge-legend"><span>المعيار: <b id="gStdTxt">غير مسجل</b></span><span class="t">حد الاشتباه (+15%): <b id="gThrTxt">—</b></span></div>
         </div>
       </div>
     </div>
 
-    <!-- الخطوة 2: الخزان والبطاقة -->
+    <!-- الخطوة 2 -->
     <div class="pane" data-step="2" hidden>
       <div class="grid g2">
         <div class="pane-box e1">
           <h4 style="color:var(--info)"><i class="fas fa-oil-can"></i> الخزان والكمية المطلوبة</h4>
           <div class="fg"><label for="fRequestedLiters">الكمية المطلوبة (مرجعي)</label><div class="field has-unit"><i class="fas fa-clipboard-list"></i><input type="number" id="fRequestedLiters" class="fc" placeholder="1000" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
-          <div class="fg"><label for="fRemainingTank">الباقي بالخزان <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-droplet"></i><input type="number" id="fRemainingTank" class="fc" oninput="liveAudit()" placeholder="80" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
+          <div class="fg"><label for="fRemainingTank">الباقي بالخزان <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-droplet"></i><input type="number" id="fRemainingTank" class="fc" placeholder="80" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
           <div class="tmeter"><span id="tankMeter"></span></div>
           <div class="hint" id="tankHint"></div>
         </div>
         <div class="pane-box">
           <h4 style="color:var(--gold-d)"><i class="fas fa-credit-card"></i> البطاقة الذكية</h4>
-          <div class="fg"><label for="fCardDinars">الباقي بالبطاقة <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-coins"></i><input type="number" id="fCardDinars" class="fc" oninput="liveAudit()" placeholder="2000" min="0" step="0.001" inputmode="decimal"><span class="unit">د.ت</span></div></div>
+          <div class="fg"><label for="fCardDinars">الباقي بالبطاقة <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-coins"></i><input type="number" id="fCardDinars" class="fc" placeholder="2000" min="0" step="0.001" inputmode="decimal"><span class="unit">د.ت</span></div></div>
           <div class="conv"><span>يعادل</span><b id="cardLiters">0</b><span>لتر</span><span>· سعر اللتر</span><b id="priceLbl">1.998</b><span>د.ت</span></div>
         </div>
       </div>
     </div>
 
-    <!-- الخطوة 3: عدادات المحركات -->
+    <!-- الخطوة 3 -->
     <div class="pane" data-step="3" hidden>
       <div class="mgrid" id="metersGrid">
         <div class="pane-box e1">
           <h4 style="color:var(--info)"><i class="fas fa-cog"></i> <span id="rightEngineLabel">المحرك</span> — عداد الساعات</h4>
           <div class="grid g2">
-            <div class="fg"><label for="fStartR">أول الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge"></i><input type="number" id="fStartR" class="fc" oninput="liveAudit()" placeholder="100" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
-            <div class="fg"><label for="fEndR">آخر الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="fEndR" class="fc" oninput="liveAudit()" placeholder="250" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+            <div class="fg"><label for="fStartR">أول الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge"></i><input type="number" id="fStartR" class="fc" placeholder="100" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+            <div class="fg"><label for="fEndR">آخر الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="fEndR" class="fc" placeholder="250" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
           </div>
           <div class="used">ساعات العمل المحتسبة: <b id="usedR">—</b></div>
         </div>
         <div class="pane-box e2" id="leftEngineBox" hidden>
           <h4 style="color:var(--navy-3)"><i class="fas fa-cog"></i> المحرك الأيسر — عداد الساعات</h4>
           <div class="grid g2">
-            <div class="fg"><label for="fStartL">أول الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge"></i><input type="number" id="fStartL" class="fc" oninput="liveAudit()" placeholder="100" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
-            <div class="fg"><label for="fEndL">آخر الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="fEndL" class="fc" oninput="liveAudit()" placeholder="250" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+            <div class="fg"><label for="fStartL">أول الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge"></i><input type="number" id="fStartL" class="fc" placeholder="100" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+            <div class="fg"><label for="fEndL">آخر الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="fEndL" class="fc" placeholder="250" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
           </div>
           <div class="used">ساعات العمل المحتسبة: <b id="usedL">—</b></div>
         </div>
@@ -326,11 +406,11 @@ td.d{color:var(--t1)}
     <div class="audit" id="auditBox" hidden></div>
 
     <div class="nav">
-      <button class="btn btn-line" id="prevBtn" onclick="prevStep()"><i class="fas fa-arrow-right"></i> السابق</button>
-      <button class="btn btn-line" onclick="clearForm()"><i class="fas fa-eraser"></i> مسح</button>
+      <button class="btn btn-line" id="prevBtn" type="button"><i class="fas fa-arrow-right"></i> السابق</button>
+      <button class="btn btn-line" id="clearBtn" type="button"><i class="fas fa-eraser"></i> مسح</button>
       <div class="sp">
-        <button class="btn btn-gold" id="nextBtn" onclick="nextStep()">التالي <i class="fas fa-arrow-left"></i></button>
-        <button class="btn btn-ok" id="addBtn" onclick="saveFuelDoc()" hidden><i class="fas fa-save"></i> حفظ الوثيقة</button>
+        <button class="btn btn-gold" id="nextBtn" type="button">التالي <i class="fas fa-arrow-left"></i></button>
+        <button class="btn btn-ok" id="addBtn" type="button" hidden><i class="fas fa-save"></i> <span id="addLbl">حفظ الوثيقة</span></button>
       </div>
     </div>
   </section>
@@ -366,11 +446,11 @@ td.d{color:var(--t1)}
   <section class="card">
     <div class="card-title"><i class="fas fa-chart-column"></i> التحليل البياني للاستهلاك</div>
     <div class="filters">
-      <div class="field"><i class="fas fa-calendar-day"></i><input type="date" id="filterStart" class="fc" aria-label="من"></div>
-      <div class="field"><i class="fas fa-calendar-day"></i><input type="date" id="filterEnd" class="fc" aria-label="إلى"></div>
-      <button class="btn btn-line" onclick="applyCustomFilter()"><i class="fas fa-filter"></i> تطبيق</button>
-      <button class="btn btn-line" onclick="quickFilter('month')">هذا الشهر</button>
-      <button class="btn btn-line" onclick="quickFilter('all')">الكل</button>
+      <div class="field"><i class="fas fa-calendar-day"></i><input type="date" id="filterStart" class="fc" aria-label="من تاريخ"></div>
+      <div class="field"><i class="fas fa-calendar-day"></i><input type="date" id="filterEnd" class="fc" aria-label="إلى تاريخ"></div>
+      <button class="btn btn-line" id="applyFilterBtn"><i class="fas fa-filter"></i> تطبيق</button>
+      <button class="btn btn-line" id="monthFilterBtn">هذا الشهر</button>
+      <button class="btn btn-line" id="allFilterBtn">الكل</button>
     </div>
     <div class="chart-empty" id="chartEmpty" hidden><i class="fas fa-chart-column"></i>لا توجد بيانات<small>لا توجد وثائق في الفترة المحددة</small></div>
     <div class="chart-box" id="chartBox" hidden><canvas id="fuelChart"></canvas></div>
@@ -379,6 +459,11 @@ td.d{color:var(--t1)}
   <!-- الجدول -->
   <section class="t-card">
     <div class="t-head"><h2><i class="fas fa-list-ul"></i> سجل وثائق التموين</h2><span class="count" id="tableCount">0</span></div>
+    <div class="t-tools">
+      <div class="field"><i class="fas fa-magnifying-glass"></i><input type="search" id="tSearch" class="fc" placeholder="بحث برقم الوثيقة أو التاريخ" aria-label="بحث"></div>
+      <div class="field sel"><i class="fas fa-filter"></i><select id="tStatus" class="fc" aria-label="الحالة"><option value="all">كل الحالات</option><option value="ok">سليمة فقط</option><option value="fraud">مشبوهة فقط</option></select></div>
+      <button class="btn btn-line btn-sm" id="csvBtn"><i class="fas fa-file-csv"></i> تصدير CSV</button>
+    </div>
     <div class="t-wrap">
       <table>
         <thead><tr><th>التاريخ</th><th>رقم الوثيقة</th><th>ساعات العمل</th><th>المحروقات المستعملة</th><th>الكمية المطلوبة</th><th>الباقي بالخزان</th><th>رصيد البطاقة</th><th>المحركات</th><th>معدل الاستهلاك</th><th>درجة الخطر</th><th>الحالة</th><th>إجراءات</th></tr></thead>
@@ -392,20 +477,34 @@ td.d{color:var(--t1)}
 <script>
 (function () {
   'use strict';
-  var boatId = new URLSearchParams(window.location.search).get('id');
-  var isTwin = false, step = 1, maxStep = 2, saving = false;
-  var standards = { standardRate: 0, tankCapacity: 0, engineCount: 1, fuelPrice: 1.998 };
-  var myChart = null, allDocs = [];
 
+  /* ══ إعدادات ══ */
+  var WEEKEND_DAYS = [5, 6];      // 0=الأحد … 6=السبت — عدّلها حسب العطلة الرسمية
+  var SUSPECT_FACTOR = 1.15;      // حد الاشتباه = المعيار × 1.15
+
+  var boatId = new URLSearchParams(window.location.search).get('id');
+  var isTwin = false, step = 1, maxStep = 3, saving = false, editingId = null;
+  var standards = { standardRate: 0, tankCapacity: 0, engineCount: 1, fuelPrice: 1.998 };
+  var myChart = null, allDocs = [], shown = [];
+  var range = { start: '', end: '' };
+  var auditData = null, detected = 0;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ══ أدوات ══ */
   function $(id) { return document.getElementById(id); }
-  function num(id) { return parseFloat($(id).value); }
+  function num(id) { var v = $(id).value; return v === '' ? NaN : parseFloat(v); }
   function getToken() { return localStorage.getItem('marine_auth_token') || localStorage.getItem('marine_token') || localStorage.getItem('token') || ''; }
   function getCsrf() { try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return ''; } }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]; }); }
-  function today() { return new Date().toISOString().split('T')[0]; }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function localISO(d) { d = d || new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function today() { return localISO(new Date()); }
   function fmt(n, d) { return (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: d == null ? 0 : d }); }
   function ldate(d, o) { return new Date(d).toLocaleDateString('ar-TN', o || { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+  function docId(d) { return d && (d._id || d.id); }
+  function docDay(d) { return String(d.date || '').slice(0, 10); }
   function auth() { return { 'Authorization': 'Bearer ' + getToken() }; }
+  function jsonHeaders() { return Object.assign({ 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() }, auth()); }
 
   function toast(msg, type) {
     var old = document.querySelector('.toast'); if (old) old.remove();
@@ -414,12 +513,43 @@ td.d{color:var(--t1)}
     t.innerHTML = '<i class="fas ' + (type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info') + '"></i><span></span>';
     t.lastChild.textContent = msg;
     document.body.appendChild(t);
-    setTimeout(function () { if (t.parentNode) t.remove(); }, 3800);
+    setTimeout(function () { if (t.parentNode) t.remove(); }, 4200);
+  }
+
+  function confirmDialog(o) {
+    return new Promise(function (resolve) {
+      var m = document.createElement('div');
+      m.className = 'modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+      m.innerHTML = '<div class="modal-box"><div class="modal-ico ' + (o.danger ? 'danger' : '') + '"><i class="fas ' + (o.icon || 'fa-circle-question') + '"></i></div><h3></h3><p></p>' +
+        '<div class="row"><button type="button" class="btn btn-line" data-r="0">إلغاء</button><button type="button" class="btn ' + (o.danger ? 'btn-bad' : 'btn-gold') + '" data-r="1"></button></div></div>';
+      m.querySelector('h3').textContent = o.title; m.querySelector('p').textContent = o.text;
+      m.querySelector('[data-r="1"]').textContent = o.ok || 'تأكيد';
+      function done(v) { document.removeEventListener('keydown', onKey); m.remove(); resolve(v); }
+      function onKey(e) { if (e.key === 'Escape') done(false); }
+      m.addEventListener('click', function (e) { var b = e.target.closest('[data-r]'); if (b) done(b.getAttribute('data-r') === '1'); else if (e.target === m) done(false); });
+      document.addEventListener('keydown', onKey);
+      document.body.appendChild(m);
+      m.querySelector('[data-r="0"]').focus();
+    });
+  }
+
+  function countTo(el, to, dec, suffix) {
+    suffix = suffix || '';
+    if (reduceMotion || !isFinite(to)) { el.textContent = fmt(to, dec) + suffix; return; }
+    var from = parseFloat(el.getAttribute('data-v')) || 0, t0 = null, dur = 700;
+    el.setAttribute('data-v', to);
+    function tick(ts) {
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(from + (to - from) * e, dec) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
   }
 
   /* ══ التهيئة ══ */
   async function init() {
-    if (!boatId) { toast('لم يتم تحديد المركب', 'error'); return; }
+    if (!boatId) { toast('لم يتم تحديد المركب', 'error'); $('vesselName').textContent = 'لم يتم تحديد المركب'; return; }
     $('fDate').value = today();
     var ready = true;
     try {
@@ -436,7 +566,7 @@ td.d{color:var(--t1)}
     try {
       var r0 = await fetch('/api/fuel/standards/' + boatId, { headers: auth() });
       if (r0.ok) {
-        standards = await r0.json();
+        standards = Object.assign(standards, await r0.json());
         ready = Number(standards.tankCapacity) > 0;
         isTwin = Number(standards.engineCount) === 2;
       } else { ready = false; }
@@ -446,15 +576,14 @@ td.d{color:var(--t1)}
     $('entryCard').hidden = !ready;
     if (ready) buildSteps();
 
-    var pr = $('fuelPrice'); pr.value = Number(standards.fuelPrice) > 0 ? standards.fuelPrice : 1.998; pr.readOnly = true; pr.title = 'سعر اللتر الرسمي';
+    var pr = $('fuelPrice'); pr.value = price(); pr.title = 'سعر اللتر الرسمي';
     showSkeleton();
     loadDocs();
     loadOtherVesselCompare();
   }
 
   /* ══ إعداد المركب ══ */
-  window.toggleSetupEngineFields = function () { $('setupEngineDetails').hidden = $('setupEngineCount').value !== '2'; };
-  window.saveEngineSetup = async function () {
+  async function saveEngineSetup() {
     var tank = num('setupTankCapacity'), rate = num('setupStandardRate');
     if (!isFinite(tank) || tank <= 0) { $('setupTankCapacity').focus(); return toast('سعة الخزان يجب أن تكون أكبر من صفر', 'error'); }
     if (!isFinite(rate) || rate <= 0) { $('setupStandardRate').focus(); return toast('الاستهلاك المعياري يجب أن يكون أكبر من صفر', 'error'); }
@@ -462,15 +591,14 @@ td.d{color:var(--t1)}
       engineCount: Number($('setupEngineCount').value), tankCapacity: tank, standardRate: rate,
       engineRight: $('setupEngineRight').value.trim().slice(0, 40), engineLeft: $('setupEngineLeft').value.trim().slice(0, 40)
     };
+    var btn = $('saveSetupBtn'); btn.disabled = true;
     try {
-      var res = await fetch('/api/vessels/' + boatId, {
-        method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() }, auth()), body: JSON.stringify(payload)
-      });
+      var res = await fetch('/api/vessels/' + boatId, { method: 'PUT', headers: jsonHeaders(), body: JSON.stringify(payload) });
       if (!res.ok) throw new Error('فشل الحفظ');
       toast('تم حفظ الإعدادات', 'success');
       setTimeout(function () { location.reload(); }, 800);
-    } catch (e) { toast(e.message, 'error'); }
-  };
+    } catch (e) { toast(e.message, 'error'); btn.disabled = false; }
+  }
 
   /* ══ الخطوات ══ */
   function buildSteps() {
@@ -482,9 +610,6 @@ td.d{color:var(--t1)}
     $('stepper').innerHTML = defs.map(function (d, i) {
       return '<li><button type="button" class="stp" data-s="' + (i + 1) + '"><b>' + (i + 1) + '</b><span>' + d + '</span></button></li>';
     }).join('');
-    $('stepper').addEventListener('click', function (e) {
-      var b = e.target.closest('.stp'); if (b) goStep(parseInt(b.getAttribute('data-s'), 10));
-    });
     showStep(1);
     liveAudit();
   }
@@ -559,11 +684,40 @@ td.d{color:var(--t1)}
     flagError(null);
     showStep(n);
   }
-  window.nextStep = function () { goStep(Math.min(step + 1, maxStep)); };
-  window.prevStep = function () { goStep(Math.max(step - 1, 1)); };
+  function nextStep() { goStep(Math.min(step + 1, maxStep)); }
+  function prevStep() { goStep(Math.max(step - 1, 1)); }
 
-  window.liveAudit = function () {
+  /* ══ المعدل التلقائي + التدقيق الحي ══ */
+  function updateRateCard(c) {
+    var has = isFinite(c.rate), std = c.std, thr = std * SUSPECT_FACTOR;
+    $('rateVal').textContent = has ? c.rate.toFixed(2) : '—';
+    $('costVal').textContent = isFinite(c.cost) ? fmt(c.cost, 3) + ' د.ت' : '—';
+    $('gStdTxt').textContent = std ? fmt(std, 2) + ' لتر/س' : 'غير مسجل';
+    $('gThrTxt').textContent = std ? fmt(thr, 2) + ' لتر/س' : '—';
+    var state = $('rateState'), fill = $('gFill'), gs = $('gStd'), gt = $('gThr');
+    if (!has) {
+      state.className = 'pill neutral'; state.textContent = 'بانتظار الإدخال';
+      fill.style.width = '0'; fill.className = ''; gs.hidden = gt.hidden = true; return;
+    }
+    var max = std ? Math.max(thr * 1.25, c.rate * 1.1) : Math.max(c.rate * 1.2, 1);
+    fill.style.width = Math.min(100, c.rate / max * 100) + '%';
+    if (std) {
+      gs.hidden = gt.hidden = false;
+      gs.style.insetInlineStart = (std / max * 100) + '%';
+      gt.style.insetInlineStart = (thr / max * 100) + '%';
+      var pct = (c.rate / std - 1) * 100;
+      if (c.rate >= thr) { fill.className = 'bad'; state.className = 'pill bad'; state.innerHTML = '<i class="fas fa-triangle-exclamation"></i> +' + pct.toFixed(0) + '% فوق المعيار — مشبوه'; }
+      else if (c.rate > std) { fill.className = 'warn'; state.className = 'pill warn'; state.innerHTML = '<i class="fas fa-circle-exclamation"></i> أعلى من المعيار بـ ' + pct.toFixed(0) + '%'; }
+      else { fill.className = ''; state.className = 'pill ok'; state.innerHTML = '<i class="fas fa-circle-check"></i> ضمن المعيار'; }
+    } else {
+      fill.className = ''; gs.hidden = gt.hidden = true;
+      state.className = 'pill neutral'; state.textContent = 'لا يوجد معيار للمقارنة';
+    }
+  }
+
+  function liveAudit() {
     var c = calc(), msgs = [], hrs = [];
+    updateRateCard(c);
     $('cardLiters').textContent = isFinite(c.cardL) ? fmt(c.cardL, 1) : '0';
     $('priceLbl').textContent = c.p.toFixed(3);
     $('usedR').textContent = isFinite(c.hR) && c.hR >= 0 ? fmt(c.hR, 1) + ' ساعة' : '—';
@@ -580,42 +734,79 @@ td.d{color:var(--t1)}
     if (c.cap && c.T > c.cap) msgs.push('الباقي بالخزان (' + c.T + ') أكبر من سعته (' + c.cap + ').');
     else if (c.cap && isFinite(c.after) && c.after > c.cap + 1) msgs.push('تجاوز الخزان: الباقي + المطلوب = ' + fmt(c.after, 1) + ' لتر والسعة ' + c.cap + '.');
     if (isFinite(c.L) && isFinite(c.C) && c.L * c.p > c.C + c.p) msgs.push('رصيد البطاقة لا يكفي: ' + fmt(c.L) + ' لتر = ' + fmt(c.L * c.p, 3) + ' د.ت، والرصيد ' + fmt(c.C, 3) + ' د.ت (= ' + fmt(c.cardL, 1) + ' لتر).');
-    if (c.std > 0 && isFinite(c.rate) && c.rate >= c.std * 1.15) msgs.push('استهلاك وهمي محتمل: المعدل ' + c.rate.toFixed(2) + ' يتجاوز المعيار ' + c.std + ' بـ 15% أو أكثر.');
+    if (c.std > 0 && isFinite(c.rate) && c.rate >= c.std * SUSPECT_FACTOR) msgs.push('استهلاك وهمي محتمل: المعدل ' + c.rate.toFixed(2) + ' يتجاوز المعيار ' + c.std + ' بـ 15% أو أكثر.');
     if (hrs.length && isFinite(c.H) && Math.abs(Math.max.apply(null, hrs) - c.H) > 0.5) msgs.push('ساعات العمل (' + c.H + ') لا تطابق ساعات العدّاد (' + fmt(Math.max.apply(null, hrs), 1) + ').');
     if (c.cap && isFinite(c.L) && c.L >= 0.9 * c.cap && c.H < 10) msgs.push('تضخم الكمية: ≥ 90% من الخزان مقابل أقل من 10 ساعات.');
     var dv = $('fDate').value, dw = dv ? new Date(dv + 'T00:00:00Z').getUTCDay() : -1;
-    if (dw === 5 || dw === 6) msgs.push('التاريخ المختار يوم عطلة أسبوعية (جمعة/سبت).');
+    if (WEEKEND_DAYS.indexOf(dw) !== -1) msgs.push('التاريخ المختار يوم عطلة أسبوعية.');
 
     var chips = [];
-    if (isFinite(c.cardL)) chips.push(['رصيد البطاقة بالليتر', fmt(c.cardL, 1) + ' لتر', '']);
+    if (isFinite(c.cardL)) chips.push(['رصيد البطاقة باللتر', fmt(c.cardL, 1) + ' لتر', '']);
     if (isFinite(c.free)) chips.push(['المساحة الفارغة بالخزان', fmt(Math.max(0, c.free), 1) + ' لتر', '']);
     if (isFinite(c.after)) chips.push(['الخزان بعد التعبئة', fmt(c.after, 1) + ' لتر', c.cap && c.after > c.cap + 1 ? 'warn' : 'good']);
     if (isFinite(c.cost)) chips.push(['كلفة التعبئة', fmt(c.cost, 3) + ' د.ت', isFinite(c.C) && c.cost > c.C + c.p ? 'warn' : '']);
-    if (isFinite(c.rate)) chips.push(['معدل الاستهلاك', fmt(c.rate, 2) + ' لتر/س' + (c.std ? ' (المعيار ' + c.std + ')' : ''), c.std && c.rate >= c.std * 1.15 ? 'warn' : '']);
+    if (isFinite(c.rate)) chips.push(['معدل الاستهلاك', fmt(c.rate, 2) + ' لتر/س' + (c.std ? ' (المعيار ' + c.std + ')' : ''), c.std && c.rate >= c.std * SUSPECT_FACTOR ? 'warn' : '']);
     if (hrs.length) chips.push(['ساعات العدّاد', hrs.map(function (x) { return fmt(x, 1); }).join(' / ') + ' ساعة', '']);
     $('liveSum').innerHTML = chips.map(function (x) { return '<div class="sm ' + x[2] + '"><span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b></div>'; }).join('');
 
     var box = $('auditBox');
     if (msgs.length) {
       box.className = 'audit danger'; box.hidden = false;
-      box.innerHTML = '<h4>🚨 شبهة تلاعب! (سيُسجَّل ضمن الوثائق المشبوهة)</h4>' + msgs.map(function (m) { return '<p>' + esc(m) + '</p>'; }).join('');
+      box.innerHTML = '<h4>🚨 شبهة تلاعب! (سيُسجَّل ضمن الوثائق المشبوهة)</h4>' + msgs.map(function (m) { return '<p>• ' + esc(m) + '</p>'; }).join('');
     } else { box.hidden = true; box.innerHTML = ''; }
-  };
+  }
 
-  window.clearForm = function () {
-    ['fDocNumber', 'fDocTotalLiters', 'fDocTotalHours', 'fRequestedLiters', 'fRemainingTank', 'fCardDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL'].forEach(function (id) { $(id).value = ''; });
+  var FORM_IDS = ['fDocNumber', 'fDocTotalLiters', 'fDocTotalHours', 'fRequestedLiters', 'fRemainingTank', 'fCardDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL'];
+  function clearForm() {
+    FORM_IDS.forEach(function (id) { $(id).value = ''; });
     $('fDate').value = today();
+    exitEditMode();
     flagError(null);
     showStep(1);
     liveAudit();
-  };
+  }
 
-  /* ══ الحفظ ══ */
-  window.saveFuelDoc = async function () {
-    if (saving) return;
-    for (var i = 1; i <= maxStep; i++) { var er = stepError(i); if (er) { showStep(i); return flagError(er); } }
-    var payload = {
-      boatId: boatId, date: $('fDate').value,
+  /* ══ وضع التعديل ══ */
+  function enterEditMode(id) {
+    editingId = id;
+    $('editBanner').hidden = false;
+    $('formTitle').textContent = 'تعديل وثيقة تموين';
+    $('addLbl').textContent = 'تحديث الوثيقة';
+    $('addBtn').querySelector('i').className = 'fas fa-sync-alt';
+  }
+  function exitEditMode() {
+    editingId = null;
+    $('editBanner').hidden = true;
+    $('formTitle').textContent = 'تسجيل وثيقة تموين جديدة';
+    $('addLbl').textContent = 'حفظ الوثيقة';
+    $('addBtn').querySelector('i').className = 'fas fa-save';
+  }
+  function editDoc(id) {
+    var d = allDocs.find(function (x) { return String(docId(x)) === String(id); });
+    if (!d) return toast('الوثيقة غير موجودة', 'error');
+    FORM_IDS.forEach(function (k) { $(k).value = ''; });
+    $('fDate').value = docDay(d) || today();
+    $('fDocNumber').value = d.documentNumber || '';
+    $('fDocTotalLiters').value = d.docTotalLiters != null ? d.docTotalLiters : '';
+    $('fDocTotalHours').value = d.docTotalHours != null ? d.docTotalHours : '';
+    $('fRequestedLiters').value = d.requestedLiters || '';
+    $('fRemainingTank').value = d.remainingTank != null ? d.remainingTank : '';
+    $('fCardDinars').value = d.cardDinars != null ? d.cardDinars : '';
+    var e = d.engines || {};
+    if (e.right) { $('fStartR').value = e.right.startHours != null ? e.right.startHours : ''; $('fEndR').value = e.right.endHours != null ? e.right.endHours : ''; }
+    if (isTwin && e.left) { $('fStartL').value = e.left.startHours != null ? e.left.startHours : ''; $('fEndL').value = e.left.endHours != null ? e.left.endHours : ''; }
+    enterEditMode(id);
+    flagError(null);
+    showStep(1);
+    liveAudit();
+    toast('تم تحميل بيانات الوثيقة للتعديل', 'info');
+    $('entryCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ══ الحفظ والتحديث ══ */
+  function buildPayload() {
+    return {
+      date: $('fDate').value,
       documentNumber: $('fDocNumber').value.replace(/[<>]/g, '').trim().slice(0, 40) || undefined,
       docTotalLiters: num('fDocTotalLiters'), docTotalHours: num('fDocTotalHours'),
       requestedLiters: num('fRequestedLiters') || 0,
@@ -625,39 +816,76 @@ td.d{color:var(--t1)}
         left: isTwin ? { startHours: num('fStartL'), endHours: num('fEndL') } : null
       }
     };
+  }
+  async function submitDoc() {
+    if (saving) return;
+    for (var i = 1; i <= maxStep; i++) { var er = stepError(i); if (er) { showStep(i); return flagError(er); } }
+    var isEdit = !!editingId, payload = buildPayload();
+    if (!isEdit) payload.boatId = boatId;
     saving = true;
     var btn = $('addBtn'); btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
     try {
-      var res = await fetch('/api/fuel/documents', {
-        method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() }, auth()), body: JSON.stringify(payload)
+      var res = await fetch(isEdit ? '/api/fuel/documents/' + editingId : '/api/fuel/documents', {
+        method: isEdit ? 'PUT' : 'POST', headers: jsonHeaders(), body: JSON.stringify(payload)
       });
       var out = await res.json().catch(function () { return {}; });
-      if (!res.ok) throw new Error(out.error || 'فشل الحفظ');
+      if (!res.ok) throw new Error(out.error || (isEdit ? 'فشل التحديث' : 'فشل الحفظ'));
       if (out.riskScore > 60) toast('🚨 شبهة (خطر ' + out.riskScore + '): ' + (out.fraudReason || ''), 'error');
       else if (out.riskScore >= 30) toast('⚠️ الوثيقة تحتاج مراجعة (خطر ' + out.riskScore + ')', 'info');
-      else toast('تم حفظ الوثيقة بنجاح', 'success');
-      window.clearForm(); loadDocs(); loadOtherVesselCompare();
+      else toast(isEdit ? 'تم تحديث الوثيقة بنجاح' : 'تم حفظ الوثيقة بنجاح', 'success');
+      clearForm(); loadDocs(); loadOtherVesselCompare();
     } catch (e) { toast(e.message, 'error'); }
-    finally { saving = false; btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> حفظ الوثيقة'; }
-  };
+    finally {
+      saving = false; btn.disabled = false;
+      btn.innerHTML = '<i class="fas ' + (editingId ? 'fa-sync-alt' : 'fa-save') + '"></i> <span id="addLbl">' + (editingId ? 'تحديث الوثيقة' : 'حفظ الوثيقة') + '</span>';
+    }
+  }
+
+  async function deleteDoc(id) {
+    var ok = await confirmDialog({ title: 'حذف الوثيقة', text: 'سيتم حذف هذه الوثيقة نهائياً ولا يمكن التراجع عن ذلك.', ok: 'نعم، احذف', danger: true, icon: 'fa-trash' });
+    if (!ok) return;
+    try {
+      var res = await fetch('/api/fuel/documents/' + id, { method: 'DELETE', headers: Object.assign({ 'X-CSRF-Token': getCsrf() }, auth()) });
+      if (!res.ok) throw new Error('فشل الحذف');
+      if (String(editingId) === String(id)) clearForm();
+      toast('تم حذف الوثيقة بنجاح', 'success');
+      loadDocs(); loadOtherVesselCompare();
+    } catch (e) { toast(e.message, 'error'); }
+  }
 
   /* ══ تحميل الوثائق ══ */
   function showSkeleton() {
-    var row = '<tr class="skel">' + new Array(12).join('<td><span></span></td>') + '</tr>';
+    var row = '<tr class="skel">' + new Array(13).join('<td><span></span></td>') + '</tr>';
     $('fuelTableBody').innerHTML = row + row + row;
   }
-  async function loadDocs(start, end) {
+  async function loadDocs() {
     try {
-      var url = '/api/fuel/documents/' + boatId;
-      if (start && end) url += '?start=' + start + '&end=' + end;
-      var res = await fetch(url, { headers: auth() });
+      var res = await fetch('/api/fuel/documents/' + boatId, { headers: auth() });
       var data = await res.json();
-      allDocs = Array.isArray(data) ? data : [];
+      allDocs = Array.isArray(data) ? data : (data && Array.isArray(data.documents) ? data.documents : []);
     } catch (e) { allDocs = []; toast('تعذّر تحميل الوثائق', 'error'); }
-    renderTable(); updateStats(); renderChart(); renderPeriodComparison(); loadAudit();
+    renderAll();
+    loadAudit();
   }
-  function updateStats() { renderDash(); }
+  function renderAll() { renderTable(); renderChart(); renderPeriodComparison(); }
+
+  function inRange(d) {
+    var day = docDay(d);
+    if (range.start && day < range.start) return false;
+    if (range.end && day > range.end) return false;
+    return true;
+  }
+  function viewDocs() {
+    var q = $('tSearch').value.trim().toLowerCase(), st = $('tStatus').value;
+    return allDocs.filter(function (d) {
+      if (!inRange(d)) return false;
+      if (st === 'fraud' && !d.isFraud) return false;
+      if (st === 'ok' && d.isFraud) return false;
+      if (q && (String(d.documentNumber || '') + ' ' + docDay(d)).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+  }
 
   /* ══ الجدول ══ */
   function engTxt(x) {
@@ -686,15 +914,16 @@ td.d{color:var(--t1)}
   }
   function renderTable() {
     var tb = $('fuelTableBody');
-    $('tableCount').textContent = allDocs.length;
-    if (!allDocs.length) {
-      tb.innerHTML = '<tr><td colspan="12" class="st-empty"><div class="empty"><i class="fas fa-folder-open"></i><b>لا توجد وثائق مسجلة</b><span>ابدأ بتسجيل أول وثيقة تموين.</span></div></td></tr>';
+    shown = viewDocs().sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
+    $('tableCount').textContent = shown.length;
+    if (!shown.length) {
+      var filtered = allDocs.length > 0;
+      tb.innerHTML = '<tr><td colspan="12" class="st-empty"><div class="empty"><i class="fas fa-folder-open"></i><b>' + (filtered ? 'لا توجد نتائج مطابقة' : 'لا توجد وثائق مسجلة') + '</b><span>' + (filtered ? 'غيّر البحث أو الفلتر.' : 'ابدأ بتسجيل أول وثيقة تموين.') + '</span></div></td></tr>';
       return;
     }
-    var sorted = allDocs.slice().sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
-    tb.innerHTML = sorted.map(function (d) {
-      var i = allDocs.indexOf(d);
-      return '<tr>' +
+    tb.innerHTML = shown.map(function (d, i) {
+      var id = esc(docId(d));
+      return '<tr class="' + (d.isFraud ? 'row-fraud' : '') + '">' +
         '<td class="d" data-label="التاريخ">' + ldate(d.date) + '</td>' +
         '<td data-label="رقم الوثيقة">' + (d.documentNumber ? esc(d.documentNumber) : '<span class="risk none">بدون رقم</span>') + '</td>' +
         '<td data-label="ساعات العمل">' + fmt(d.docTotalHours, 1) + '</td>' +
@@ -703,19 +932,20 @@ td.d{color:var(--t1)}
         '<td data-label="الباقي بالخزان">' + (d.remainingTank != null ? fmt(d.remainingTank, 1) + ' لتر' : '—') + '</td>' +
         '<td data-label="رصيد البطاقة">' + (d.cardDinars != null ? fmt(d.cardDinars, 3) + ' د.ت <small style="color:var(--t3)">(' + fmt(d.cardLiters, 0) + ' ل)</small>' : '—') + '</td>' +
         '<td data-label="المحركات">' + (d.engineCount === 2 ? 'محركان' : 'محرك واحد') + '</td>' +
-        '<td data-label="المعدل">' + (d.totalActualRate ? Number(d.totalActualRate).toFixed(2) : 0) + '</td>' +
+        '<td data-label="المعدل">' + (d.totalActualRate ? Number(d.totalActualRate).toFixed(2) : '0') + '</td>' +
         '<td data-label="درجة الخطر">' + riskBadge(d.riskScore) + '</td>' +
         '<td data-label="الحالة"><button type="button" class="badge ' + (d.isFraud ? 'bad' : 'ok') + '" data-i="' + i + '">' +
           (d.isFraud ? '<i class="fas fa-triangle-exclamation"></i>مشبوه' : '<i class="fas fa-circle-check"></i>سليم') + '</button></td>' +
-        '<td data-label="إجراءات">' +
-          '<button class="btn btn-line" style="padding:4px 8px;font-size:11px;margin:0 2px" onclick="editDoc(\'' + d._id + '\')"><i class="fas fa-edit"></i></button>' +
-          '<button class="btn btn-line" style="padding:4px 8px;font-size:11px;margin:0 2px;color:red" onclick="deleteDoc(\'' + d._id + '\')"><i class="fas fa-trash"></i></button>' +
-        '</td></tr>';
+        '<td class="act-cell" data-label="إجراءات"><div class="acts">' +
+          '<button type="button" class="btn-act edit" data-act="edit" data-id="' + id + '" title="تعديل الوثيقة"><i class="fas fa-pen"></i> تعديل</button>' +
+          '<button type="button" class="btn-act del" data-act="del" data-id="' + id + '" title="حذف الوثيقة"><i class="fas fa-trash"></i> حذف</button>' +
+        '</div></td></tr>';
     }).join('');
   }
+
   var tip = $('tip');
   function showTip(btn) {
-    var d = allDocs[parseInt(btn.getAttribute('data-i'), 10)]; if (!d) return;
+    var d = shown[parseInt(btn.getAttribute('data-i'), 10)]; if (!d) return;
     tip.innerHTML = tipHtml(d); tip.hidden = false;
     var b = btn.getBoundingClientRect(), t = tip.getBoundingClientRect();
     var left = Math.min(Math.max(8, b.left + b.width / 2 - t.width / 2), window.innerWidth - t.width - 8);
@@ -727,83 +957,33 @@ td.d{color:var(--t1)}
   tbody.addEventListener('mouseout', function (e) { if (e.target.closest('.badge')) tip.hidden = true; });
   tbody.addEventListener('focusin', function (e) { var b = e.target.closest('.badge'); if (b) showTip(b); });
   tbody.addEventListener('focusout', function () { tip.hidden = true; });
-  tbody.addEventListener('click', function (e) { var b = e.target.closest('.badge'); if (b) { if (tip.hidden) showTip(b); else tip.hidden = true; } });
+  tbody.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-act]');
+    if (a) {
+      tip.hidden = true;
+      var id = a.getAttribute('data-id');
+      return a.getAttribute('data-act') === 'edit' ? editDoc(id) : deleteDoc(id);
+    }
+    var b = e.target.closest('.badge'); if (b) { if (tip.hidden) showTip(b); else tip.hidden = true; }
+  });
   window.addEventListener('scroll', function () { tip.hidden = true; }, true);
 
-  /* ══ تعديل وحذف وثيقة ══ */
-  window.deleteDoc = async function (id) {
-    if (!confirm('هل أنت متأكد من حذف هذه الوثيقة نهائياً؟')) return;
-    try {
-      var res = await fetch('/api/fuel/documents/' + id, {
-        method: 'DELETE',
-        headers: Object.assign({ 'X-CSRF-Token': getCsrf() }, auth())
-      });
-      if (!res.ok) throw new Error('فشل الحذف');
-      toast('تم حذف الوثيقة بنجاح', 'success');
-      loadDocs();
-    } catch (e) { toast(e.message, 'error'); }
-  };
-
-  window.editDoc = function (id) {
-    var d = allDocs.find(function (x) { return String(x._id) === String(id); });
-    if (!d) return;
-
-    $('fDate').value = new Date(d.date).toISOString().split('T')[0];
-    $('fDocNumber').value = d.documentNumber || '';
-    $('fDocTotalLiters').value = d.docTotalLiters;
-    $('fDocTotalHours').value = d.docTotalHours;
-    $('fRequestedLiters').value = d.requestedLiters || '';
-    $('fRemainingTank').value = d.remainingTank != null ? d.remainingTank : '';
-    $('fCardDinars').value = d.cardDinars != null ? d.cardDinars : '';
-
-    if (d.engines && d.engines.right) {
-      $('fStartR').value = d.engines.right.startHours != null ? d.engines.right.startHours : '';
-      $('fEndR').value = d.engines.right.endHours != null ? d.engines.right.endHours : '';
-    }
-    if (isTwin && d.engines && d.engines.left) {
-      $('fStartL').value = d.engines.left.startHours != null ? d.engines.left.startHours : '';
-      $('fEndL').value = d.engines.left.endHours != null ? d.engines.left.endHours : '';
-    }
-
-    var btn = $('addBtn');
-    btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث الوثيقة';
-    btn.onclick = function () { updateDoc(id); };
-
-    showStep(1);
-    liveAudit();
-    toast('تم تحميل البيانات للتعديل', 'info');
-    $('entryCard').scrollIntoView({ behavior: 'smooth' });
-  };
-
-  async function updateDoc(id) {
-    for (var i = 1; i <= maxStep; i++) { var er = stepError(i); if (er) { showStep(i); return flagError(er); } }
-    var payload = {
-      date: $('fDate').value,
-      documentNumber: $('fDocNumber').value.replace(/[<>]/g, '').trim().slice(0, 40) || undefined,
-      docTotalLiters: num('fDocTotalLiters'),
-      docTotalHours: num('fDocTotalHours'),
-      requestedLiters: num('fRequestedLiters') || 0,
-      remainingTank: num('fRemainingTank'),
-      cardDinars: num('fCardDinars'),
-      engines: {
-        right: { startHours: num('fStartR'), endHours: num('fEndR') },
-        left: isTwin ? { startHours: num('fStartL'), endHours: num('fEndL') } : null
-      }
-    };
-    try {
-      var res = await fetch('/api/fuel/documents/' + id, {
-        method: 'PUT',
-        headers: Object.assign({ 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() }, auth()),
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error('فشل التحديث');
-      toast('تم تحديث الوثيقة بنجاح', 'success');
-      var btn = $('addBtn');
-      btn.innerHTML = '<i class="fas fa-save"></i> حفظ الوثيقة';
-      btn.onclick = saveFuelDoc;
-      clearForm();
-      loadDocs();
-    } catch (e) { toast(e.message, 'error'); }
+  /* ══ تصدير CSV ══ */
+  function exportCsv() {
+    var rows = shown.length ? shown : viewDocs();
+    if (!rows.length) return toast('لا توجد بيانات للتصدير', 'info');
+    var head = ['التاريخ', 'رقم الوثيقة', 'ساعات العمل', 'المحروقات المستعملة (لتر)', 'الكمية المطلوبة (لتر)', 'الباقي بالخزان (لتر)', 'رصيد البطاقة (د.ت)', 'معدل الاستهلاك', 'درجة الخطر', 'الحالة'];
+    function cell(v) { v = v == null ? '' : String(v); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    var lines = [head.map(cell).join(',')].concat(rows.map(function (d) {
+      return [docDay(d), d.documentNumber, d.docTotalHours, d.docTotalLiters, d.requestedLiters, d.remainingTank, d.cardDinars,
+        d.totalActualRate ? Number(d.totalActualRate).toFixed(2) : '', d.riskScore, d.isFraud ? 'مشبوه' : 'سليم'].map(cell).join(',');
+    }));
+    var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'fuel-documents-' + today() + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    toast('تم تصدير ' + rows.length + ' وثيقة', 'success');
   }
 
   /* ══ المقارنات ══ */
@@ -823,7 +1003,7 @@ td.d{color:var(--t1)}
     var wk = new Date(now.getTime() - 7 * 864e5), wk2 = new Date(now.getTime() - 14 * 864e5);
     var cm = 0, lm = 0, cw = 0, lw = 0;
     allDocs.forEach(function (d) {
-      var dt = new Date(d.date), L = d.docTotalLiters || 0;
+      var dt = new Date(d.date), L = Number(d.docTotalLiters) || 0;
       if (dt >= som) cm += L; else if (dt >= solm && dt <= eolm) lm += L;
       if (dt >= wk) cw += L; else if (dt >= wk2 && dt < wk) lw += L;
     });
@@ -862,12 +1042,12 @@ td.d{color:var(--t1)}
   function renderChart() {
     var box = $('chartBox'), emptyEl = $('chartEmpty');
     if (myChart) { myChart.destroy(); myChart = null; }
-    if (!allDocs.length) { box.hidden = true; emptyEl.hidden = false; return; }
+    var s = allDocs.filter(inRange).sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
+    if (!s.length || typeof Chart === 'undefined') { box.hidden = true; emptyEl.hidden = false; return; }
     emptyEl.hidden = true; box.hidden = false;
     var C = { navy: '#2f6fd0', navyH: '#1f56ad', gold: '#d4a017', red: '#ef4444', text: '#64748b', grid: 'rgba(148,163,184,.18)' };
     Chart.defaults.font.family = "'Cairo','Segoe UI',Tahoma,sans-serif";
     Chart.defaults.font.size = 12; Chart.defaults.color = C.text;
-    var s = allDocs.slice().sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
     var rates = s.map(function (d) { return Number(d.totalActualRate) || 0; }), std = Number(standards.standardRate) || 0;
     myChart = new Chart($('fuelChart').getContext('2d'), {
       type: 'bar',
@@ -882,7 +1062,7 @@ td.d{color:var(--t1)}
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        animation: { duration: 700, easing: 'easeOutQuart' },
+        animation: { duration: reduceMotion ? 0 : 700, easing: 'easeOutQuart' },
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { rtl: true, position: 'top', align: 'end', onClick: function () {},
@@ -904,24 +1084,23 @@ td.d{color:var(--t1)}
     });
   }
 
-  window.quickFilter = function (type) {
-    var start = new Date(), end = new Date();
-    if (type === 'month') start.setMonth(end.getMonth() - 1);
-    if (type === 'all') start = new Date(2000, 0, 1);
-    var s = start.toISOString().split('T')[0], e = end.toISOString().split('T')[0];
-    $('filterStart').value = s; $('filterEnd').value = e; loadDocs(s, e);
-  };
-  window.applyCustomFilter = function () {
+  function setRange(s, e) { range.start = s || ''; range.end = e || ''; $('filterStart').value = range.start; $('filterEnd').value = range.end; renderAll(); }
+  function quickFilter(type) {
+    if (type === 'all') return setRange('', '');
+    var end = new Date(), start = new Date(); start.setMonth(end.getMonth() - 1);
+    setRange(localISO(start), localISO(end));
+  }
+  function applyCustomFilter() {
     var s = $('filterStart').value, e = $('filterEnd').value;
     if (!s || !e) return toast('اختر تاريخ البداية والنهاية', 'info');
     if (s > e) return toast('تاريخ البداية بعد تاريخ النهاية', 'error');
-    loadDocs(s, e);
-  };
+    setRange(s, e);
+  }
 
   /* ══ التدقيق ودرجة الخطر ══ */
-  var auditData = null, detected = 0;
   var RULES = { METER_ROLLBACK: 'تراجع العداد', RATE_INFLATED: 'استهلاك مرتفع', TANK_OVERFLOW: 'تجاوز الخزان', HOURS_MISMATCH: 'تعارض الساعات', LITERS_MISMATCH: 'تعارض الكميات', PHANTOM_TRIP: 'رحلة في فترة توقف', STAT_ANOMALY: 'انحراف إحصائي', VOLUME_INFLATION: 'تضخم الكمية', DOUBLE_DIP: 'تموين متكرر', CARD_INSUFFICIENT: 'رصيد البطاقة لا يكفي', TANK_BALANCE: 'رصيد الخزان غير متسق', CONSUMPTION_GAP: 'فجوة استهلاك', METER_GAP: 'ساعات غير موثقة' };
   function riskBadge(sc) {
+    if (sc == null || sc === '') return '<span class="risk none">غير محسوبة</span>';
     sc = Number(sc);
     if (!isFinite(sc)) return '<span class="risk none">غير محسوبة</span>';
     var cls = sc > 60 ? 'high' : sc >= 30 ? 'mid' : 'low';
@@ -935,25 +1114,24 @@ td.d{color:var(--t1)}
     } catch (e) { auditData = null; }
     renderAudit();
   }
-  window.setPrice = function () { try { localStorage.setItem('fuel_price', $('fuelPrice').value); } catch (e) {} renderAudit(); };
   function renderAudit() {
     renderDash();
     var d = auditData, keys = d ? Object.keys(d.byRule || {}) : [];
     $('auRules').innerHTML = !d ? '<span class="chip">بيانات التدقيق غير متاحة</span>'
-      : keys.length ? keys.map(function (k) { return '<span class="chip">' + esc(RULES[k] || k) + ' · ' + d.byRule[k] + '</span>'; }).join('')
+      : keys.length ? keys.map(function (k) { return '<span class="chip">' + esc(RULES[k] || k) + ' · ' + esc(d.byRule[k]) + '</span>'; }).join('')
       : '<span class="chip">لا توجد مخالفات مرصودة</span>';
   }
   function renderDash() {
-    var t = auditData && auditData.totals, price = parseFloat($('fuelPrice').value);
+    var t = auditData && auditData.totals, p = price();
     if (!t) { ['dHours', 'dLiters', 'dTank', 'dCardL', 'dVar', 'dRisk'].forEach(function (id) { $(id).textContent = 'غير متاح'; }); return; }
-    $('dHours').textContent = fmt(t.totalHours, 1) + ' ساعة';
+    countTo($('dHours'), Number(t.totalHours) || 0, 1, ' ساعة');
     $('dHoursAvg').textContent = t.docs ? 'المتوسط ' + fmt(t.avgHours, 1) + ' ساعة / وثيقة' : 'لا توجد وثائق بعد';
-    $('dLiters').textContent = fmt(t.requestedLiters, 0) + ' لتر';
-    $('dCost').textContent = price > 0 ? 'التكلفة: ' + fmt(t.requestedLiters * price, 3) + ' د.ت' : '';
+    countTo($('dLiters'), Number(t.requestedLiters) || 0, 0, ' لتر');
+    $('dCost').textContent = p > 0 ? 'التكلفة: ' + fmt((Number(t.requestedLiters) || 0) * p, 3) + ' د.ت' : '';
     var bar = $('dTankBar');
     if (t.balanceLiters == null) { $('dTank').textContent = 'لا توجد بيانات'; $('dTankNote').textContent = ''; bar.style.width = '0'; }
     else {
-      var pc = Math.max(0, Math.min(100, t.balancePct));
+      var pc = Math.max(0, Math.min(100, Number(t.balancePct) || 0));
       $('dTank').textContent = fmt(t.balanceLiters, 0) + ' لتر';
       $('dTankNote').textContent = fmt(pc, 0) + '% من السعة (بعد آخر تعبئة)';
       bar.style.width = pc + '%'; bar.className = pc < 20 ? 'low' : pc < 50 ? 'mid' : 'high';
@@ -970,7 +1148,9 @@ td.d{color:var(--t1)}
     $('dRisk').textContent = fmt(t.avgRisk, 0) + ' / 100';
     $('dFlagged').textContent = (t.flagged || 0) + ' مشبوهة · ' + (t.warned || 0) + ' للمراجعة';
   }
-  window.detectAutoRate = async function () {
+
+  async function detectAutoRate() {
+    var btn = $('detectBtn'); btn.disabled = true;
     try {
       var res = await fetch('/api/fuel/auto-standard/' + boatId, { headers: auth() });
       var d = await res.json();
@@ -981,18 +1161,48 @@ td.d{color:var(--t1)}
       $('dtNote').textContent = 'الفئة: ' + d.category + ' · ' + d.basedOn + ' وثيقة سليمة' + (d.excluded ? ' · استُبعدت ' + d.excluded + ' شاذة' : '') + ' · انحراف ' + d.stdDev + (d.caution ? ' — ' + d.caution : '');
       $('dtResult').hidden = false;
     } catch (e) { toast(e.message || 'تعذّر الاتصال بالخادم', 'error'); }
-  };
-  window.applyDetectedRate = async function () {
+    finally { btn.disabled = false; }
+  }
+  async function applyDetectedRate() {
     if (!(detected > 0)) return;
     if (!$('setupCard').hidden) { $('setupStandardRate').value = detected; $('setupCard').scrollIntoView({ behavior: 'smooth' }); return toast('عُبّئ الحقل. اضغط «حفظ الإعدادات»', 'info'); }
-    if (!confirm('اعتماد ' + detected + ' لتر/ساعة كاستهلاك معياري لهذا المركب؟ سيُستخدم في تحليل الوثائق الجديدة.')) return;
+    var ok = await confirmDialog({ title: 'اعتماد الاستهلاك المعياري', text: 'اعتماد ' + detected + ' لتر/ساعة كمعيار لهذا المركب؟ سيُستخدم في تحليل الوثائق الجديدة.', ok: 'اعتماد', icon: 'fa-gauge-high' });
+    if (!ok) return;
     try {
-      var res = await fetch('/api/vessels/' + boatId, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() }, auth()), body: JSON.stringify({ standardRate: detected }) });
+      var res = await fetch('/api/vessels/' + boatId, { method: 'PUT', headers: jsonHeaders(), body: JSON.stringify({ standardRate: detected }) });
       if (!res.ok) throw new Error('فشل الاعتماد');
-      standards.standardRate = detected; toast('تم اعتماد الاستهلاك المعياري', 'success'); loadDocs();
+      standards.standardRate = detected; toast('تم اعتماد الاستهلاك المعياري', 'success');
+      liveAudit(); renderAll(); loadAudit();
     } catch (e) { toast(e.message, 'error'); }
-  };
-  try { $('fuelPrice').value = localStorage.getItem('fuel_price') || ''; } catch (e) {}
+  }
+
+  /* ══ ربط الأحداث ══ */
+  $('setupEngineCount').addEventListener('change', function () { $('setupEngineDetails').hidden = this.value !== '2'; });
+  $('saveSetupBtn').addEventListener('click', saveEngineSetup);
+  $('detectBtn').addEventListener('click', detectAutoRate);
+  $('applyBtn').addEventListener('click', applyDetectedRate);
+  $('prevBtn').addEventListener('click', prevStep);
+  $('nextBtn').addEventListener('click', nextStep);
+  $('clearBtn').addEventListener('click', clearForm);
+  $('addBtn').addEventListener('click', submitDoc);
+  $('cancelEditBtn').addEventListener('click', function () { clearForm(); toast('تم إلغاء التعديل', 'info'); });
+  $('stepper').addEventListener('click', function (e) { var b = e.target.closest('.stp'); if (b) goStep(parseInt(b.getAttribute('data-s'), 10)); });
+  $('applyFilterBtn').addEventListener('click', applyCustomFilter);
+  $('monthFilterBtn').addEventListener('click', function () { quickFilter('month'); });
+  $('allFilterBtn').addEventListener('click', function () { quickFilter('all'); });
+  $('csvBtn').addEventListener('click', exportCsv);
+  $('tSearch').addEventListener('input', renderTable);
+  $('tStatus').addEventListener('change', renderTable);
+
+  // تحديث فوري عند كل تغيير في أي حقل من النموذج
+  $('entryCard').addEventListener('input', liveAudit);
+  $('entryCard').addEventListener('change', liveAudit);
+  // Enter = الخطوة التالية / الحفظ
+  $('entryCard').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
+    e.preventDefault();
+    if (step < maxStep) nextStep(); else submitDoc();
+  });
 
   init();
 })();
