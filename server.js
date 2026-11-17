@@ -3145,8 +3145,7 @@ function formatMaintenance(log) {
                 repairUnit: b.repairUnit || '—', cost: 0,
                 notes: b.break ? `عطب: ${b.break}` : 'صيانة دورية', createdBy: req.user.id
             });
-        }
-        
+               
         await addSystemLog({ userId: req.user.id, userName: req.user.name,
             action: 'update', resource: 'vessel', resourceId: v.id, resourceName: v.name,
             status: 'success', ip: req.ip, requestId: req.requestId });
