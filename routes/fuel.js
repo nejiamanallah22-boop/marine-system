@@ -1,6 +1,5 @@
 /**
- * routes/fuel.js — محرك التدقيق لوثائق تموين المحروقات (9 قواعد)
- * ✅ نسخة مصححة: تدعم البحث بـ `_id` و `id`
+ * routes/fuel.js — محرك التدقيق لوثائق تموين المحروقات
  */
 const express = require('express');
 const router = express.Router();
@@ -29,14 +28,13 @@ const dayStart = d => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate
 let maintenanceChecker = async () => false;
 router.setMaintenanceChecker = fn => { maintenanceChecker = fn; };
 
-/* 🟢 دالة البحث عن القارب (تدعم _id أو id) */
-function vesselQuery(boatId) {
-  if (!boatId) return null;
-  const q = [{ id: String(boatId) }];
+/* دالة مساعدة: البحث عن القارب بـ _id أو id */
+async function findVessel(boatId) {
+  let query = { id: boatId };
   if (mongoose.Types.ObjectId.isValid(boatId)) {
-    q.push({ _id: boatId });
+    query = { $or: [{ id: boatId }, { _id: boatId }] };
   }
-  return q.length === 1 ? q[0] : { $or: q };
+  return await Vessel.findOne(query).lean();
 }
 
 /* العدد والمتوسط والانحراف المعياري */
@@ -53,9 +51,7 @@ function cleanEngine(e) {
   return { totalHours: g('totalHours'), usedHours: g('usedHours'), requestedLiters: g('requestedLiters') };
 }
 
-/**
- * يطبق القواعد التسع على وثيقة.
- */
+/* تحليل الوثيقة */
 function analyze(doc, ctx) {
   const flags = [];
   const add = (code, points, msg) => flags.push({ code, points: Math.round(points), msg });
@@ -64,35 +60,27 @@ function analyze(doc, ctx) {
   const std = n(v.standardRate), tank = n(v.tankCapacity), rate = hours > 0 ? liters / hours : 0;
   const eng = [['right', 'الأيمن', doc.engines?.right], ['left', 'الأيسر', doc.engines?.left]].filter(x => x[2]);
 
-  // 1) تراجع العداد
   if (ctx.prev) for (const [k, name, e] of eng) {
     const cur = n(e.totalHours), old = n(ctx.prev.engines?.[k]?.totalHours);
     if (cur > 0 && old > 0 && cur < old - T.METER_EPS) add('METER_ROLLBACK', 40, `عداد المحرك ${name} (${cur}) أقل من القراءة السابقة (${old})`);
   }
-  // 2) + 3) تعارض ساعات / كميات
   const sh = eng.reduce((s, x) => s + n(x[2].usedHours), 0), sl = eng.reduce((s, x) => s + n(x[2].requestedLiters), 0);
   if (sh > 0 && Math.abs(sh - hours) > T.SUM_EPS) add('HOURS_MISMATCH', 25, `مجموع ساعات المحركات (${sh}) ≠ الإجمالي (${hours})`);
   if (sl > 0 && Math.abs(sl - liters) > T.SUM_EPS) add('LITERS_MISMATCH', 25, `مجموع وقود المحركات (${sl}) ≠ الإجمالي (${liters})`);
-  // 4) تجاوز سعة الخزان
   if (tank > 0 && liters > tank) add('TANK_OVERFLOW', 35, `الكمية (${liters}) أكبر من سعة الخزان (${tank})`);
-  // 5) استهلاك وهمي
   if (std > 0 && rate >= std * (1 + T.INFLATION)) {
     const over = (rate / std - 1) * 100;
     add('RATE_INFLATED', Math.min(35, over), `المعدل ${rate.toFixed(2)} يتجاوز المعيار ${std} بنسبة ${over.toFixed(0)}%`);
   }
-  // 6) تضخم الكمية
   if (tank > 0 && liters >= T.FULL_TANK * tank && hours < T.SHORT_HOURS)
     add('VOLUME_INFLATION', 25, `تموين ${liters} لتر (≥ 90% من الخزان) مقابل ${hours} ساعة فقط`);
-  // 7) رحلة وهمية
   const reasons = [];
   if (T.WEEKEND.includes(d.getUTCDay())) reasons.push('يوم عطلة أسبوعية');
   const off = (v.inactivePeriods || []).find(p => d >= new Date(p.from) && d <= new Date(p.to));
   if (off) reasons.push('فترة توقف مسجلة' + (off.reason ? ` (${off.reason})` : ''));
   if (ctx.maintenance) reasons.push(typeof ctx.maintenance === 'string' ? ctx.maintenance : 'يوم صيانة مسجل');
   if (reasons.length) add('PHANTOM_TRIP', 30, `وثيقة في ${reasons.join(' / ')}`);
-  // 8) تموين متكرر
   if (ctx.sameDay.length) add('DOUBLE_DIP', 20, `وثيقة أخرى لنفس المركب في نفس اليوم${ctx.sameDay[0].documentNumber ? ' (رقم ' + ctx.sameDay[0].documentNumber + ')' : ''}`);
-  // 9) انحراف إحصائي
   const h = ctx.hist;
   if (h && h.n >= T.MIN_HIST && h.sd > 0 && Math.abs(rate - h.mean) > T.SIGMA * h.sd)
     add('STAT_ANOMALY', 20, `المعدل ${rate.toFixed(2)} يبعد أكثر من ${T.SIGMA} انحراف معياري عن متوسط المركب ${h.mean.toFixed(2)}`);
@@ -103,7 +91,6 @@ function analyze(doc, ctx) {
   return { flags, byRule, riskScore, isFraud: riskScore > T.FRAUD, fraudReason: flags.map(f => f.msg).join(' | ') };
 }
 
-/* يجمع سياق التحليل */
 async function buildContext(doc, vessel) {
   const d = new Date(doc.date), s = dayStart(d);
   const own = { boatId: doc.boatId, _id: { $ne: doc._id } };
@@ -122,12 +109,13 @@ router.post('/documents', async (req, res) => {
     const b = req.body || {};
     const hours = +b.docTotalHours, liters = +b.docTotalLiters, date = new Date(b.date);
     if (!b.boatId || !(hours > 0) || !(liters > 0) || isNaN(date)) return res.status(400).json({ error: 'بيانات الوثيقة غير صالحة' });
-    const q = vesselQuery(b.boatId);
-    const vessel = q ? await Vessel.findOne(q).lean() : null;
+    
+    const vessel = await findVessel(String(b.boatId));
     if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
+    
     const twin = vessel.engineCount === 2;
     const doc = new FuelDocument({
-      boatId: vessel.id, date, docTotalHours: hours, docTotalLiters: liters,
+      boatId: vessel.id || vessel._id.toString(), date, docTotalHours: hours, docTotalLiters: liters,
       documentNumber: b.documentNumber ? String(b.documentNumber).replace(/[<>]/g, '').slice(0, 40) : undefined,
       engineCount: twin ? 2 : 1,
       engines: { right: cleanEngine(b.engines?.right), left: twin ? cleanEngine(b.engines?.left) : undefined },
@@ -142,10 +130,9 @@ router.post('/documents', async (req, res) => {
 /* ───────── معايير القارب ───────── */
 router.get('/standards/:boatId', async (req, res) => {
   try {
-    const q = vesselQuery(req.params.boatId);
-    const v = q ? await Vessel.findOne(q).lean() : null;
+    const v = await findVessel(req.params.boatId);
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
-    const last = await FuelDocument.findOne({ boatId: v.id }).sort({ date: -1 }).lean();
+    const last = await FuelDocument.findOne({ boatId: v.id || v._id.toString() }).sort({ date: -1 }).lean();
     res.json({
       engineCount: v.engineCount || null, tankCapacity: n(v.tankCapacity) || null, standardRate: n(v.standardRate) || null,
       lastHours: last ? { date: last.date, right: last.engines?.right?.totalHours ?? null, left: last.engines?.left?.totalHours ?? null } : null
@@ -156,11 +143,8 @@ router.get('/standards/:boatId', async (req, res) => {
 /* ───────── جلب وثائق القارب ───────── */
 router.get('/documents/:boatId', async (req, res) => {
   try {
-    const q = vesselQuery(req.params.boatId);
-    const v = q ? await Vessel.findOne(q).lean() : null;
-    if (!v) return res.json([]);
     const { start, end } = req.query;
-    let query = { boatId: v.id };
+    let query = { boatId: req.params.boatId };
     if (start && end) {
       query.date = { $gte: new Date(start), $lte: new Date(end) };
     }
@@ -172,10 +156,10 @@ router.get('/documents/:boatId', async (req, res) => {
 /* ───────── تقرير التدقيق ───────── */
 router.get('/audit-report/:boatId', async (req, res) => {
   try {
-    const q = vesselQuery(req.params.boatId);
-    const v = q ? await Vessel.findOne(q).lean() : null;
+    const v = await findVessel(req.params.boatId);
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
-    const docs = await FuelDocument.find({ boatId: v.id }).sort({ date: 1 }).lean();
+    const bId = v.id || v._id.toString();
+    const docs = await FuelDocument.find({ boatId: bId }).sort({ date: 1 }).lean();
     const std = n(v.standardRate), tank = n(v.tankCapacity);
     let liters = 0, hours = 0, expected = 0, excess = 0, riskSum = 0, bal = 0;
     const byRule = {};
@@ -188,7 +172,7 @@ router.get('/audit-report/:boatId', async (req, res) => {
     });
     const hasStd = std > 0;
     res.json({
-      vessel: { id: v.id, name: v.name, cat: v.cat, standardRate: std || null, tankCapacity: tank || null },
+      vessel: { id: bId, name: v.name, cat: v.cat, standardRate: std || null, tankCapacity: tank || null },
       totals: {
         docs: docs.length, totalHours: hours, avgHours: docs.length ? hours / docs.length : 0,
         requestedLiters: liters,
@@ -209,31 +193,13 @@ router.get('/audit-report/:boatId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ───────── ملخص الأسطول ───────── */
-router.get('/fleet-summary', async (req, res) => {
-  try {
-    const vessels = await Vessel.find().select('id standardRate').lean();
-    const std = Object.fromEntries(vessels.map(v => [v.id, n(v.standardRate)]));
-    const docs = await FuelDocument.find().select('boatId docTotalHours docTotalLiters riskScore').lean();
-    let requested = 0, expected = 0, excess = 0, flagged = 0, warned = 0, noStd = 0;
-    docs.forEach(d => {
-      const s = std[d.boatId] || 0, L = n(d.docTotalLiters);
-      requested += L;
-      if (s > 0) { const e = n(d.docTotalHours) * s; expected += e; excess += Math.max(0, L - e); } else noStd++;
-      if (d.riskScore > T.FRAUD) flagged++; else if (d.riskScore >= T.WARN) warned++;
-    });
-    res.json({ vessels: vessels.length, docs: docs.length, requestedLiters: requested, expectedLiters: expected, excessLiters: excess, flagged, warned, docsWithoutStandard: noStd });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
 /* ───────── اكتشاف الاستهلاك المعياري ───────── */
 router.get('/auto-standard/:boatId', async (req, res) => {
   try {
-    const q = vesselQuery(req.params.boatId);
-    const v = q ? await Vessel.findOne(q).lean() : null;
+    const v = await findVessel(req.params.boatId);
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
     if (!v.cat) return res.json({ autoRate: 0, source: 'none', message: 'المركب لا ينتمي لأي فئة' });
-    const ids = (await Vessel.find({ cat: v.cat }).select('id').lean()).map(x => x.id);
+    const ids = (await Vessel.find({ cat: v.cat }).select('id _id').lean()).map(x => x.id || x._id.toString());
     const docs = await FuelDocument.find({ boatId: { $in: ids }, isFraud: false, totalActualRate: { $gt: 0 } }).select('totalActualRate').lean();
     if (docs.length < 3) return res.json({ autoRate: 0, source: 'insufficient', message: 'لا توجد بيانات كافية (أقل من 3 وثائق سليمة في الفئة)' });
 
@@ -253,26 +219,39 @@ router.get('/auto-standard/:boatId', async (req, res) => {
 /* ───────── مقارنة مع مركب مشابه ───────── */
 router.get('/compare-vessel/:boatId', async (req, res) => {
   try {
-    const q = vesselQuery(req.params.boatId);
-    const cur = q ? await Vessel.findOne(q).lean() : null;
+    const cur = await findVessel(req.params.boatId);
     if (!cur) return res.status(404).json({ error: 'المركب غير موجود' });
-    let others = cur.cat ? await Vessel.find({ cat: cur.cat, id: { $ne: cur.id } }).lean() : [], basis = 'cat';
+    
+    const curId = cur.id || cur._id.toString();
+    let others = cur.cat ? await Vessel.find({ cat: cur.cat, id: { $ne: curId } }).lean() : [], basis = 'cat';
     if (!others.length && n(cur.len) > 0) {
-      others = await Vessel.find({ id: { $ne: cur.id }, len: { $gte: cur.len * 0.85, $lte: cur.len * 1.15 } }).lean();
+      others = await Vessel.find({ id: { $ne: curId }, len: { $gte: cur.len * 0.85, $lte: cur.len * 1.15 } }).lean();
       basis = 'len';
     }
     if (!others.length) return res.json({ success: false, reason: 'no_similar', message: 'لا يوجد مركب مشابه' });
 
+    const otherIds = others.map(o => o.id || o._id.toString());
     const agg = await FuelDocument.aggregate([
-      { $match: { boatId: { $in: [cur.id, ...others.map(o => o.id)] } } },
+      { $match: { boatId: { $in: [curId, ...otherIds] } } },
       { $group: { _id: '$boatId', liters: { $sum: '$docTotalLiters' }, hours: { $sum: '$docTotalHours' }, docs: { $sum: 1 } } }
     ]);
     const m = Object.fromEntries(agg.map(a => [a._id, a]));
-    const mk = x => { const a = m[x.id] || { liters: 0, hours: 0, docs: 0 }; return { id: x.id, name: x.name, totalLiters: a.liters, totalHours: a.hours, docs: a.docs, rate: a.hours > 0 ? a.liters / a.hours : 0 }; };
-    const withData = others.filter(o => m[o.id] && m[o.id].hours > 0)
+    
+    const mk = (x, id) => { 
+        const a = m[id] || { liters: 0, hours: 0, docs: 0 }; 
+        return { id: id, name: x.name, totalLiters: a.liters, totalHours: a.hours, docs: a.docs, rate: a.hours > 0 ? a.liters / a.hours : 0 }; 
+    };
+    
+    const withData = others.filter(o => m[o.id || o._id.toString()] && m[o.id || o._id.toString()].hours > 0)
       .sort((a, b) => Math.abs(n(a.len) - n(cur.len)) - Math.abs(n(b.len) - n(cur.len)));
+      
     if (!withData.length) return res.json({ success: false, reason: 'no_data', message: 'لا توجد بيانات استهلاك للمراكب المشابهة' });
-    res.json({ success: true, basis, current: mk(cur), other: mk(withData[0]), rateDiff: mk(cur).rate - mk(withData[0]).rate });
+    
+    const curMk = mk(cur, curId);
+    const othId = withData[0].id || withData[0]._id.toString();
+    const othMk = mk(withData[0], othId);
+    
+    res.json({ success: true, basis, current: curMk, other: othMk, rateDiff: curMk.rate - othMk.rate });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
