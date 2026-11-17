@@ -1370,7 +1370,7 @@ function formatVessel(v) {
         uploadedAt: img.uploadedAt || null,
         uploadedBy: img.uploadedBy || 'system'
     })) : [];
-    const primary = images.find(i => i.isPrimary) || images[0] || null;
+   const primary = images.find(i => i.isPrimary) || images[0] || null;
     return {
         id: obj.id, _id: obj._id ? obj._id.toString() : null,
         name: obj.name, num: obj.num || '', len: obj.len || 0,
@@ -1381,6 +1381,14 @@ function formatVessel(v) {
         ref: obj.ref || '', repairUnit: obj.repairUnit || '',
         cat: obj.cat || '', category: obj.cat || obj.category || '',
         type: obj.type || '', location: obj.location || '',
+
+        // ⛽ إعدادات المحروقات
+        engineCount: obj.engineCount || 1,
+        tankCapacity: obj.tankCapacity || 0,
+        standardRate: obj.standardRate || 0,
+        engineRight: obj.engineRight || '',
+        engineLeft: obj.engineLeft || '',
+
         images: images,
         primaryImage: primary,
         imagesCount: images.length,
