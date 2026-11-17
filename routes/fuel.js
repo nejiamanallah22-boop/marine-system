@@ -1,8 +1,10 @@
 /**
  * routes/fuel.js — محرك التدقيق لوثائق تموين المحروقات (9 قواعد)
+ * ✅ نسخة مصححة: تدعم البحث بـ `_id` و `id`
  */
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Vessel = require('../models/Vessel');
 const FuelDocument = require('../models/FuelDocument');
 
@@ -26,6 +28,16 @@ const dayStart = d => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate
 
 let maintenanceChecker = async () => false;
 router.setMaintenanceChecker = fn => { maintenanceChecker = fn; };
+
+/* 🟢 دالة البحث عن القارب (تدعم _id أو id) */
+function vesselQuery(boatId) {
+  if (!boatId) return null;
+  const q = [{ id: String(boatId) }];
+  if (mongoose.Types.ObjectId.isValid(boatId)) {
+    q.push({ _id: boatId });
+  }
+  return q.length === 1 ? q[0] : { $or: q };
+}
 
 /* العدد والمتوسط والانحراف المعياري */
 function stats(a) {
@@ -110,7 +122,8 @@ router.post('/documents', async (req, res) => {
     const b = req.body || {};
     const hours = +b.docTotalHours, liters = +b.docTotalLiters, date = new Date(b.date);
     if (!b.boatId || !(hours > 0) || !(liters > 0) || isNaN(date)) return res.status(400).json({ error: 'بيانات الوثيقة غير صالحة' });
-    const vessel = await Vessel.findOne({ id: String(b.boatId) }).lean();
+    const q = vesselQuery(b.boatId);
+    const vessel = q ? await Vessel.findOne(q).lean() : null;
     if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
     const twin = vessel.engineCount === 2;
     const doc = new FuelDocument({
@@ -129,7 +142,8 @@ router.post('/documents', async (req, res) => {
 /* ───────── معايير القارب ───────── */
 router.get('/standards/:boatId', async (req, res) => {
   try {
-    const v = await Vessel.findOne({ id: req.params.boatId }).lean();
+    const q = vesselQuery(req.params.boatId);
+    const v = q ? await Vessel.findOne(q).lean() : null;
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
     const last = await FuelDocument.findOne({ boatId: v.id }).sort({ date: -1 }).lean();
     res.json({
@@ -142,8 +156,11 @@ router.get('/standards/:boatId', async (req, res) => {
 /* ───────── جلب وثائق القارب ───────── */
 router.get('/documents/:boatId', async (req, res) => {
   try {
+    const q = vesselQuery(req.params.boatId);
+    const v = q ? await Vessel.findOne(q).lean() : null;
+    if (!v) return res.json([]);
     const { start, end } = req.query;
-    let query = { boatId: req.params.boatId };
+    let query = { boatId: v.id };
     if (start && end) {
       query.date = { $gte: new Date(start), $lte: new Date(end) };
     }
@@ -155,7 +172,8 @@ router.get('/documents/:boatId', async (req, res) => {
 /* ───────── تقرير التدقيق ───────── */
 router.get('/audit-report/:boatId', async (req, res) => {
   try {
-    const v = await Vessel.findOne({ id: req.params.boatId }).lean();
+    const q = vesselQuery(req.params.boatId);
+    const v = q ? await Vessel.findOne(q).lean() : null;
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
     const docs = await FuelDocument.find({ boatId: v.id }).sort({ date: 1 }).lean();
     const std = n(v.standardRate), tank = n(v.tankCapacity);
@@ -211,7 +229,8 @@ router.get('/fleet-summary', async (req, res) => {
 /* ───────── اكتشاف الاستهلاك المعياري ───────── */
 router.get('/auto-standard/:boatId', async (req, res) => {
   try {
-    const v = await Vessel.findOne({ id: req.params.boatId }).lean();
+    const q = vesselQuery(req.params.boatId);
+    const v = q ? await Vessel.findOne(q).lean() : null;
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
     if (!v.cat) return res.json({ autoRate: 0, source: 'none', message: 'المركب لا ينتمي لأي فئة' });
     const ids = (await Vessel.find({ cat: v.cat }).select('id').lean()).map(x => x.id);
@@ -234,7 +253,8 @@ router.get('/auto-standard/:boatId', async (req, res) => {
 /* ───────── مقارنة مع مركب مشابه ───────── */
 router.get('/compare-vessel/:boatId', async (req, res) => {
   try {
-    const cur = await Vessel.findOne({ id: req.params.boatId }).lean();
+    const q = vesselQuery(req.params.boatId);
+    const cur = q ? await Vessel.findOne(q).lean() : null;
     if (!cur) return res.status(404).json({ error: 'المركب غير موجود' });
     let others = cur.cat ? await Vessel.find({ cat: cur.cat, id: { $ne: cur.id } }).lean() : [], basis = 'cat';
     if (!others.length && n(cur.len) > 0) {
