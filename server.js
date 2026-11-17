@@ -3142,7 +3142,7 @@ app.put('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:
         if (b.repairUnit !== undefined) v.repairUnit = validateString(b.repairUnit, { max: 200 }) || '';
         if (b.cat !== undefined) v.cat = validateString(b.cat, { max: 100 }) || '';
 
-        // إعدادات المحروقات
+               // إعدادات المحروقات
         if (b.engineCount !== undefined) v.engineCount = Number(b.engineCount) || 1;
         if (b.tankCapacity !== undefined) v.tankCapacity = validateNumber(b.tankCapacity, { min: 0, max: 10000 }) || 0;
         if (b.standardRate !== undefined) v.standardRate = validateNumber(b.standardRate, { min: 0, max: 100 }) || 0;
@@ -3151,6 +3151,17 @@ app.put('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:
 
         v.updatedAt = new Date();
         await v.save();
+
+        // ⛽ كتابة مباشرة لحقول المحروقات (تتجاوز أي schema ناقص)
+        const fuelSet = {};
+        if (b.engineCount !== undefined) fuelSet.engineCount = [1, 2].includes(Number(b.engineCount)) ? Number(b.engineCount) : 1;
+        if (b.tankCapacity !== undefined) fuelSet.tankCapacity = validateNumber(b.tankCapacity, { min: 0, max: 10000 }) || 0;
+        if (b.standardRate !== undefined) fuelSet.standardRate = validateNumber(b.standardRate, { min: 0, max: 100 }) || 0;
+        if (b.engineRight !== undefined) fuelSet.engineRight = validateString(b.engineRight, { max: 100 }) || '';
+        if (b.engineLeft !== undefined) fuelSet.engineLeft = validateString(b.engineLeft, { max: 100 }) || '';
+        if (Object.keys(fuelSet).length) {
+            await Vessel.collection.updateOne({ _id: v._id }, { $set: fuelSet });
+        }
 
         if (v.status && (v.status === 'معطب' || v.status === 'صيانة') && old !== v.status) {
             await Maintenance.create({
