@@ -1,7 +1,9 @@
 /**
- * routes/fuel.js v2 — محرك التدقيق لوثائق تموين المحروقات
- * المعطيات: الكمية المطلوبة، ساعات العمل، عدادات المحرك (بداية/نهاية الشهر)،
- *           الباقي بالخزان (لتر)، الباقي بالبطاقة الذكية (دينار → لتر).
+ * routes/fuel.js v3 — محرك التدقيق لوثائق تموين المحروقات
+ * - المعطيات: الكمية المطلوبة، ساعات العمل، عدادات المحرك (بداية/نهاية الشهر)،
+ *             الباقي بالخزان (لتر)، الباقي بالبطاقة الذكية (دينار → لتر).
+ * - المعيار: يدوي إن وُجد، وإلا يتعلمه النظام تلقائياً (وسيط وثائق المركب السليمة).
+ * - تعديل وحذف الوثائق مع سجل تغييرات وإعادة تدقيق الوثائق اللاحقة.
  * يتطلب: models/Vessel.js و models/FuelDocument.js
  */
 const express = require('express');
@@ -11,15 +13,19 @@ const Vessel = require('../models/Vessel');
 const FuelDocument = require('../models/FuelDocument');
 
 let authenticateAccessToken, csrfProtection, normalizeRole = r => String(r || '');
+let addLog = async () => {};
 const csrf = (req, res, next) => csrfProtection(req, res, next);
 
 // سعر اللتر (دينار تونسي) — يمكن تغييره عبر متغير البيئة FUEL_PRICE_DT
 const FUEL_PRICE = Number(process.env.FUEL_PRICE_DT) > 0 ? Number(process.env.FUEL_PRICE_DT) : 1.998;
 
 const WRITE_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit'];
+const DELETE_ROLES = ['admin', 'manager'];
 const PRIVILEGED = ['admin', 'manager'];
 const FRAUD_THRESHOLD = 60;
 const WARN_THRESHOLD = 30;
+const LEARN_MIN_OWN = 3;        // أقل عدد وثائق سليمة لتعلّم معيار المركب
+const LEARN_MIN_CATEGORY = 5;   // أقل عدد وثائق لتعلّم معيار الفئة
 
 // وزن كل قاعدة في درجة الخطر (الحد الأقصى 100)
 const WEIGHTS = {
@@ -32,15 +38,18 @@ const WEIGHTS = {
 const n = v => { const x = Number(v); return Number.isFinite(x) ? x : NaN; };
 const r2 = v => Math.round(v * 100) / 100;
 const r3 = v => Math.round(v * 1000) / 1000;
+const median = a => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 const roleOf = req => normalizeRole(req.user && req.user.role);
 const isPrivileged = req => PRIVILEGED.includes(roleOf(req));
 const canWrite = req => WRITE_ROLES.includes(roleOf(req));
+const canDelete = req => DELETE_ROLES.includes(roleOf(req));
 const validId = s => typeof s === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(s);
+const isOid = s => typeof s === 'string' && /^[a-f0-9]{24}$/i.test(s);
 const fail = (res, err, where) => { console.error('❌ [FUEL] ' + where + ':', err && err.message); res.status(500).json({ error: 'خطأ في الخادم' }); };
 
 async function findVessel(boatId) {
   if (!validId(boatId)) return null;
-  const q = /^[a-f0-9]{24}$/i.test(boatId) && mongoose.Types.ObjectId.isValid(boatId)
+  const q = isOid(boatId) && mongoose.Types.ObjectId.isValid(boatId)
     ? { $or: [{ id: boatId }, { _id: boatId }] } : { id: boatId };
   return Vessel.findOne(q).lean();
 }
@@ -53,7 +62,35 @@ async function loadVessel(req, res) {
   return v;
 }
 
-// قراءة عدّاد محرك: بداية/نهاية الشهر → الساعات المحتسبة
+// مراكب الفئة نفسها (مع احترام الإقليم)
+async function siblingsOf(req, v) {
+  if (!v.cat) return [];
+  const q = { cat: v.cat, _id: { $ne: v._id }, status: { $ne: 'طرح' } };
+  if (req && !isPrivileged(req) && req.user.region) q.region = req.user.region;
+  return Vessel.find(q).select('id name').lean();
+}
+
+/* ───────── المعيار الفعّال: يدوي ← متعلَّم من المركب ← متعلَّم من الفئة ───────── */
+async function cleanRates(ids, excludeId) {
+  const q = { boatId: { $in: ids }, isFraud: false, riskScore: { $lt: WARN_THRESHOLD }, totalActualRate: { $gt: 0 } };
+  if (excludeId) q._id = { $ne: excludeId };
+  const docs = await FuelDocument.find(q).select('totalActualRate').limit(500).lean();
+  return docs.map(d => d.totalActualRate);
+}
+async function effectiveStandard(v, req, excludeId) {
+  const manual = Number(v.standardRate) || 0;
+  if (manual > 0) return { rate: manual, source: 'manual', basedOn: 0 };
+  const own = await cleanRates(idsOf(v), excludeId);
+  if (own.length >= LEARN_MIN_OWN) return { rate: r2(median(own)), source: 'learned', basedOn: own.length };
+  const sibs = await siblingsOf(req, v);
+  if (sibs.length) {
+    const rs = await cleanRates([].concat(...sibs.map(s => [s.id, String(s._id)].filter(Boolean))), excludeId);
+    if (rs.length >= LEARN_MIN_CATEGORY) return { rate: r2(median(rs)), source: 'category', basedOn: rs.length };
+  }
+  return { rate: 0, source: 'none', basedOn: own.length };
+}
+
+/* ───────── قراءة والتحقق من المدخلات ───────── */
 function readEngine(e, label) {
   const tag = label ? ' المحرك ' + label : ' المحرك';
   if (!e || typeof e !== 'object') return { err: 'بيانات' + tag + ' ناقصة' };
@@ -66,12 +103,41 @@ function readEngine(e, label) {
 const startOf = e => (e && e.startHours != null ? e.startHours : null);
 const endOf = e => (e ? (e.endHours != null ? e.endHours : (e.totalHours > 0 ? e.totalHours : null)) : null);
 
+function parseDoc(b, v) {
+  const date = new Date(b.date);
+  if (isNaN(date) || date.getTime() > Date.now() + 864e5 || date.getTime() < new Date('2000-01-01').getTime()) return { err: 'تاريخ غير صالح' };
+  const L = n(b.docTotalLiters), H = n(b.docTotalHours), T = n(b.remainingTank), C = n(b.cardDinars);
+  if (!(L > 0 && L <= 1e6)) return { err: 'الكمية المطلوبة غير صالحة' };
+  if (!(H > 0 && H <= 1e5)) return { err: 'ساعات العمل غير صالحة' };
+  if (!(T >= 0 && T <= v.tankCapacity)) return { err: 'الباقي بالخزان غير صالح (من 0 إلى سعة الخزان)' };
+  if (!(C >= 0 && C <= 1e7)) return { err: 'رصيد البطاقة غير صالح' };
+  const twin = v.engineCount === 2;
+  const right = readEngine(b.engines && b.engines.right, twin ? 'الأيمن' : '');
+  if (right.err) return { err: right.err };
+  let left = null;
+  if (twin) { left = readEngine(b.engines && b.engines.left, 'الأيسر'); if (left.err) return { err: left.err }; }
+  const documentNumber = typeof b.documentNumber === 'string' ? b.documentNumber.replace(/[<>]/g, '').trim().slice(0, 40) : '';
+  return { input: { date, docTotalHours: H, docTotalLiters: L, remainingTank: T, cardDinars: C, price: FUEL_PRICE, documentNumber, engines: { right, left }, twin } };
+}
+
+const docFields = (d, a) => ({
+  date: d.date, documentNumber: d.documentNumber,
+  docTotalLiters: d.docTotalLiters, docTotalHours: d.docTotalHours,
+  remainingTank: r2(d.remainingTank), cardDinars: r3(d.cardDinars),
+  cardLiters: r2(a.cardL), fuelPrice: d.price, tankAfter: r2(d.remainingTank + d.docTotalLiters),
+  engineCount: d.twin ? 2 : 1, engines: { right: d.engines.right, left: d.engines.left },
+  totalActualRate: r2(a.rate), actualConsumption: a.consumed,
+  riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules
+});
+
 /* ───────── محرك التدقيق ───────── */
-async function runAudit(vessel, d) {
+async function runAudit(vessel, d, opts = {}) {
   const hits = {};
   const add = (rule, msg) => { hits[rule] = hits[rule] ? hits[rule] + ' ؛ ' + msg : msg; };
   const ids = idsOf(vessel);
-  const std = Number(vessel.standardRate) || 0;
+  const base = { boatId: { $in: ids } };
+  if (opts.excludeId) base._id = { $ne: opts.excludeId };
+  const std = Number(opts.std) || 0;
   const tank = Number(vessel.tankCapacity) || 0;
   const L = d.docTotalLiters, H = d.docTotalHours, T = d.remainingTank, C = d.cardDinars, price = d.price;
   const rate = H > 0 ? L / H : 0;
@@ -99,8 +165,8 @@ async function runAudit(vessel, d) {
 
   // 6) الوثيقة السابقة واللاحقة: اتصال العدّاد + رصيد الخزان
   const [prev, next] = await Promise.all([
-    FuelDocument.findOne({ boatId: { $in: ids }, date: { $lt: d.date } }).sort({ date: -1 }).lean(),
-    FuelDocument.findOne({ boatId: { $in: ids }, date: { $gt: d.date } }).sort({ date: 1 }).lean()
+    FuelDocument.findOne(Object.assign({}, base, { date: { $lt: d.date } })).sort({ date: -1 }).lean(),
+    FuelDocument.findOne(Object.assign({}, base, { date: { $gt: d.date } })).sort({ date: 1 }).lean()
   ]);
   [['right', 'الأيمن'], ['left', 'الأيسر']].forEach(([side, label]) => {
     const cur = d.engines[side]; if (!cur) return;
@@ -125,13 +191,12 @@ async function runAudit(vessel, d) {
   }
 
   // 7) تموين مكرر: نفس اليوم أو نفس رقم الوثيقة
-  const dayEnd = new Date(t + 864e5);
-  const dupQ = [{ date: { $gte: d.date, $lt: dayEnd } }];
+  const dupQ = [{ date: { $gte: d.date, $lt: new Date(t + 864e5) } }];
   if (d.documentNumber) dupQ.push({ documentNumber: d.documentNumber });
-  if (await FuelDocument.exists({ boatId: { $in: ids }, $or: dupQ })) add('DOUBLE_DIP', 'وثيقة أخرى بنفس التاريخ أو الرقم لهذا المركب');
+  if (await FuelDocument.exists(Object.assign({}, base, { $or: dupQ }))) add('DOUBLE_DIP', 'وثيقة أخرى بنفس التاريخ أو الرقم لهذا المركب');
 
   // 8) انحراف إحصائي عن سجل المركب
-  const hist = await FuelDocument.find({ boatId: { $in: ids }, isFraud: false }).sort({ date: -1 }).limit(50).select('totalActualRate').lean();
+  const hist = await FuelDocument.find(Object.assign({}, base, { isFraud: false })).sort({ date: -1 }).limit(50).select('totalActualRate').lean();
   const rs = hist.map(h => h.totalActualRate).filter(x => x > 0);
   if (rs.length >= 5) {
     const m = rs.reduce((a, b) => a + b, 0) / rs.length;
@@ -144,11 +209,45 @@ async function runAudit(vessel, d) {
   return { rate, rules, score, consumed, cardL, isFraud: score > FRAUD_THRESHOLD, reason: rules.map(k => hits[k]).join(' | ') };
 }
 
+// إعادة تدقيق الوثائق اللاحقة بعد تعديل/حذف (حتى تبقى سلسلة العدّاد والرصيد متسقة)
+async function reauditFrom(v, req, fromDate) {
+  try {
+    const std = await effectiveStandard(v, req);
+    const docs = await FuelDocument.find({ boatId: { $in: idsOf(v) }, date: { $gte: fromDate } }).sort({ date: 1 }).limit(200).lean();
+    for (const d of docs) {
+      const e = d.engines || {};
+      if (d.remainingTank == null || d.cardDinars == null || !e.right || e.right.startHours == null) continue; // وثائق النسخة القديمة
+      const input = { date: new Date(d.date), docTotalHours: d.docTotalHours, docTotalLiters: d.docTotalLiters, remainingTank: d.remainingTank,
+        cardDinars: d.cardDinars, price: d.fuelPrice || FUEL_PRICE, documentNumber: d.documentNumber || '', engines: { right: e.right, left: e.left || null } };
+      const a = await runAudit(v, input, { std: std.rate, excludeId: d._id });
+      await FuelDocument.updateOne({ _id: d._id }, { $set: { riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules, actualConsumption: a.consumed } });
+    }
+  } catch (e) { console.error('❌ [FUEL] reaudit:', e.message); }
+}
+
+async function getDoc(req, res) {
+  const id = req.params.docId;
+  if (!isOid(id)) { res.status(400).json({ error: 'معرّف غير صالح' }); return null; }
+  const doc = await FuelDocument.findOne({ _id: id }).lean();
+  const v = doc && await findVessel(doc.boatId);
+  if (!doc || !v || !allowed(req, v)) { res.status(404).json({ error: 'الوثيقة غير موجودة' }); return null; }
+  return { doc, v };
+}
+const snapshot = d => ({ date: d.date, documentNumber: d.documentNumber, docTotalLiters: d.docTotalLiters, docTotalHours: d.docTotalHours,
+  remainingTank: d.remainingTank, cardDinars: d.cardDinars, engines: d.engines, riskScore: d.riskScore, isFraud: d.isFraud });
+const logDoc = (req, action, v, d, details) => addLog({
+  userId: req.user.id, userName: req.user.name, action, resource: 'fuel-document',
+  resourceId: String(d._id), resourceName: v.name + ' — ' + new Date(d.date).toISOString().slice(0, 10),
+  status: 'success', ip: req.ip, requestId: req.requestId, details
+});
+
 /* ───────── 1. معايير القارب ───────── */
 router.get('/standards/:boatId', async (req, res) => {
   try {
     const v = await loadVessel(req, res); if (!v) return;
-    res.json({ engineCount: v.engineCount || 1, tankCapacity: v.tankCapacity || 0, standardRate: v.standardRate || 0, fuelPrice: FUEL_PRICE });
+    const sd = await effectiveStandard(v, req);
+    res.json({ engineCount: v.engineCount || 1, tankCapacity: v.tankCapacity || 0, standardRate: sd.rate,
+      standardSource: sd.source, standardBasedOn: sd.basedOn, manualRate: Number(v.standardRate) || 0, fuelPrice: FUEL_PRICE });
   } catch (e) { fail(res, e, 'standards'); }
 });
 
@@ -160,37 +259,48 @@ router.post('/documents', csrf, async (req, res) => {
     const v = await findVessel(String(b.boatId || ''));
     if (!v || !allowed(req, v)) return res.status(404).json({ error: 'المركب غير موجود' });
     if (!(v.tankCapacity > 0)) return res.status(400).json({ error: 'المركب غير مهيأ: أدخل سعة الخزان أولاً' });
+    const p = parseDoc(b, v); if (p.err) return res.status(400).json({ error: p.err });
 
-    const date = new Date(b.date);
-    if (isNaN(date) || date.getTime() > Date.now() + 864e5 || date.getTime() < new Date('2000-01-01').getTime())
-      return res.status(400).json({ error: 'تاريخ غير صالح' });
-    const L = n(b.docTotalLiters), H = n(b.docTotalHours), T = n(b.remainingTank), C = n(b.cardDinars);
-    if (!(L > 0 && L <= 1e6)) return res.status(400).json({ error: 'الكمية المطلوبة غير صالحة' });
-    if (!(H > 0 && H <= 1e5)) return res.status(400).json({ error: 'ساعات العمل غير صالحة' });
-    if (!(T >= 0 && T <= v.tankCapacity)) return res.status(400).json({ error: 'الباقي بالخزان غير صالح (من 0 إلى سعة الخزان)' });
-    if (!(C >= 0 && C <= 1e7)) return res.status(400).json({ error: 'رصيد البطاقة غير صالح' });
-
-    const twin = v.engineCount === 2;
-    const right = readEngine(b.engines && b.engines.right, twin ? 'الأيمن' : '');
-    if (right.err) return res.status(400).json({ error: right.err });
-    let left = null;
-    if (twin) { left = readEngine(b.engines && b.engines.left, 'الأيسر'); if (left.err) return res.status(400).json({ error: left.err }); }
-
-    const documentNumber = typeof b.documentNumber === 'string' ? b.documentNumber.replace(/[<>]/g, '').trim().slice(0, 40) : '';
-    const input = { date, docTotalHours: H, docTotalLiters: L, remainingTank: T, cardDinars: C, price: FUEL_PRICE, documentNumber, engines: { right, left } };
-    const a = await runAudit(v, input);
-
-    const doc = await FuelDocument.create({
-      boatId: v.id || String(v._id), date, documentNumber,
-      docTotalLiters: L, docTotalHours: H, remainingTank: r2(T), cardDinars: r3(C),
-      cardLiters: r2(a.cardL), fuelPrice: FUEL_PRICE, tankAfter: r2(T + L),
-      engineCount: twin ? 2 : 1, engines: { right, left },
-      totalActualRate: r2(a.rate), actualConsumption: a.consumed,
-      riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules,
-      createdBy: req.user.id
-    });
+    const sd = await effectiveStandard(v, req);
+    const a = await runAudit(v, p.input, { std: sd.rate });
+    const doc = await FuelDocument.create(Object.assign({ boatId: v.id || String(v._id), createdBy: req.user.id }, docFields(p.input, a)));
     res.status(201).json({ ok: true, id: doc._id, riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules });
   } catch (e) { fail(res, e, 'create'); }
+});
+
+/* ───────── 2b. تعديل وثيقة ───────── */
+router.put('/documents/:docId', csrf, async (req, res) => {
+  try {
+    if (!canWrite(req)) return res.status(403).json({ error: 'ليس لديك صلاحية التعديل' });
+    const found = await getDoc(req, res); if (!found) return;
+    const { doc, v } = found;
+    const p = parseDoc(req.body || {}, v); if (p.err) return res.status(400).json({ error: p.err });
+
+    const sd = await effectiveStandard(v, req, doc._id);
+    const a = await runAudit(v, p.input, { std: sd.rate, excludeId: doc._id });
+    const before = snapshot(doc);
+    await FuelDocument.updateOne({ _id: doc._id }, {
+      $set: Object.assign(docFields(p.input, a), { editedAt: new Date(), editedBy: req.user.id }),
+      $inc: { editCount: 1 },
+      $push: { history: { $each: [{ at: new Date(), by: req.user.id, byName: req.user.name || req.user.username || '', before }], $slice: -20 } }
+    });
+    await reauditFrom(v, req, new Date(Math.min(new Date(doc.date).getTime(), p.input.date.getTime())));
+    await logDoc(req, 'update', v, doc, { before, after: snapshot(Object.assign({}, p.input, { riskScore: a.score, isFraud: a.isFraud })) });
+    res.json({ ok: true, riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules });
+  } catch (e) { fail(res, e, 'update'); }
+});
+
+/* ───────── 2c. حذف وثيقة ───────── */
+router.delete('/documents/:docId', csrf, async (req, res) => {
+  try {
+    if (!canDelete(req)) return res.status(403).json({ error: 'الحذف للمسؤول والمدير فقط' });
+    const found = await getDoc(req, res); if (!found) return;
+    const { doc, v } = found;
+    await FuelDocument.deleteOne({ _id: doc._id });
+    await reauditFrom(v, req, new Date(doc.date));
+    await logDoc(req, 'delete', v, doc, { deleted: snapshot(doc) });
+    res.json({ ok: true });
+  } catch (e) { fail(res, e, 'delete'); }
 });
 
 /* ───────── 3. جلب وثائق القارب (مع فلتر التاريخ) ───────── */
@@ -204,7 +314,7 @@ router.get('/documents/:boatId', async (req, res) => {
       if (isNaN(s) || isNaN(e)) return res.status(400).json({ error: 'تاريخ غير صالح' });
       q.date = { $gte: s, $lt: new Date(e.getTime() + 864e5) };
     }
-    res.json(await FuelDocument.find(q).sort({ date: -1 }).limit(1000).lean());
+    res.json(await FuelDocument.find(q).select('-history').sort({ date: -1 }).limit(1000).lean());
   } catch (e) { fail(res, e, 'list'); }
 });
 
@@ -212,7 +322,7 @@ router.get('/documents/:boatId', async (req, res) => {
 router.get('/audit-report/:boatId', async (req, res) => {
   try {
     const v = await loadVessel(req, res); if (!v) return;
-    const docs = await FuelDocument.find({ boatId: { $in: idsOf(v) } }).lean();
+    const docs = await FuelDocument.find({ boatId: { $in: idsOf(v) } }).select('-history').lean();
     let liters = 0, hours = 0, risk = 0, flagged = 0, warned = 0;
     const byRule = {};
     docs.forEach(d => {
@@ -220,13 +330,15 @@ router.get('/audit-report/:boatId', async (req, res) => {
       if (d.isFraud) flagged++; else if ((d.riskScore || 0) >= WARN_THRESHOLD) warned++;
       (d.violations || []).forEach(k => { byRule[k] = (byRule[k] || 0) + 1; });
     });
-    const std = Number(v.standardRate) || 0, tank = Number(v.tankCapacity) || 0;
+    const sd = await effectiveStandard(v, req);
+    const std = sd.rate, tank = Number(v.tankCapacity) || 0;
     const t = {
       docs: docs.length, totalHours: r2(hours), avgHours: docs.length ? r2(hours / docs.length) : 0,
       requestedLiters: r2(liters), avgRisk: docs.length ? r2(risk / docs.length) : 0, flagged, warned,
       expectedLiters: null, varianceLiters: null, variancePct: null, excessLiters: null,
       balanceLiters: null, balancePct: null,
-      lastRemainingTank: null, cardDinars: null, cardLiters: null, fuelPrice: FUEL_PRICE
+      lastRemainingTank: null, cardDinars: null, cardLiters: null, fuelPrice: FUEL_PRICE,
+      standard: { rate: std, source: sd.source, basedOn: sd.basedOn }
     };
     if (std > 0 && docs.length) {
       t.expectedLiters = r2(std * hours);
@@ -234,7 +346,6 @@ router.get('/audit-report/:boatId', async (req, res) => {
       t.variancePct = t.expectedLiters > 0 ? r2(t.varianceLiters / t.expectedLiters * 100) : null;
       t.excessLiters = Math.max(0, t.varianceLiters);
     }
-    // أحدث وثيقة: الرصيد الفعلي للخزان والبطاقة
     const latest = docs.slice().sort((a, b) => new Date(b.date) - new Date(a.date))[0];
     if (latest) {
       t.lastRemainingTank = latest.remainingTank != null ? latest.remainingTank : null;
@@ -250,31 +361,19 @@ router.get('/audit-report/:boatId', async (req, res) => {
   } catch (e) { fail(res, e, 'audit-report'); }
 });
 
-/* ───────── مركبات الفئة نفسها (مع احترام الإقليم) ───────── */
-async function siblingsOf(req, v) {
-  if (!v.cat) return [];
-  const q = { cat: v.cat, _id: { $ne: v._id }, status: { $ne: 'طرح' } };
-  if (!isPrivileged(req) && req.user.region) q.region = req.user.region;
-  return Vessel.find(q).select('id name').lean();
-}
-
-/* ───────── 5. الاستهلاك المعياري التلقائي ───────── */
+/* ───────── 5. الاستهلاك المعياري التلقائي (تفصيلي) ───────── */
 router.get('/auto-standard/:boatId', async (req, res) => {
   try {
     const v = await loadVessel(req, res); if (!v) return;
     const sibs = await siblingsOf(req, v);
     const ids = idsOf(v).concat(...sibs.map(s => [s.id, String(s._id)].filter(Boolean)));
-    const docs = await FuelDocument.find({ boatId: { $in: ids }, isFraud: false, riskScore: { $lt: WARN_THRESHOLD }, totalActualRate: { $gt: 0 } })
-      .select('totalActualRate').limit(2000).lean();
-    let rs = docs.map(d => d.totalActualRate);
+    let rs = await cleanRates(ids);
     if (rs.length < 5) return res.json({ autoRate: 0, message: 'لا توجد بيانات كافية (يلزم 5 وثائق سليمة على الأقل)' });
     const stat = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return { m, sd: Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length) }; };
     let s = stat(rs); const before = rs.length;
     if (s.sd > 0) { rs = rs.filter(x => Math.abs(x - s.m) <= 2 * s.sd); s = stat(rs); }
-    res.json({
-      autoRate: r2(s.m), category: v.cat || 'المركب نفسه', basedOn: rs.length, excluded: before - rs.length, stdDev: r2(s.sd),
-      caution: rs.length < 10 ? 'عينة صغيرة، راجع النتيجة قبل الاعتماد' : ''
-    });
+    res.json({ autoRate: r2(s.m), category: v.cat || 'المركب نفسه', basedOn: rs.length, excluded: before - rs.length, stdDev: r2(s.sd),
+      caution: rs.length < 10 ? 'عينة صغيرة، راجع النتيجة قبل الاعتماد' : '' });
   } catch (e) { fail(res, e, 'auto-standard'); }
 });
 
@@ -305,6 +404,7 @@ module.exports = function (app, middlewares) {
   authenticateAccessToken = middlewares.authenticateAccessToken;
   csrfProtection = middlewares.csrfProtection;
   if (typeof middlewares.normalizeRole === 'function') normalizeRole = middlewares.normalizeRole;
+  if (typeof middlewares.addSystemLog === 'function') addLog = middlewares.addSystemLog;
   app.use('/api/fuel', authenticateAccessToken, router);
 };
-module.exports._test = { runAudit, readEngine, FUEL_PRICE };
+module.exports._test = { runAudit, readEngine, parseDoc, effectiveStandard, FUEL_PRICE };
