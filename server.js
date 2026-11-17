@@ -3096,47 +3096,67 @@ function formatMaintenance(log) {
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     });
 
-    app.put('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:update'), csrfProtection, async (req, res) => {
-        try {
-            const q = buildIdQuery(req.params.id);
-            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-            const v = await Vessel.findOne(q);
-            if (!v) return res.status(404).json({ success: false, error: 'غير موجود' });
-            const b = req.body, old = v.status || v.stat;
-            if (b.name !== undefined) {
-                const n = validateString(b.name, { required: true, max: 100 });
-                if (!n) return res.status(400).json({ success: false, error: 'اسم غير صالح' });
-                v.name = n;
-            }
-            if (b.num !== undefined) v.num = validateString(b.num, { max: 50 }) || '';
-            if (b.len !== undefined) v.len = validateNumber(b.len, { min: 0, max: 1000 }) || 0;
-            if (b.region !== undefined) v.region = validateString(b.region, { max: 100 }) || '';
-            if (b.zone !== undefined) v.zone = validateString(b.zone, { max: 100 }) || '';
-            if (b.port !== undefined) v.port = validateString(b.port, { max: 100 }) || '';
-            if (b.supp !== undefined) v.supp = validateString(b.supp, { max: 100 }) || '';
-            if (b.status !== undefined && ['صالح','معطب','صيانة'].includes(b.status)) {
-                v.status = b.status; v.stat = b.status;
-            } else if (b.stat !== undefined && ['صالح','معطب','صيانة'].includes(b.stat)) {
-                v.status = b.stat; v.stat = b.stat;
-            }
-            if (b.break !== undefined) v.break = validateString(b.break, { max: 500 }) || '';
-            if (b.fDate !== undefined) v.fDate = validateDate(b.fDate);
-            if (b.eDate !== undefined) v.eDate = validateDate(b.eDate);
-            if (b.ref !== undefined) v.ref = validateString(b.ref, { max: 100 }) || '';
-            if (b.repairUnit !== undefined) v.repairUnit = validateString(b.repairUnit, { max: 200 }) || '';
-            if (b.cat !== undefined) v.cat = validateString(b.cat, { max: 100 }) || '';
-            v.updatedAt = new Date(); await v.save();
-            if (v.status && (v.status === 'معطب' || v.status === 'صيانة') && old !== v.status) {
-                await Maintenance.create({
-                    id: randomId(8), vesselId: v.id, vesselName: v.name, vesselNum: v.num,
-                    type: b.break || 'صيانة دورية',
-                    status: v.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-                    date: b.fDate || new Date().toISOString(),
-                    startDate: b.fDate ? new Date(b.fDate) : new Date(),
-                    repairUnit: b.repairUnit || '—', cost: 0,
-                    notes: b.break ? `عطب: ${b.break}` : 'صيانة دورية', createdBy: req.user.id
-                });
-            }
+  app.put('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:update'), csrfProtection, async (req, res) => {
+    try {
+        const q = buildIdQuery(req.params.id);
+        if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+        const v = await Vessel.findOne(q);
+        if (!v) return res.status(404).json({ success: false, error: 'غير موجود' });
+        const b = req.body, old = v.status || v.stat;
+        if (b.name !== undefined) {
+            const n = validateString(b.name, { required: true, max: 100 });
+            if (!n) return res.status(400).json({ success: false, error: 'اسم غير صالح' });
+            v.name = n;
+        }
+        if (b.num !== undefined) v.num = validateString(b.num, { max: 50 }) || '';
+        if (b.len !== undefined) v.len = validateNumber(b.len, { min: 0, max: 1000 }) || 0;
+        if (b.region !== undefined) v.region = validateString(b.region, { max: 100 }) || '';
+        if (b.zone !== undefined) v.zone = validateString(b.zone, { max: 100 }) || '';
+        if (b.port !== undefined) v.port = validateString(b.port, { max: 100 }) || '';
+        if (b.supp !== undefined) v.supp = validateString(b.supp, { max: 100 }) || '';
+        if (b.status !== undefined && ['صالح','معطب','صيانة'].includes(b.status)) {
+            v.status = b.status; v.stat = b.status;
+        } else if (b.stat !== undefined && ['صالح','معطب','صيانة'].includes(b.stat)) {
+            v.status = b.stat; v.stat = b.stat;
+        }
+        if (b.break !== undefined) v.break = validateString(b.break, { max: 500 }) || '';
+        if (b.fDate !== undefined) v.fDate = validateDate(b.fDate);
+        if (b.eDate !== undefined) v.eDate = validateDate(b.eDate);
+        if (b.ref !== undefined) v.ref = validateString(b.ref, { max: 100 }) || '';
+        if (b.repairUnit !== undefined) v.repairUnit = validateString(b.repairUnit, { max: 200 }) || '';
+        if (b.cat !== undefined) v.cat = validateString(b.cat, { max: 100 }) || '';
+
+        // ✅ الحقول الجديدة لإعدادات المحروقات
+        if (b.engineCount !== undefined) v.engineCount = Number(b.engineCount) || 1;
+        if (b.tankCapacity !== undefined) v.tankCapacity = validateNumber(b.tankCapacity, { min: 0, max: 10000 }) || 0;
+        if (b.standardRate !== undefined) v.standardRate = validateNumber(b.standardRate, { min: 0, max: 100 }) || 0;
+        if (b.engineRight !== undefined) v.engineRight = validateString(b.engineRight, { max: 100 }) || '';
+        if (b.engineLeft !== undefined) v.engineLeft = validateString(b.engineLeft, { max: 100 }) || '';
+
+        v.updatedAt = new Date(); await v.save();
+        
+        if (v.status && (v.status === 'معطب' || v.status === 'صيانة') && old !== v.status) {
+            await Maintenance.create({
+                id: randomId(8), vesselId: v.id, vesselName: v.name, vesselNum: v.num,
+                type: b.break || 'صيانة دورية',
+                status: v.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
+                date: b.fDate || new Date().toISOString(),
+                startDate: b.fDate ? new Date(b.fDate) : new Date(),
+                repairUnit: b.repairUnit || '—', cost: 0,
+                notes: b.break ? `عطب: ${b.break}` : 'صيانة دورية', createdBy: req.user.id
+            });
+        }
+        
+        await addSystemLog({ userId: req.user.id, userName: req.user.name,
+            action: 'update', resource: 'vessel', resourceId: v.id, resourceName: v.name,
+            status: 'success', ip: req.ip, requestId: req.requestId });
+        await notify({ type: 'info', category: 'vessel', title: 'تعديل مركب',
+            message: 'تم تعديل "' + v.name + '"', link: '/pages/fleet.html',
+            icon: 'edit', actorName: req.user.name || req.user.username });
+        
+        res.json({ success: true, message: 'تم التحديث', vessel: formatVessel(v) });
+    } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
+});
             await addSystemLog({ userId: req.user.id, userName: req.user.name,
                 action: 'update', resource: 'vessel', resourceId: v.id, resourceName: v.name,
                 status: 'success', ip: req.ip, requestId: req.requestId });
