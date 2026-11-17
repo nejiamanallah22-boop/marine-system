@@ -138,7 +138,7 @@ select.fc{cursor:pointer}
 .t-head h2 i{color:var(--gold-l)}
 .count{background:var(--gold);color:var(--navy);font-weight:900;font-size:13px;padding:2px 13px;border-radius:99px}
 .t-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:820px}
+table{width:100%;border-collapse:collapse;min-width:1020px}
 th{background:#f6f8fb;padding:13px 12px;font-size:12px;font-weight:800;color:var(--t2);border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:13px 12px;text-align:center;font-size:13.5px;font-weight:700;color:var(--t2);border-bottom:1px solid var(--line-2)}
 tbody tr{transition:background var(--ease)}
@@ -162,7 +162,7 @@ td.d{color:var(--t1)}
 @keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 
 /* لوحة القيادة */
-.dash{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}
 .dc{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);transition:var(--ease)}
 .dc:hover{transform:translateY(-4px);box-shadow:var(--sh-l)}
 .dc .h{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--t2);margin-bottom:8px}
@@ -170,6 +170,7 @@ td.d{color:var(--t1)}
 .dc b.v{display:block;font-size:21px;font-weight:900;color:var(--navy);line-height:1.35}
 .dc small{display:block;font-size:12px;color:var(--t3);font-weight:700}
 .dc.blue{--c:var(--info);--bgc:var(--info-bg)}.dc.gold{--c:var(--gold);--bgc:var(--gold-bg)}.dc.green{--c:var(--ok);--bgc:var(--ok-bg)}.dc.orange{--c:#e8830c;--bgc:#fdf0e0}
+.dc.teal{--c:#0e8f9b;--bgc:#e0f4f6}
 .dc.bad{--c:var(--bad);--bgc:var(--bad-bg)}.dc.good{--c:var(--ok);--bgc:var(--ok-bg)}.dc.neutral{--c:var(--t3);--bgc:var(--line-2)}
 .dc .price{margin-top:8px}.dc .price .fc{padding:7px 10px;padding-inline-start:34px;font-size:13px}
 .tbar{height:8px;border-radius:9px;background:var(--line-2);margin-top:10px;overflow:hidden}
@@ -212,6 +213,23 @@ td.d{color:var(--t1)}
   td.st-empty{display:block;text-align:center}td.st-empty::before{content:none}
 }
 @media print{.h-actions,#entryCard,#setupCard,.filters,.nav{display:none!important}body{background:#fff}.card,.t-card,.stat{box-shadow:none}.tip{display:none}}
+/* إدخال الوثيقة: ملخص حي وتحويل البطاقة */
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:20px}
+.sm{background:linear-gradient(180deg,#fff,#fafbfd);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.sm span{display:block;font-size:11.5px;font-weight:800;color:var(--t3)}
+.sm b{font-size:16px;font-weight:900;color:var(--navy)}
+.sm.warn{border-color:#f1b3b3;background:var(--bad-bg)}.sm.warn b{color:var(--bad)}
+.sm.good b{color:var(--ok)}
+.hint{font-size:12px;font-weight:700;color:var(--t3);margin-top:8px}
+.conv{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;background:var(--gold-bg);border:1px solid #ecd68a;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13px;color:#6b4e07}
+.conv b{font-size:18px;color:var(--navy)}
+.tmeter{height:8px;border-radius:9px;background:var(--line-2);margin-top:12px;overflow:hidden}
+.tmeter span{display:block;height:100%;width:0;border-radius:9px;background:var(--info);transition:width .4s,background .3s}
+.tmeter span.full{background:var(--bad)}
+.mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.mgrid.one{grid-template-columns:minmax(0,560px)}
+.used{margin-top:12px;font-size:13px;font-weight:800;color:var(--t2)}.used b{color:var(--navy);font-size:15px}
+@media(max-width:768px){.mgrid{grid-template-columns:1fr}.sum{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -250,6 +268,7 @@ td.d{color:var(--t1)}
     <div class="dc gold"><div class="h"><i class="fas fa-gas-pump"></i>الوقود المصروف</div><b class="v" id="dLiters">جاري التحميل...</b><small id="dCost"></small>
       <div class="price field has-unit"><i class="fas fa-coins"></i><input type="number" id="fuelPrice" class="fc" min="0" step="0.001" placeholder="سعر اللتر" oninput="setPrice()" inputmode="decimal" aria-label="سعر اللتر"><span class="unit">د.ت</span></div></div>
     <div class="dc green"><div class="h"><i class="fas fa-battery-three-quarters"></i>المتبقي في الخزان</div><b class="v" id="dTank">جاري التحميل...</b><small id="dTankNote"></small><div class="tbar"><span id="dTankBar"></span></div></div>
+    <div class="dc teal"><div class="h"><i class="fas fa-credit-card"></i>رصيد البطاقة الذكية</div><b class="v" id="dCardL">جاري التحميل...</b><small id="dCardD"></small></div>
     <div class="dc neutral" id="dCardVar"><div class="h"><i class="fas fa-scale-unbalanced"></i>الفائض / التوفير</div><b class="v" id="dVar">جاري التحميل...</b><small id="dVarPct"></small></div>
     <div class="dc orange"><div class="h"><i class="fas fa-shield-halved"></i>درجة الخطر</div><b class="v" id="dRisk">جاري التحميل...</b><small id="dFlagged"></small></div>
   </section>
@@ -277,37 +296,53 @@ td.d{color:var(--t1)}
           <div class="fg"><label for="fDocNumber">رقم الوثيقة</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="fDocNumber" class="fc" placeholder="اختياري" maxlength="40" autocomplete="off"></div></div>
         </div>
         <div class="pane-box">
-          <h4 style="color:var(--gold-d)"><i class="fas fa-calculator"></i> إجمالي الوثيقة (من ورقة الإدارة)</h4>
+          <h4 style="color:var(--gold-d)"><i class="fas fa-calculator"></i> معطيات الوثيقة</h4>
           <div class="grid g2">
-            <div class="fg"><label for="fDocTotalHours">إجمالي ساعات العمل <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-clock"></i><input type="number" id="fDocTotalHours" class="fc" oninput="liveAudit()" placeholder="150" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
-            <div class="fg"><label for="fDocTotalLiters">إجمالي الوقود المطلوب <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gas-pump"></i><input type="number" id="fDocTotalLiters" class="fc" oninput="liveAudit()" placeholder="1000" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
+            <div class="fg"><label for="fDocTotalLiters">الكمية المطلوبة <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gas-pump"></i><input type="number" id="fDocTotalLiters" class="fc" oninput="liveAudit()" placeholder="900" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
+            <div class="fg"><label for="fDocTotalHours">ساعات العمل <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-clock"></i><input type="number" id="fDocTotalHours" class="fc" oninput="liveAudit()" placeholder="150" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
           </div>
         </div>
       </div>
     </div>
 
     <div class="pane" data-step="2" hidden>
-      <div class="pane-box e1">
-        <h4 style="color:var(--info)"><i class="fas fa-cog"></i> المحرك <span id="rightEngineLabel">(الوحيد)</span></h4>
-        <div class="grid g3">
-          <div class="fg"><label for="fTotalHoursR">عداد الساعات الكلي</label><div class="field has-unit"><i class="fas fa-gauge"></i><input type="number" id="fTotalHoursR" class="fc" oninput="liveAudit()" placeholder="169" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
-          <div class="fg"><label for="fUsedHoursR">الساعات المقطوعة <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-stopwatch"></i><input type="number" id="fUsedHoursR" class="fc" oninput="liveAudit()" placeholder="75" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
-          <div class="fg"><label for="fRequestedLitersR">الوقود المطلوب <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-droplet"></i><input type="number" id="fRequestedLitersR" class="fc" oninput="liveAudit()" placeholder="500" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
+      <div class="grid g2">
+        <div class="pane-box e1">
+          <h4 style="color:var(--info)"><i class="fas fa-oil-can"></i> الخزان</h4>
+          <div class="fg"><label for="fRemainingTank">الباقي بالخزان <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-droplet"></i><input type="number" id="fRemainingTank" class="fc" oninput="liveAudit()" placeholder="80" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
+          <div class="tmeter"><span id="tankMeter"></span></div>
+          <div class="hint" id="tankHint"></div>
+        </div>
+        <div class="pane-box">
+          <h4 style="color:var(--gold-d)"><i class="fas fa-credit-card"></i> البطاقة الذكية</h4>
+          <div class="fg"><label for="fCardDinars">الباقي بالبطاقة <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-coins"></i><input type="number" id="fCardDinars" class="fc" oninput="liveAudit()" placeholder="2000" min="0" step="0.001" inputmode="decimal"><span class="unit">د.ت</span></div></div>
+          <div class="conv"><span>يعادل</span><b id="cardLiters">0</b><span>لتر</span><span>· سعر اللتر</span><b id="priceLbl">1.998</b><span>د.ت</span></div>
         </div>
       </div>
     </div>
 
     <div class="pane" data-step="3" hidden>
-      <div class="pane-box e2">
-        <h4 style="color:var(--navy-3)"><i class="fas fa-cog"></i> المحرك الأيسر</h4>
-        <div class="grid g3">
-          <div class="fg"><label for="fTotalHoursL">عداد الساعات الكلي</label><div class="field has-unit"><i class="fas fa-gauge"></i><input type="number" id="fTotalHoursL" class="fc" oninput="liveAudit()" placeholder="169" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
-          <div class="fg"><label for="fUsedHoursL">الساعات المقطوعة <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-stopwatch"></i><input type="number" id="fUsedHoursL" class="fc" oninput="liveAudit()" placeholder="75" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
-          <div class="fg"><label for="fRequestedLitersL">الوقود المطلوب <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-droplet"></i><input type="number" id="fRequestedLitersL" class="fc" oninput="liveAudit()" placeholder="500" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
+      <div class="mgrid" id="metersGrid">
+        <div class="pane-box e1">
+          <h4 style="color:var(--info)"><i class="fas fa-cog"></i> <span id="rightEngineLabel">المحرك</span> — عداد الساعات</h4>
+          <div class="grid g2">
+            <div class="fg"><label for="fStartR">أول الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge"></i><input type="number" id="fStartR" class="fc" oninput="liveAudit()" placeholder="100" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+            <div class="fg"><label for="fEndR">آخر الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="fEndR" class="fc" oninput="liveAudit()" placeholder="250" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+          </div>
+          <div class="used">ساعات العمل المحتسبة: <b id="usedR">—</b></div>
+        </div>
+        <div class="pane-box e2" id="leftEngineBox" hidden>
+          <h4 style="color:var(--navy-3)"><i class="fas fa-cog"></i> المحرك الأيسر — عداد الساعات</h4>
+          <div class="grid g2">
+            <div class="fg"><label for="fStartL">أول الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge"></i><input type="number" id="fStartL" class="fc" oninput="liveAudit()" placeholder="100" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+            <div class="fg"><label for="fEndL">آخر الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="fEndL" class="fc" oninput="liveAudit()" placeholder="250" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+          </div>
+          <div class="used">ساعات العمل المحتسبة: <b id="usedL">—</b></div>
         </div>
       </div>
     </div>
 
+    <div class="sum" id="liveSum"></div>
     <div class="audit" id="auditBox" hidden></div>
 
     <div class="nav">
@@ -366,7 +401,7 @@ td.d{color:var(--t1)}
     <div class="t-head"><h2><i class="fas fa-list-ul"></i> سجل وثائق التموين</h2><span class="count" id="tableCount">0</span></div>
     <div class="t-wrap">
       <table>
-        <thead><tr><th>التاريخ</th><th>رقم الوثيقة</th><th>إجمالي الساعات</th><th>إجمالي الوقود</th><th>المحركات</th><th>معدل الاستهلاك</th><th>درجة الخطر</th><th>الحالة</th></tr></thead>
+        <thead><tr><th>التاريخ</th><th>رقم الوثيقة</th><th>ساعات العمل</th><th>الكمية المطلوبة</th><th>الباقي بالخزان</th><th>رصيد البطاقة</th><th>المحركات</th><th>معدل الاستهلاك</th><th>درجة الخطر</th><th>الحالة</th></tr></thead>
         <tbody id="fuelTableBody"></tbody>
       </table>
     </div>
@@ -379,7 +414,7 @@ td.d{color:var(--t1)}
   'use strict';
   var boatId = new URLSearchParams(window.location.search).get('id');
   var isTwin = false, step = 1, maxStep = 2, saving = false;
-  var standards = { standardRate: 0, tankCapacity: 0, engineCount: 1 };
+  var standards = { standardRate: 0, tankCapacity: 0, engineCount: 1, fuelPrice: 1.998 };
   var myChart = null, allDocs = [];
 
   function $(id) { return document.getElementById(id); }
@@ -433,6 +468,7 @@ td.d{color:var(--t1)}
     $('entryCard').hidden = !ready;
     if (ready) buildSteps();
 
+    var pr = $('fuelPrice'); pr.value = Number(standards.fuelPrice) > 0 ? standards.fuelPrice : 1.998; pr.readOnly = true; pr.title = 'سعر اللتر الرسمي';
     showSkeleton();
     loadDocs();
     loadOtherVesselCompare();
@@ -460,36 +496,63 @@ td.d{color:var(--t1)}
 
   /* ══ الخطوات ══ */
   function buildSteps() {
-    maxStep = isTwin ? 3 : 2;
-    if (isTwin) $('rightEngineLabel').textContent = '(الأيمن)';
-    var defs = [['الإجماليات'], [isTwin ? 'المحرك الأيمن' : 'المحرك']];
-    if (isTwin) defs.push(['المحرك الأيسر']);
+    maxStep = 3;
+    $('rightEngineLabel').textContent = isTwin ? 'المحرك الأيمن' : 'المحرك';
+    $('leftEngineBox').hidden = !isTwin;
+    $('metersGrid').className = isTwin ? 'mgrid' : 'mgrid one';
+    var defs = ['الأساسيات', 'الخزان والبطاقة', isTwin ? 'عدادات المحركين' : 'عداد المحرك'];
     $('stepper').innerHTML = defs.map(function (d, i) {
-      return '<li><button type="button" class="stp" data-s="' + (i + 1) + '"><b>' + (i + 1) + '</b><span>' + d[0] + '</span></button></li>';
+      return '<li><button type="button" class="stp" data-s="' + (i + 1) + '"><b>' + (i + 1) + '</b><span>' + d + '</span></button></li>';
     }).join('');
     $('stepper').addEventListener('click', function (e) {
       var b = e.target.closest('.stp'); if (b) goStep(parseInt(b.getAttribute('data-s'), 10));
     });
     showStep(1);
+    liveAudit();
+  }
+
+  function price() { return Number(standards.fuelPrice) > 0 ? Number(standards.fuelPrice) : 1.998; }
+
+  /* القيم المحتسبة من الحقول (NaN عند الفراغ) */
+  function calc() {
+    var L = num('fDocTotalLiters'), H = num('fDocTotalHours'), T = num('fRemainingTank'), C = num('fCardDinars');
+    var p = price(), cap = Number(standards.tankCapacity) || 0, std = Number(standards.standardRate) || 0;
+    var sR = num('fStartR'), eR = num('fEndR'), sL = isTwin ? num('fStartL') : NaN, eL = isTwin ? num('fEndL') : NaN;
+    return {
+      L: L, H: H, T: T, C: C, p: p, cap: cap, std: std,
+      cardL: isFinite(C) ? C / p : NaN,
+      free: isFinite(T) && cap ? cap - T : NaN,
+      after: isFinite(T) && isFinite(L) ? T + L : NaN,
+      hR: eR - sR, hL: eL - sL,
+      rate: H > 0 && isFinite(L) ? L / H : NaN,
+      cost: isFinite(L) ? L * p : NaN
+    };
   }
 
   function stepError(n) {
     var bad = function (id, msg) { return [id, msg]; };
+    var cap = Number(standards.tankCapacity) || 0;
     if (n === 1) {
       if (!$('fDate').value) return bad('fDate', 'اختر تاريخ الوثيقة');
-      var h = num('fDocTotalHours'), l = num('fDocTotalLiters');
-      if (!isFinite(h) || h <= 0) return bad('fDocTotalHours', 'إجمالي ساعات العمل يجب أن يكون رقماً أكبر من صفر');
-      if (!isFinite(l) || l <= 0) return bad('fDocTotalLiters', 'إجمالي الوقود يجب أن يكون رقماً أكبر من صفر');
+      var l = num('fDocTotalLiters'), h = num('fDocTotalHours');
+      if (!isFinite(l) || l <= 0) return bad('fDocTotalLiters', 'الكمية المطلوبة يجب أن تكون رقماً أكبر من صفر');
+      if (!isFinite(h) || h <= 0) return bad('fDocTotalHours', 'ساعات العمل يجب أن تكون رقماً أكبر من صفر');
     }
     if (n === 2) {
-      var u = num('fUsedHoursR'), q = num('fRequestedLitersR'), nm = isTwin ? 'الأيمن' : 'الوحيد';
-      if (!isFinite(u) || u < 0) return bad('fUsedHoursR', 'يرجى إدخال ساعات المحرك ' + nm + ' بشكل صحيح');
-      if (!isFinite(q) || q < 0) return bad('fRequestedLitersR', 'يرجى إدخال وقود المحرك ' + nm + ' بشكل صحيح');
+      var t = num('fRemainingTank'), c = num('fCardDinars');
+      if (!isFinite(t) || t < 0) return bad('fRemainingTank', 'أدخل الباقي بالخزان (صفر أو أكثر)');
+      if (cap && t > cap) return bad('fRemainingTank', 'الباقي بالخزان يتجاوز سعته (' + cap + ' لتر)');
+      if (!isFinite(c) || c < 0) return bad('fCardDinars', 'أدخل رصيد البطاقة بالدينار (صفر أو أكثر)');
     }
-    if (n === 3 && isTwin) {
-      var u2 = num('fUsedHoursL'), q2 = num('fRequestedLitersL');
-      if (!isFinite(u2) || u2 < 0) return bad('fUsedHoursL', 'يرجى إدخال ساعات المحرك الأيسر بشكل صحيح');
-      if (!isFinite(q2) || q2 < 0) return bad('fRequestedLitersL', 'يرجى إدخال وقود المحرك الأيسر بشكل صحيح');
+    if (n === 3) {
+      var pairs = [['fStartR', 'fEndR', isTwin ? 'الأيمن' : '']];
+      if (isTwin) pairs.push(['fStartL', 'fEndL', 'الأيسر']);
+      for (var i = 0; i < pairs.length; i++) {
+        var pr = pairs[i], s = num(pr[0]), e = num(pr[1]), nm = 'المحرك' + (pr[2] ? ' ' + pr[2] : '');
+        if (!isFinite(s) || s < 0) return bad(pr[0], 'أدخل عداد بداية ' + nm);
+        if (!isFinite(e) || e < 0) return bad(pr[1], 'أدخل عداد نهاية ' + nm);
+        if (e < s) return bad(pr[1], 'عداد نهاية ' + nm + ' أقل من البداية');
+      }
     }
     return null;
   }
@@ -522,22 +585,43 @@ td.d{color:var(--t1)}
   window.nextStep = function () { goStep(Math.min(step + 1, maxStep)); };
   window.prevStep = function () { goStep(Math.max(step - 1, 1)); };
 
-  /* ══ التحقق الذكي ══ */
+  /* ══ التحقق الذكي والملخص الحي ══ */
   window.liveAudit = function () {
-    var docH = num('fDocTotalHours'), docL = num('fDocTotalLiters');
-    var uR = num('fUsedHoursR') || 0, lR = num('fRequestedLitersR') || 0, uL = 0, lL = 0;
-    if (isTwin) { uL = num('fUsedHoursL') || 0; lL = num('fRequestedLitersL') || 0; }
-    var box = $('auditBox'), msgs = [];
-    if (!isNaN(docH) && !isNaN(docL)) {
-      if ((uR > 0 || uL > 0) && Math.abs(uR + uL - docH) > 0.5) msgs.push('تعارض في الساعات: مجموع المحركات (' + (uR + uL) + ') لا يطابق الإجمالي (' + docH + ').');
-      if ((lR > 0 || lL > 0) && Math.abs(lR + lL - docL) > 0.5) msgs.push('تعارض في الكميات: مجموع المحركات (' + (lR + lL) + ') لا يطابق الإجمالي (' + docL + ').');
-      if (standards.tankCapacity && docL > standards.tankCapacity) msgs.push('تجاوز الخزان: (' + docL + ') أكبر من السعة (' + standards.tankCapacity + ').');
-      var stdR = Number(standards.standardRate) || 0;
-      if (stdR > 0 && docH > 0 && docL / docH >= stdR * 1.15) msgs.push('استهلاك وهمي محتمل: المعدل ' + (docL / docH).toFixed(2) + ' يتجاوز المعيار ' + stdR + ' بـ 15% أو أكثر.');
-      if (standards.tankCapacity && docL >= 0.9 * standards.tankCapacity && docH < 10) msgs.push('تضخم الكمية: ≥ 90% من الخزان مقابل أقل من 10 ساعات.');
-      var dv = $('fDate').value, dw = dv ? new Date(dv + 'T00:00:00Z').getUTCDay() : -1;
-      if (dw === 5 || dw === 6) msgs.push('التاريخ المختار يوم عطلة أسبوعية (جمعة/سبت).');
-    }
+    var c = calc(), msgs = [], hrs = [];
+    $('cardLiters').textContent = isFinite(c.cardL) ? fmt(c.cardL, 1) : '0';
+    $('priceLbl').textContent = c.p.toFixed(3);
+    $('usedR').textContent = isFinite(c.hR) && c.hR >= 0 ? fmt(c.hR, 1) + ' ساعة' : '—';
+    if (isTwin) $('usedL').textContent = isFinite(c.hL) && c.hL >= 0 ? fmt(c.hL, 1) + ' ساعة' : '—';
+
+    // عدّاد الخزان
+    var pct = c.cap && isFinite(c.T) ? Math.max(0, Math.min(100, c.T / c.cap * 100)) : 0;
+    var tm = $('tankMeter'); tm.style.width = pct + '%'; tm.className = c.cap && c.T > c.cap ? 'full' : '';
+    $('tankHint').textContent = c.cap ? 'السعة ' + fmt(c.cap) + ' لتر' + (isFinite(c.free) ? ' · المساحة الفارغة ' + fmt(Math.max(0, c.free), 1) + ' لتر' : '') : '';
+
+    if (isFinite(c.hR) && c.hR >= 0) hrs.push(c.hR);
+    if (isTwin && isFinite(c.hL) && c.hL >= 0) hrs.push(c.hL);
+    if (isFinite(c.hR) && c.hR < 0) msgs.push('عداد نهاية المحرك ' + (isTwin ? 'الأيمن ' : '') + 'أقل من بدايته.');
+    if (isTwin && isFinite(c.hL) && c.hL < 0) msgs.push('عداد نهاية المحرك الأيسر أقل من بدايته.');
+    if (c.cap && c.T > c.cap) msgs.push('الباقي بالخزان (' + c.T + ') أكبر من سعته (' + c.cap + ').');
+    else if (c.cap && isFinite(c.after) && c.after > c.cap + 1) msgs.push('تجاوز الخزان: الباقي + المطلوب = ' + fmt(c.after, 1) + ' لتر والسعة ' + c.cap + '.');
+    if (isFinite(c.L) && isFinite(c.C) && c.L * c.p > c.C + c.p) msgs.push('رصيد البطاقة لا يكفي: ' + fmt(c.L) + ' لتر = ' + fmt(c.L * c.p, 3) + ' د.ت، والرصيد ' + fmt(c.C, 3) + ' د.ت (= ' + fmt(c.cardL, 1) + ' لتر).');
+    if (c.std > 0 && isFinite(c.rate) && c.rate >= c.std * 1.15) msgs.push('استهلاك وهمي محتمل: المعدل ' + c.rate.toFixed(2) + ' يتجاوز المعيار ' + c.std + ' بـ 15% أو أكثر.');
+    if (hrs.length && isFinite(c.H) && Math.abs(Math.max.apply(null, hrs) - c.H) > 0.5) msgs.push('ساعات العمل (' + c.H + ') لا تطابق ساعات العدّاد (' + fmt(Math.max.apply(null, hrs), 1) + ').');
+    if (c.cap && isFinite(c.L) && c.L >= 0.9 * c.cap && c.H < 10) msgs.push('تضخم الكمية: ≥ 90% من الخزان مقابل أقل من 10 ساعات.');
+    var dv = $('fDate').value, dw = dv ? new Date(dv + 'T00:00:00Z').getUTCDay() : -1;
+    if (dw === 5 || dw === 6) msgs.push('التاريخ المختار يوم عطلة أسبوعية (جمعة/سبت).');
+
+    // الملخص الحي
+    var chips = [];
+    if (isFinite(c.cardL)) chips.push(['رصيد البطاقة بالليتر', fmt(c.cardL, 1) + ' لتر', '']);
+    if (isFinite(c.free)) chips.push(['المساحة الفارغة بالخزان', fmt(Math.max(0, c.free), 1) + ' لتر', '']);
+    if (isFinite(c.after)) chips.push(['الخزان بعد التعبئة', fmt(c.after, 1) + ' لتر', c.cap && c.after > c.cap + 1 ? 'warn' : 'good']);
+    if (isFinite(c.cost)) chips.push(['كلفة التعبئة', fmt(c.cost, 3) + ' د.ت', isFinite(c.C) && c.cost > c.C + c.p ? 'warn' : '']);
+    if (isFinite(c.rate)) chips.push(['معدل الاستهلاك', fmt(c.rate, 2) + ' لتر/س' + (c.std ? ' (المعيار ' + c.std + ')' : ''), c.std && c.rate >= c.std * 1.15 ? 'warn' : '']);
+    if (hrs.length) chips.push(['ساعات العدّاد', hrs.map(function (x) { return fmt(x, 1); }).join(' / ') + ' ساعة', '']);
+    $('liveSum').innerHTML = chips.map(function (x) { return '<div class="sm ' + x[2] + '"><span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b></div>'; }).join('');
+
+    var box = $('auditBox');
     if (msgs.length) {
       box.className = 'audit danger'; box.hidden = false;
       box.innerHTML = '<h4>🚨 شبهة تلاعب! (سيُسجَّل ضمن الوثائق المشبوهة)</h4>' + msgs.map(function (m) { return '<p>' + esc(m) + '</p>'; }).join('');
@@ -545,26 +629,25 @@ td.d{color:var(--t1)}
   };
 
   window.clearForm = function () {
-    ['fDocNumber', 'fDocTotalHours', 'fDocTotalLiters', 'fTotalHoursR', 'fUsedHoursR', 'fRequestedLitersR', 'fTotalHoursL', 'fUsedHoursL', 'fRequestedLitersL'].forEach(function (id) { $(id).value = ''; });
+    ['fDocNumber', 'fDocTotalLiters', 'fDocTotalHours', 'fRemainingTank', 'fCardDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL'].forEach(function (id) { $(id).value = ''; });
     $('fDate').value = today();
-    $('auditBox').hidden = true;
     flagError(null);
     showStep(1);
+    liveAudit();
   };
 
   /* ══ الحفظ ══ */
   window.saveFuelDoc = async function () {
     if (saving) return;
     for (var i = 1; i <= maxStep; i++) { var er = stepError(i); if (er) { showStep(i); return flagError(er); } }
-    var nz = function (id) { var v = num(id); return isFinite(v) && v >= 0 ? v : 0; };
     var payload = {
       boatId: boatId, date: $('fDate').value,
       documentNumber: $('fDocNumber').value.replace(/[<>]/g, '').trim().slice(0, 40) || undefined,
-      docTotalHours: num('fDocTotalHours'), docTotalLiters: num('fDocTotalLiters'),
-      engineCount: isTwin ? 2 : 1,
+      docTotalLiters: num('fDocTotalLiters'), docTotalHours: num('fDocTotalHours'),
+      remainingTank: num('fRemainingTank'), cardDinars: num('fCardDinars'),
       engines: {
-        right: { totalHours: nz('fTotalHoursR'), usedHours: num('fUsedHoursR'), requestedLiters: num('fRequestedLitersR') },
-        left: isTwin ? { totalHours: nz('fTotalHoursL'), usedHours: num('fUsedHoursL'), requestedLiters: num('fRequestedLitersL') } : null
+        right: { startHours: num('fStartR'), endHours: num('fEndR') },
+        left: isTwin ? { startHours: num('fStartL'), endHours: num('fEndL') } : null
       }
     };
     saving = true;
@@ -586,7 +669,7 @@ td.d{color:var(--t1)}
 
   /* ══ تحميل الوثائق ══ */
   function showSkeleton() {
-    var row = '<tr class="skel">' + new Array(9).join('<td><span></span></td>') + '</tr>';
+    var row = '<tr class="skel">' + new Array(11).join('<td><span></span></td>') + '</tr>';
     $('fuelTableBody').innerHTML = row + row + row;
   }
   async function loadDocs(start, end) {
@@ -602,33 +685,34 @@ td.d{color:var(--t1)}
   function updateStats() { renderDash(); }
 
   /* ══ الجدول + التلميحات ══ */
-  function docNotes(d) {
-    var n = [], e = d.engines || {}, r = e.right || {}, l = e.left || {};
-    var sh = (+r.usedHours || 0) + (+l.usedHours || 0), sl = (+r.requestedLiters || 0) + (+l.requestedLiters || 0);
-    if (sh > 0 && Math.abs(sh - d.docTotalHours) > 0.5) n.push('مجموع ساعات المحركات (' + sh + ') ≠ الإجمالي (' + d.docTotalHours + ')');
-    if (sl > 0 && Math.abs(sl - d.docTotalLiters) > 0.5) n.push('مجموع وقود المحركات (' + sl + ') ≠ الإجمالي (' + d.docTotalLiters + ')');
-    if (standards.tankCapacity && d.docTotalLiters > standards.tankCapacity) n.push('الكمية تتجاوز سعة الخزان (' + standards.tankCapacity + ')');
-    return n;
+  function engTxt(x) {
+    if (!x) return '';
+    if (x.startHours != null) return esc(x.startHours) + ' ← ' + esc(x.endHours) + ' (' + esc(x.usedHours) + ' س)';
+    return esc(x.usedHours || 0) + ' س';
   }
   function tipHtml(d) {
-    var e = d.engines || {}, r = e.right, l = e.left, notes = docNotes(d);
+    var e = d.engines || {}, r = e.right, l = e.left, notes = [];
     var row = function (a, b) { return '<div class="r"><span>' + a + '</span><b>' + b + '</b></div>'; };
     var h = '<h5>' + (d.isFraud ? '🚨 وثيقة مشبوهة' : '✅ وثيقة سليمة') + ' — ' + ldate(d.date) + '</h5>';
     h += row('المعدل الفعلي', fmt(d.totalActualRate, 2)) + row('المعيار', standards.standardRate ? fmt(standards.standardRate, 2) : 'غير مسجل');
     if (typeof d.riskScore === 'number') h += row('درجة الخطر', d.riskScore + ' / 100');
     if (d.documentNumber) h += row('رقم الوثيقة', esc(d.documentNumber));
-    if (r) h += row(l ? 'الأيمن' : 'المحرك', esc(r.usedHours) + ' س / ' + esc(r.requestedLiters) + ' ل');
-    if (l) h += row('الأيسر', esc(l.usedHours) + ' س / ' + esc(l.requestedLiters) + ' ل');
+    if (d.remainingTank != null) h += row('الباقي بالخزان', fmt(d.remainingTank, 1) + ' لتر');
+    if (d.tankAfter != null) h += row('بعد التعبئة', fmt(d.tankAfter, 1) + ' لتر');
+    if (d.cardDinars != null) h += row('رصيد البطاقة', fmt(d.cardDinars, 3) + ' د.ت ≈ ' + fmt(d.cardLiters, 1) + ' لتر');
+    if (d.actualConsumption != null) h += row('الاستهلاك المحسوب', fmt(d.actualConsumption, 1) + ' لتر');
+    if (r) h += row(l ? 'الأيمن' : 'المحرك', engTxt(r));
+    if (l) h += row('الأيسر', engTxt(l));
     if (d.fraudReason) notes = String(d.fraudReason).split(' | ');
     if (notes.length) h += notes.map(function (x) { return '<div class="w">• ' + esc(x) + '</div>'; }).join('');
-    else if (d.isFraud) h += '<div class="w">• صنّفها النظام كمشبوهة حسب قواعد المعدل</div>';
+    else if (d.isFraud) h += '<div class="w">• صنّفها النظام كمشبوهة حسب قواعد التدقيق</div>';
     return h;
   }
   function renderTable() {
     var tb = $('fuelTableBody');
     $('tableCount').textContent = allDocs.length;
     if (!allDocs.length) {
-      tb.innerHTML = '<tr><td colspan="8" class="st-empty"><div class="empty"><i class="fas fa-folder-open"></i><b>لا توجد وثائق مسجلة</b><span>ابدأ بتسجيل أول وثيقة تموين.</span></div></td></tr>';
+      tb.innerHTML = '<tr><td colspan="10" class="st-empty"><div class="empty"><i class="fas fa-folder-open"></i><b>لا توجد وثائق مسجلة</b><span>ابدأ بتسجيل أول وثيقة تموين.</span></div></td></tr>';
       return;
     }
     var sorted = allDocs.slice().sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
@@ -637,8 +721,10 @@ td.d{color:var(--t1)}
       return '<tr>' +
         '<td class="d" data-label="التاريخ">' + ldate(d.date) + '</td>' +
         '<td data-label="رقم الوثيقة">' + (d.documentNumber ? esc(d.documentNumber) : '<span class="risk none">بدون رقم</span>') + '</td>' +
-        '<td data-label="الساعات">' + esc(d.docTotalHours) + '</td>' +
-        '<td data-label="الوقود">' + esc(d.docTotalLiters) + ' لتر</td>' +
+        '<td data-label="ساعات العمل">' + fmt(d.docTotalHours, 1) + '</td>' +
+        '<td data-label="الكمية المطلوبة">' + fmt(d.docTotalLiters, 1) + ' لتر</td>' +
+        '<td data-label="الباقي بالخزان">' + (d.remainingTank != null ? fmt(d.remainingTank, 1) + ' لتر' : '—') + '</td>' +
+        '<td data-label="رصيد البطاقة">' + (d.cardDinars != null ? fmt(d.cardDinars, 3) + ' د.ت <small style="color:var(--t3)">(' + fmt(d.cardLiters, 0) + ' ل)</small>' : '—') + '</td>' +
         '<td data-label="المحركات">' + (d.engineCount === 2 ? 'محركان' : 'محرك واحد') + '</td>' +
         '<td data-label="المعدل">' + (d.totalActualRate ? Number(d.totalActualRate).toFixed(2) : 0) + '</td>' +
         '<td data-label="درجة الخطر">' + riskBadge(d.riskScore) + '</td>' +
@@ -777,7 +863,7 @@ td.d{color:var(--t1)}
 
   /* ══ التدقيق ودرجة الخطر ══ */
   var auditData = null, detected = 0;
-  var RULES = { METER_ROLLBACK: 'تراجع العداد', RATE_INFLATED: 'استهلاك مرتفع', TANK_OVERFLOW: 'تجاوز الخزان', HOURS_MISMATCH: 'تعارض الساعات', LITERS_MISMATCH: 'تعارض الكميات', PHANTOM_TRIP: 'رحلة في فترة توقف', STAT_ANOMALY: 'انحراف إحصائي', VOLUME_INFLATION: 'تضخم الكمية', DOUBLE_DIP: 'تموين متكرر' };
+  var RULES = { METER_ROLLBACK: 'تراجع العداد', RATE_INFLATED: 'استهلاك مرتفع', TANK_OVERFLOW: 'تجاوز الخزان', HOURS_MISMATCH: 'تعارض الساعات', LITERS_MISMATCH: 'تعارض الكميات', PHANTOM_TRIP: 'رحلة في فترة توقف', STAT_ANOMALY: 'انحراف إحصائي', VOLUME_INFLATION: 'تضخم الكمية', DOUBLE_DIP: 'تموين متكرر', CARD_INSUFFICIENT: 'رصيد البطاقة لا يكفي', TANK_BALANCE: 'رصيد الخزان غير متسق', CONSUMPTION_GAP: 'فجوة استهلاك', METER_GAP: 'ساعات غير موثقة' };
   function riskBadge(sc) {
     sc = Number(sc);
     if (!isFinite(sc)) return '<span class="risk none">غير محسوبة</span>';
@@ -803,19 +889,21 @@ td.d{color:var(--t1)}
   /* بطاقات لوحة القيادة من تقرير التدقيق */
   function renderDash() {
     var t = auditData && auditData.totals, price = parseFloat($('fuelPrice').value);
-    if (!t) { ['dHours', 'dLiters', 'dTank', 'dVar', 'dRisk'].forEach(function (id) { $(id).textContent = 'غير متاح'; }); return; }
+    if (!t) { ['dHours', 'dLiters', 'dTank', 'dCardL', 'dVar', 'dRisk'].forEach(function (id) { $(id).textContent = 'غير متاح'; }); return; }
     $('dHours').textContent = fmt(t.totalHours, 1) + ' ساعة';
     $('dHoursAvg').textContent = t.docs ? 'المتوسط ' + fmt(t.avgHours, 1) + ' ساعة / وثيقة' : 'لا توجد وثائق بعد';
     $('dLiters').textContent = fmt(t.requestedLiters, 0) + ' لتر';
-    $('dCost').textContent = price > 0 ? 'التكلفة: ' + fmt(t.requestedLiters * price, 2) + ' د.ت' : 'أدخل سعر اللتر لحساب التكلفة';
+    $('dCost').textContent = price > 0 ? 'التكلفة: ' + fmt(t.requestedLiters * price, 3) + ' د.ت' : '';
     var bar = $('dTankBar');
-    if (t.balanceLiters == null) { $('dTank').textContent = 'يتطلب معياراً وسعة خزان'; $('dTankNote').textContent = ''; bar.style.width = '0'; }
+    if (t.balanceLiters == null) { $('dTank').textContent = 'لا توجد بيانات'; $('dTankNote').textContent = ''; bar.style.width = '0'; }
     else {
       var pc = Math.max(0, Math.min(100, t.balancePct));
       $('dTank').textContent = fmt(t.balanceLiters, 0) + ' لتر';
-      $('dTankNote').textContent = fmt(pc, 0) + '% من السعة (رصيد تقديري)';
+      $('dTankNote').textContent = fmt(pc, 0) + '% من السعة (بعد آخر تعبئة)';
       bar.style.width = pc + '%'; bar.className = pc < 20 ? 'low' : pc < 50 ? 'mid' : 'high';
     }
+    $('dCardL').textContent = t.cardLiters == null ? 'لا توجد بيانات' : fmt(t.cardLiters, 1) + ' لتر';
+    $('dCardD').textContent = t.cardDinars == null ? '' : fmt(t.cardDinars, 3) + ' د.ت (آخر وثيقة)';
     var v = t.varianceLiters, card = $('dCardVar');
     if (v == null) { $('dVar').textContent = 'يتطلب معياراً مسجلاً'; $('dVarPct').textContent = ''; card.className = 'dc neutral'; }
     else {
