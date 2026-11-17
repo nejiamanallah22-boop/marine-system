@@ -9,6 +9,14 @@ const meterSchema = new mongoose.Schema({
     requestedLiters: { type: Number, min: 0 }    // legacy
 }, { _id: false });
 
+// سجل التعديلات: لقطة من القيم قبل كل تعديل
+const historySchema = new mongoose.Schema({
+    at: { type: Date, default: Date.now },
+    by: { type: String, default: '' },
+    byName: { type: String, default: '' },
+    before: { type: mongoose.Schema.Types.Mixed }
+}, { _id: false });
+
 const fuelDocumentSchema = new mongoose.Schema({
     boatId: { type: String, required: true, index: true },
     date: { type: Date, required: true, index: true },
@@ -36,7 +44,13 @@ const fuelDocumentSchema = new mongoose.Schema({
     isFraud: { type: Boolean, default: false },
     fraudReason: { type: String, default: '' },
     violations: { type: [String], default: [] },
-    createdBy: { type: String, default: '' }
+
+    // التتبع
+    createdBy: { type: String, default: '' },
+    editedAt: { type: Date, default: null },
+    editedBy: { type: String, default: '' },
+    editCount: { type: Number, default: 0 },
+    history: { type: [historySchema], default: [] }
 }, { timestamps: true });
 
 fuelDocumentSchema.index({ boatId: 1, date: -1 });
