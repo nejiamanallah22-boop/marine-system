@@ -1,5 +1,5 @@
 /**
- * routes/fuel.js — إصلاح جذري وإضافة المسارات الناقصة
+ * routes/fuel.js — محرك التدقيق لوثائق تموين المحروقات
  */
 const express = require('express');
 const router = express.Router();
@@ -7,11 +7,10 @@ const mongoose = require('mongoose');
 const Vessel = require('../models/Vessel');
 const FuelDocument = require('../models/FuelDocument');
 
+// الميدلوير سيُمرَّر من server.js
 let authenticateAccessToken, csrfProtection;
 
-const n = v => (Number.isFinite(+v) ? +v : 0);
-
-// دالة للبحث عن القارب بـ id أو _id
+// دالة البحث عن القارب (تقبل id أو _id)
 async function findVessel(boatId) {
   let query = { id: boatId };
   if (mongoose.Types.ObjectId.isValid(boatId)) {
@@ -20,11 +19,12 @@ async function findVessel(boatId) {
   return await Vessel.findOne(query).lean();
 }
 
-// 1. معايير القارب (هذا المسار هو الذي يظهر في Console)
+/* ───────── 1. معايير القارب ───────── */
 router.get('/standards/:boatId', async (req, res) => {
   try {
     const v = await findVessel(req.params.boatId);
     if (!v) return res.status(404).json({ error: 'المركب غير موجود' });
+    
     res.json({ 
         engineCount: v.engineCount || 1, 
         tankCapacity: v.tankCapacity || 0, 
@@ -33,7 +33,7 @@ router.get('/standards/:boatId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 2. حفظ وثيقة جديدة
+/* ───────── 2. حفظ وثيقة جديدة ───────── */
 router.post('/documents', async (req, res) => {
   try {
     const b = req.body;
@@ -57,7 +57,7 @@ router.post('/documents', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 3. جلب الوثائق
+/* ───────── 3. جلب وثائق القارب ───────── */
 router.get('/documents/:boatId', async (req, res) => {
   try {
     const docs = await FuelDocument.find({ boatId: req.params.boatId }).sort({ date: -1 });
@@ -65,7 +65,7 @@ router.get('/documents/:boatId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 4. تقرير التدقيق
+/* ───────── 4. تقرير التدقيق ───────── */
 router.get('/audit-report/:boatId', async (req, res) => {
   try {
     const v = await findVessel(req.params.boatId);
@@ -89,7 +89,7 @@ router.get('/audit-report/:boatId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 5. المسارات الناقصة (لاستكمال الواجهة)
+/* ───────── 5. مسارات ناقصة (لاستكمال الواجهة) ───────── */
 router.get('/auto-standard/:boatId', async (req, res) => {
   res.json({ autoRate: 0, message: 'غير متاح حالياً' });
 });
@@ -98,7 +98,7 @@ router.get('/compare-vessel/:boatId', async (req, res) => {
   res.json({ success: false, message: 'غير متاح حالياً' });
 });
 
-// التصدير
+/* ───────── تصدير ───────── */
 module.exports = function(app, middlewares) {
     authenticateAccessToken = middlewares.authenticateAccessToken;
     csrfProtection = middlewares.csrfProtection;
