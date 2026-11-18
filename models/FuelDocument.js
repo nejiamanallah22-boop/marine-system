@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
-// عدّاد محرك: بداية الشهر / نهايته / الساعات المحتسبة
+// عدّاد محرك: بداية الشهر / نهايته / الساعات المحتسبة (الحقلان الأخيران قديمان للتوافق)
 const meterSchema = new mongoose.Schema({
     startHours: { type: Number, min: 0 },
     endHours: { type: Number, min: 0 },
     usedHours: { type: Number, min: 0 },
     totalHours: { type: Number, min: 0 },        // legacy
-    requestedLiters: { type: Number, min: 0 }    // legacy (داخل المحرك)
+    requestedLiters: { type: Number, min: 0 }    // legacy
 }, { _id: false });
 
 // سجل التعديلات: لقطة من القيم قبل كل تعديل
@@ -23,9 +23,8 @@ const fuelDocumentSchema = new mongoose.Schema({
     documentNumber: { type: String, default: '', maxlength: 40 },
 
     // المعطيات الأساسية
-    docTotalLiters: { type: Number, required: true, min: 0 },   // كمية المحروقات المستعملة (لتر)
+    docTotalLiters: { type: Number, required: true, min: 0 },   // الكمية المطلوبة
     docTotalHours: { type: Number, required: true, min: 0 },    // ساعات العمل
-    requestedLiters: { type: Number, default: 0, min: 0 },      // ✅ الكمية المطلوبة (مرجعي)
     remainingTank: { type: Number, default: null, min: 0 },     // الباقي بالخزان (لتر)
     cardDinars: { type: Number, default: null, min: 0 },        // الباقي بالبطاقة الذكية (دينار)
     cardLiters: { type: Number, default: null, min: 0 },        // المعادل بالليتر
