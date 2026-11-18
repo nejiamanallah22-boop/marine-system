@@ -1,7 +1,7 @@
 /**
- * routes/fuel.js v4 — محرك التدقيق لوثائق تموين المحروقات
+ * routes/fuel.js v5 — محرك التدقيق لوثائق تموين المحروقات
  * - المعطيات: المقرر، الكمية المطلوبة، الكمية المستهلكة، ساعات العمل، عدادات المحرك، الباقي بالخزان، الباقي بالبطاقة.
- * - المعيار: يدوي إن وُجد، وإلا يتعلمه النظام تلقائياً.
+ * - المعيار: يتعلمه النظام تلقائياً من الوثائق السليمة (بعد وثيقتين).
  * - تعديل وحذف الوثائق مع سجل تغييرات وإعادة تدقيق.
  */
 const express = require('express');
@@ -20,22 +20,23 @@ const PRICES = {
   benzine: 2.525
 };
 
+// الحد الأقصى المنطقي للمعدل (لتجاهل البيانات الخاطئة القديمة)
+const MAX_SENSIBLE_RATE = 35;
+
 const WRITE_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit'];
 const DELETE_ROLES = ['admin', 'manager'];
 const PRIVILEGED = ['admin', 'manager'];
 const FRAUD_THRESHOLD = 60;
 const WARN_THRESHOLD = 30;
-const LEARN_MIN_OWN = 3;        // أقل عدد وثائق سليمة لتعلّم معيار المركب
-const LEARN_MIN_CATEGORY = 5;   // أقل عدد وثائق لتعلّم معيار الفئة
+const LEARN_MIN_OWN = 2;        // التعلم المبكر بعد وثيقتين سليمتين
+const LEARN_MIN_CATEGORY = 3;   // التعلم من الفئة بعد 3 وثائق
 
-// وزن كل قاعدة في درجة الخطر (الحد الأقصى 100)
 const WEIGHTS = {
   METER_ROLLBACK: 70, TANK_OVERFLOW: 70, PHANTOM_TRIP: 65, TANK_BALANCE: 55,
   CARD_INSUFFICIENT: 50, RATE_INFLATED: 45, DOUBLE_DIP: 45, VOLUME_INFLATION: 40,
   HOURS_MISMATCH: 35, CONSUMPTION_GAP: 35, STAT_ANOMALY: 25, METER_GAP: 20
 };
 
-/* ───────── أدوات ───────── */
 const n = v => { const x = Number(v); return Number.isFinite(x) ? x : NaN; };
 const r2 = v => Math.round(v * 100) / 100;
 const r3 = v => Math.round(v * 1000) / 1000;
@@ -63,7 +64,6 @@ async function loadVessel(req, res) {
   return v;
 }
 
-// مراكب الفئة نفسها (مع احترام الإقليم)
 async function siblingsOf(req, v) {
   if (!v.cat) return [];
   const q = { cat: v.cat, _id: { $ne: v._id }, status: { $ne: 'طرح' } };
@@ -71,18 +71,25 @@ async function siblingsOf(req, v) {
   return Vessel.find(q).select('id name').lean();
 }
 
-/* ───────── المعيار الفعّال: يدوي ← متعلَّم من المركب ← متعلَّم من الفئة ───────── */
 async function cleanRates(ids, excludeId) {
-  const q = { boatId: { $in: ids }, isFraud: false, riskScore: { $lt: WARN_THRESHOLD }, totalActualRate: { $gt: 0 } };
+  const q = { 
+    boatId: { $in: ids }, 
+    isFraud: false, 
+    riskScore: { $lt: WARN_THRESHOLD }, 
+    totalActualRate: { $gt: 0, $lt: MAX_SENSIBLE_RATE }
+  };
   if (excludeId) q._id = { $ne: excludeId };
   const docs = await FuelDocument.find(q).select('totalActualRate').limit(500).lean();
   return docs.map(d => d.totalActualRate);
 }
+
 async function effectiveStandard(v, req, excludeId) {
   const manual = Number(v.standardRate) || 0;
-  if (manual > 0) return { rate: manual, source: 'manual', basedOn: 0 };
+  if (manual > 0 && manual < MAX_SENSIBLE_RATE) return { rate: manual, source: 'manual', basedOn: 0 };
+  
   const own = await cleanRates(idsOf(v), excludeId);
   if (own.length >= LEARN_MIN_OWN) return { rate: r2(median(own)), source: 'learned', basedOn: own.length };
+  
   const sibs = await siblingsOf(req, v);
   if (sibs.length) {
     const rs = await cleanRates([].concat(...sibs.map(s => [s.id, String(s._id)].filter(Boolean))), excludeId);
@@ -91,7 +98,6 @@ async function effectiveStandard(v, req, excludeId) {
   return { rate: 0, source: 'none', basedOn: own.length };
 }
 
-/* ───────── قراءة والتحقق من المدخلات ───────── */
 function readEngine(e, label) {
   const tag = label ? ' المحرك ' + label : ' المحرك';
   if (!e || typeof e !== 'object') return { err: 'بيانات' + tag + ' ناقصة' };
@@ -146,7 +152,6 @@ const docFields = (d, a) => ({
   riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules
 });
 
-/* ───────── محرك التدقيق ───────── */
 async function runAudit(vessel, d, opts = {}) {
   const hits = {};
   const add = (rule, msg) => { hits[rule] = hits[rule] ? hits[rule] + ' ؛ ' + msg : msg; };
@@ -156,33 +161,25 @@ async function runAudit(vessel, d, opts = {}) {
   const std = Number(opts.std) || 0;
   const tank = Number(vessel.tankCapacity) || 0;
   
-  const Q = d.quota, L = d.docTotalLiters, Actual = d.actualConsumedLiters, H = d.docTotalHours, T = d.remainingTank, C = d.cardDinars, price = d.price;
-  
-  // المعدل الفعلي = الكمية المستهلكة ÷ ساعات العمل
+  const L = d.docTotalLiters, Actual = d.actualConsumedLiters, H = d.docTotalHours, T = d.remainingTank, C = d.cardDinars, price = d.price;
   const rate = H > 0 ? Actual / H : 0;
   const cardL = price > 0 ? C / price : 0;
 
-  // 1) ساعات العمل مقابل عدّادات المحرك (الأعلى بين المحركين)
   const used = [d.engines.right, d.engines.left].filter(Boolean).map(e => e.usedHours);
   const maxUsed = used.length ? Math.max(...used) : 0;
   if (Math.abs(maxUsed - H) > 0.5) add('HOURS_MISMATCH', 'ساعات العمل (' + H + ') لا تطابق ساعات العدّاد (' + maxUsed + ')');
 
-  // 2) الخزان: الباقي + المطلوب لا يتجاوز السعة
   if (tank > 0 && T + L > tank + 1) add('TANK_OVERFLOW', 'الباقي (' + T + ') + المطلوب (' + L + ') = ' + r2(T + L) + ' لتر يتجاوز سعة الخزان (' + tank + ')');
 
-  // 3) البطاقة الذكية: كلفة المطلوب لا تتجاوز الرصيد
   if (L * price > C + price) add('CARD_INSUFFICIENT', 'كلفة ' + L + ' لتر = ' + r3(L * price) + ' د.ت تتجاوز رصيد البطاقة ' + r3(C) + ' د.ت (= ' + r2(cardL) + ' لتر)');
 
-  // 4) معدل الاستهلاك مقابل المعيار + تضخم الكمية
   if (std > 0 && rate >= std * 1.15) add('RATE_INFLATED', 'المعدل ' + r2(rate) + ' يتجاوز المعيار ' + std + ' بـ 15% أو أكثر');
   if (tank > 0 && L >= 0.9 * tank && H < 10) add('VOLUME_INFLATION', 'تعبئة ≥ 90% من الخزان مقابل أقل من 10 ساعات');
 
-  // 5) فترات التوقف
   const t = d.date.getTime();
   if ((vessel.inactivePeriods || []).some(p => p.from && t >= new Date(p.from).getTime() && (!p.to || t <= new Date(p.to).getTime())))
     add('PHANTOM_TRIP', 'الوثيقة داخل فترة توقف مسجلة للمركب');
 
-  // 6) الوثيقة السابقة واللاحقة: اتصال العدّاد + رصيد الخزان
   const [prev, next] = await Promise.all([
     FuelDocument.findOne(Object.assign({}, base, { date: { $lt: d.date } })).sort({ date: -1 }).lean(),
     FuelDocument.findOne(Object.assign({}, base, { date: { $gt: d.date } })).sort({ date: 1 }).lean()
@@ -209,14 +206,12 @@ async function runAudit(vessel, d, opts = {}) {
       add('CONSUMPTION_GAP', 'الاستهلاك المحسوب من الخزان (' + consumed + ' لتر) يتجاوز المتوقع (' + r2(std * H) + ') بأكثر من 25%');
   }
 
-  // 7) تموين مكرر: نفس اليوم أو نفس رقم الوثيقة
   const dupQ = [{ date: { $gte: d.date, $lt: new Date(t + 864e5) } }];
   if (d.documentNumber) dupQ.push({ documentNumber: d.documentNumber });
   if (await FuelDocument.exists(Object.assign({}, base, { $or: dupQ }))) add('DOUBLE_DIP', 'وثيقة أخرى بنفس التاريخ أو الرقم لهذا المركب');
 
-  // 8) انحراف إحصائي عن سجل المركب
   const hist = await FuelDocument.find(Object.assign({}, base, { isFraud: false })).sort({ date: -1 }).limit(50).select('totalActualRate').lean();
-  const rs = hist.map(h => h.totalActualRate).filter(x => x > 0);
+  const rs = hist.map(h => h.totalActualRate).filter(x => x > 0 && x < MAX_SENSIBLE_RATE);
   if (rs.length >= 5) {
     const m = rs.reduce((a, b) => a + b, 0) / rs.length;
     const sd = Math.sqrt(rs.reduce((a, b) => a + (b - m) ** 2, 0) / rs.length);
@@ -228,7 +223,6 @@ async function runAudit(vessel, d, opts = {}) {
   return { rate, rules, score, consumed, cardL, isFraud: score > FRAUD_THRESHOLD, reason: rules.map(k => hits[k]).join(' | ') };
 }
 
-// إعادة تدقيق الوثائق اللاحقة بعد تعديل/حذف
 async function reauditFrom(v, req, fromDate) {
   try {
     const std = await effectiveStandard(v, req);
@@ -261,7 +255,6 @@ const logDoc = (req, action, v, d, details) => addLog({
   status: 'success', ip: req.ip, requestId: req.requestId, details
 });
 
-/* ───────── 1. معايير القارب ───────── */
 router.get('/standards/:boatId', async (req, res) => {
   try {
     const v = await loadVessel(req, res); if (!v) return;
@@ -271,7 +264,6 @@ router.get('/standards/:boatId', async (req, res) => {
   } catch (e) { fail(res, e, 'standards'); }
 });
 
-/* ───────── 2. حفظ وثيقة جديدة ───────── */
 router.post('/documents', csrf, async (req, res) => {
   try {
     if (!canWrite(req)) return res.status(403).json({ error: 'ليس لديك صلاحية التسجيل' });
@@ -288,7 +280,6 @@ router.post('/documents', csrf, async (req, res) => {
   } catch (e) { fail(res, e, 'create'); }
 });
 
-/* ───────── 2b. تعديل وثيقة ───────── */
 router.put('/documents/:docId', csrf, async (req, res) => {
   try {
     if (!canWrite(req)) return res.status(403).json({ error: 'ليس لديك صلاحية التعديل' });
@@ -310,7 +301,6 @@ router.put('/documents/:docId', csrf, async (req, res) => {
   } catch (e) { fail(res, e, 'update'); }
 });
 
-/* ───────── 2c. حذف وثيقة ───────── */
 router.delete('/documents/:docId', csrf, async (req, res) => {
   try {
     if (!canDelete(req)) return res.status(403).json({ error: 'الحذف للمسؤول والمدير فقط' });
@@ -323,7 +313,6 @@ router.delete('/documents/:docId', csrf, async (req, res) => {
   } catch (e) { fail(res, e, 'delete'); }
 });
 
-/* ───────── 3. جلب وثائق القارب (مع فلتر التاريخ) ───────── */
 router.get('/documents/:boatId', async (req, res) => {
   try {
     const v = await loadVessel(req, res); if (!v) return;
@@ -338,7 +327,6 @@ router.get('/documents/:boatId', async (req, res) => {
   } catch (e) { fail(res, e, 'list'); }
 });
 
-/* ───────── 4. تقرير التدقيق ───────── */
 router.get('/audit-report/:boatId', async (req, res) => {
   try {
     const v = await loadVessel(req, res); if (!v) return;
@@ -381,23 +369,21 @@ router.get('/audit-report/:boatId', async (req, res) => {
   } catch (e) { fail(res, e, 'audit-report'); }
 });
 
-/* ───────── 5. الاستهلاك المعياري التلقائي (تفصيلي) ───────── */
 router.get('/auto-standard/:boatId', async (req, res) => {
   try {
     const v = await loadVessel(req, res); if (!v) return;
     const sibs = await siblingsOf(req, v);
     const ids = idsOf(v).concat(...sibs.map(s => [s.id, String(s._id)].filter(Boolean)));
     let rs = await cleanRates(ids);
-    if (rs.length < 5) return res.json({ autoRate: 0, message: 'لا توجد بيانات كافية (يلزم 5 وثائق سليمة على الأقل)' });
+    if (rs.length < 2) return res.json({ autoRate: 0, message: 'لا توجد بيانات كافية (يلزم وثيقتين سليمتين على الأقل)' });
     const stat = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return { m, sd: Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length) }; };
     let s = stat(rs); const before = rs.length;
     if (s.sd > 0) { rs = rs.filter(x => Math.abs(x - s.m) <= 2 * s.sd); s = stat(rs); }
     res.json({ autoRate: r2(s.m), category: v.cat || 'المركب نفسه', basedOn: rs.length, excluded: before - rs.length, stdDev: r2(s.sd),
-      caution: rs.length < 10 ? 'عينة صغيرة، راجع النتيجة قبل الاعتماد' : '' });
+      caution: rs.length < 5 ? 'عينة صغيرة، راجع النتيجة قبل الاعتماد' : '' });
   } catch (e) { fail(res, e, 'auto-standard'); }
 });
 
-/* ───────── 6. مقارنة مع مركب من نفس الفئة ───────── */
 router.get('/compare-vessel/:boatId', async (req, res) => {
   try {
     const v = await loadVessel(req, res); if (!v) return;
@@ -419,7 +405,6 @@ router.get('/compare-vessel/:boatId', async (req, res) => {
   } catch (e) { fail(res, e, 'compare'); }
 });
 
-/* ───────── تصدير ───────── */
 module.exports = function (app, middlewares) {
   authenticateAccessToken = middlewares.authenticateAccessToken;
   csrfProtection = middlewares.csrfProtection;
