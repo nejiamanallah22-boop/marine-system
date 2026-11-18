@@ -220,19 +220,22 @@ td.d{color:var(--t1)}
 .used{margin-top:12px;font-size:13px;font-weight:800;color:var(--t2)}.used b{color:var(--navy);font-size:15px}
 @media(max-width:768px){.mgrid{grid-template-columns:1fr}.sum{grid-template-columns:repeat(2,1fr)}}
 
-/* النسبة المئوية للمعدل المعياري */
-.rate-pct{display:inline-flex;align-items:center;gap:6px;background:var(--info-bg);border:1px solid #b9d0fb;border-radius:10px;padding:6px 12px;font-weight:800;font-size:13px;color:var(--info)}
-.rate-pct b{font-size:16px}
-.rate-pct.warn{background:var(--bad-bg);border-color:#f1b3b3;color:var(--bad)}
-.rate-pct.good{background:var(--ok-bg);border-color:#b3e0cc;color:var(--ok)}
-
-/* شريط نسبة الاستهلاك */
+/* شريط نسبة المعيار */
 .pct-bar{display:flex;align-items:center;gap:10px;margin-top:8px}
 .pct-bar .track{flex:1;height:10px;border-radius:9px;background:var(--line-2);overflow:hidden;position:relative}
 .pct-bar .fill{display:block;height:100%;border-radius:9px;background:var(--ok);transition:width .5s,background .3s}
 .pct-bar .fill.mid{background:#e0a800}
 .pct-bar .fill.high{background:var(--bad)}
 .pct-bar .lbl{font-size:12px;font-weight:800;color:var(--t2);min-width:52px;text-align:end}
+
+/* بطاقة المعدل الفعلي */
+.rate-display{display:flex;align-items:baseline;gap:8px;margin-top:8px}
+.rate-display .num{font-size:28px;font-weight:900;color:var(--navy)}
+.rate-display .unit{font-size:13px;font-weight:700;color:var(--t3)}
+.rate-display .cmp{margin-inline-start:auto;font-size:12px;font-weight:800;padding:3px 10px;border-radius:99px}
+.rate-display .cmp.ok{background:var(--ok-bg);color:var(--ok)}
+.rate-display .cmp.mid{background:#fff3cd;color:#a67c00}
+.rate-display .cmp.high{background:var(--bad-bg);color:var(--bad)}
 </style>
 </head>
 <body>
@@ -292,7 +295,7 @@ td.d{color:var(--t1)}
     <div class="card-title"><i class="fas fa-file-invoice"></i> <span id="entryTitle">تسجيل وثيقة تموين جديدة</span></div>
     <div class="editbar" id="editBar" hidden><i class="fas fa-pen-to-square"></i><span id="editBarTxt"></span><button type="button" class="btn btn-line" onclick="cancelEdit()"><i class="fas fa-xmark"></i> إلغاء التعديل</button></div>
 
-    <!-- الصف الأول: التاريخ + رقم الوثيقة + نوع المحروقات -->
+    <!-- الصف الأول -->
     <div class="grid g3" style="margin-bottom:18px">
       <div class="fg"><label for="fDate">تاريخ الوثيقة <span class="req">*</span></label><div class="field"><i class="fas fa-calendar-day"></i><input type="date" id="fDate" class="fc" onchange="liveAudit()"></div></div>
       <div class="fg"><label for="fDocNumber">رقم الوثيقة</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="fDocNumber" class="fc" placeholder="اختياري" maxlength="40" autocomplete="off"></div></div>
@@ -303,7 +306,7 @@ td.d{color:var(--t1)}
         </select></div></div>
     </div>
 
-    <!-- الصف الثاني: المقرر + الكمية المطلوبة + ساعات العمل -->
+    <!-- الصف الثاني: المقرر + الكمية + الساعات -->
     <div class="pane-box" style="margin-bottom:18px">
       <h4 style="color:var(--gold-d)"><i class="fas fa-calculator"></i> معطيات الوثيقة</h4>
       <div class="grid g3">
@@ -328,7 +331,7 @@ td.d{color:var(--t1)}
       </div>
     </div>
 
-    <!-- الصف الرابع: عدادات المحركات -->
+    <!-- الصف الرابع: العدادات -->
     <div class="mgrid" id="metersGrid" style="margin-bottom:18px">
       <div class="pane-box e1">
         <h4 style="color:var(--info)"><i class="fas fa-cog"></i> <span id="rightEngineLabel">المحرك</span> — عداد الساعات</h4>
@@ -348,14 +351,19 @@ td.d{color:var(--t1)}
       </div>
     </div>
 
-    <!-- شريط النسبة المئوية للمعدل المعياري -->
+    <!-- المعدل الفعلي + نسبة المعيار -->
     <div class="pane-box" style="margin-bottom:18px">
-      <h4 style="color:var(--gold-d)"><i class="fas fa-percent"></i> المعدل المعياري (نسبة مئوية)</h4>
+      <h4 style="color:var(--gold-d)"><i class="fas fa-percent"></i> المعدل الفعلي ونسبة المعيار</h4>
+      <div class="rate-display">
+        <span class="num" id="actualRateNum">—</span>
+        <span class="unit">لتر/ساعة</span>
+        <span class="cmp" id="rateCmp" hidden></span>
+      </div>
       <div class="pct-bar">
         <div class="track"><span class="fill" id="pctFill"></span></div>
         <span class="lbl" id="pctLbl">—</span>
       </div>
-      <div class="hint" id="pctHint">النسبة = (الكمية المطلوبة ÷ ساعات العمل) × 100 — تُقارن بالمعيار المعتمد</div>
+      <div class="hint" id="pctHint">المعدل = الكمية المستهلكة ÷ ساعات العمل · النسبة = (المعدل الفعلي ÷ المعيار) × 100</div>
     </div>
 
     <div class="sum" id="liveSum"></div>
@@ -415,7 +423,12 @@ td.d{color:var(--t1)}
     <div class="t-head"><h2><i class="fas fa-list-ul"></i> سجل وثائق التموين</h2><span class="count" id="tableCount">0</span></div>
     <div class="t-wrap">
       <table>
-        <thead><tr><th>التاريخ</th><th>رقم الوثيقة</th><th>نوع الوقود</th><th>المقرر</th><th>ساعات العمل</th><th>الكمية المطلوبة</th><th>الباقي بالخزان</th><th>رصيد البطاقة</th><th id="thEngR">ساعات المحرك الأيمن</th><th id="thEngL">ساعات المحرك الأيسر</th><th>النسبة %</th><th>درجة الخطر</th><th>الحالة</th><th class="colAct">إجراءات</th></tr></thead>
+        <thead><tr>
+          <th>التاريخ</th><th>رقم الوثيقة</th><th>نوع الوقود</th><th>المقرر</th>
+          <th>ساعات العمل</th><th>الكمية المطلوبة</th><th>الباقي بالخزان</th><th>رصيد البطاقة</th>
+          <th id="thEngR">ساعات المحرك الأيمن</th><th id="thEngL">ساعات المحرك الأيسر</th>
+          <th>المعدل الفعلي (لتر/س)</th><th>نسبة المعيار %</th><th>درجة الخطر</th><th>الحالة</th><th class="colAct">إجراءات</th>
+        </tr></thead>
         <tbody id="fuelTableBody"></tbody>
       </table>
     </div>
@@ -530,21 +543,29 @@ td.d{color:var(--t1)}
     } catch (e) { toast(e.message, 'error'); }
   };
 
-  /* ══ الحسابات ══ */
+  /* ══ الحسابات ══
+     المعدل الفعلي = الكمية المستهلكة ÷ ساعات العمل (لتر/ساعة)
+     نسبة المعيار = (المعدل الفعلي ÷ المعيار) × 100
+  */
   function calc() {
     var L = num('fDocTotalLiters'), H = num('fDocTotalHours'), T = num('fRemainingTank'), C = num('fCardDinars');
     var Q = num('fQuota');
     var p = price(), cap = Number(standards.tankCapacity) || 0, std = Number(standards.standardRate) || 0;
     var sR = num('fStartR'), eR = num('fEndR'), sL = isTwin ? num('fStartL') : NaN, eL = isTwin ? num('fEndL') : NaN;
-    var ratePct = H > 0 && isFinite(L) ? (L / H) * 100 : NaN;
+
+    // المعدل الفعلي (لتر/ساعة)
+    var actualRate = (H > 0 && isFinite(L)) ? (L / H) : NaN;
+    // نسبة المعيار = (المعدل الفعلي ÷ المعيار) × 100
+    var ratePct = (std > 0 && isFinite(actualRate)) ? (actualRate / std) * 100 : NaN;
+
     return {
       L: L, H: H, T: T, C: C, p: p, cap: cap, std: std, Q: Q,
       cardL: isFinite(C) ? C / p : NaN,
       free: isFinite(T) && cap ? cap - T : NaN,
       after: isFinite(T) && isFinite(L) ? T + L : NaN,
       hR: eR - sR, hL: eL - sL,
-      rate: H > 0 && isFinite(L) ? L / H : NaN,
-      ratePct: ratePct,
+      rate: actualRate,      // لتر/ساعة
+      ratePct: ratePct,      // نسبة المعيار %
       cost: isFinite(L) ? L * p : NaN,
       quotaRemaining: isFinite(Q) && isFinite(L) ? Q - L : NaN
     };
@@ -602,24 +623,43 @@ td.d{color:var(--t1)}
     else if (c.cap && isFinite(c.after) && c.after > c.cap + 1) msgs.push('تجاوز الخزان: الباقي + المطلوب = ' + fmt(c.after, 1) + ' لتر والسعة ' + c.cap + '.');
     if (isFinite(c.L) && isFinite(c.C) && c.L * c.p > c.C + c.p) msgs.push('رصيد البطاقة لا يكفي: ' + fmt(c.L) + ' لتر = ' + fmt(c.L * c.p, 3) + ' د.ت، والرصيد ' + fmt(c.C, 3) + ' د.ت.');
     if (isFinite(c.Q) && isFinite(c.L) && c.L > c.Q) msgs.push('الكمية المطلوبة (' + fmt(c.L) + ') تتجاوز المقرر (' + fmt(c.Q) + ').');
-    if (c.std > 0 && isFinite(c.rate) && c.rate >= c.std * 1.15) msgs.push('استهلاك وهمي محتمل: المعدل ' + c.rate.toFixed(2) + ' لتر/س يتجاوز المعيار ' + c.std + ' لتر/س بـ 15% أو أكثر.');
+    if (c.std > 0 && isFinite(c.ratePct) && c.ratePct >= 115) msgs.push('استهلاك وهمي محتمل: المعدل ' + c.rate.toFixed(2) + ' لتر/س يمثل ' + c.ratePct.toFixed(0) + '% من المعيار ' + c.std + ' لتر/س.');
     if (hrs.length && isFinite(c.H) && Math.abs(Math.max.apply(null, hrs) - c.H) > 0.5) msgs.push('ساعات العمل (' + c.H + ') لا تطابق ساعات العدّاد (' + fmt(Math.max.apply(null, hrs), 1) + ').');
 
-    /* شريط النسبة المئوية */
+    /* المعدل الفعلي */
+    var arNum = $('actualRateNum'), arCmp = $('rateCmp');
+    if (isFinite(c.rate)) {
+      arNum.textContent = c.rate.toFixed(2);
+      if (c.std > 0 && isFinite(c.ratePct)) {
+        arCmp.hidden = false;
+        arCmp.className = 'cmp ' + (c.ratePct > 115 ? 'high' : c.ratePct > 100 ? 'mid' : 'ok');
+        arCmp.textContent = c.ratePct.toFixed(0) + '% من المعيار (' + c.std.toFixed(2) + ')';
+      } else { arCmp.hidden = true; }
+    } else {
+      arNum.textContent = '—';
+      arCmp.hidden = true;
+    }
+
+    /* شريط نسبة المعيار */
     var pctFill = $('pctFill'), pctLbl = $('pctLbl');
-    if (isFinite(c.ratePct)) {
-      var ratio = c.std > 0 ? c.rate / c.std * 100 : c.ratePct;
-      var display = Math.min(200, Math.max(0, ratio));
+    if (isFinite(c.ratePct) && c.std > 0) {
+      var display = Math.min(200, Math.max(0, c.ratePct));
       pctFill.style.width = Math.min(100, display) + '%';
       pctFill.className = 'fill' + (display > 115 ? ' high' : display > 100 ? ' mid' : '');
-      pctLbl.textContent = c.ratePct.toFixed(1) + '%';
-      $('pctHint').textContent = 'النسبة الفعلية: ' + c.ratePct.toFixed(1) + '%' +
-        (c.std > 0 ? ' · نسبة للمعيار: ' + ratio.toFixed(0) + '%' + (ratio > 115 ? ' ⚠️ تجاوز' : ratio > 100 ? ' ⚠️ مرتفع' : ' ✅ ضمن الحد') : '') +
-        ' — (الكمية ÷ الساعات) × 100';
+      pctLbl.textContent = c.ratePct.toFixed(0) + '%';
+      $('pctHint').textContent =
+        'المعدل الفعلي: ' + c.rate.toFixed(2) + ' لتر/ساعة' +
+        ' · المعيار: ' + c.std.toFixed(2) + ' لتر/ساعة' +
+        ' · النسبة: ' + c.ratePct.toFixed(0) + '%' +
+        (c.ratePct > 115 ? ' ⚠️ تجاوز خطير' : c.ratePct > 100 ? ' ⚠️ مرتفع' : ' ✅ ضمن الحد');
+    } else if (isFinite(c.rate)) {
+      pctFill.style.width = '0%'; pctFill.className = 'fill';
+      pctLbl.textContent = c.rate.toFixed(2) + ' ل/س';
+      $('pctHint').textContent = 'المعدل الفعلي: ' + c.rate.toFixed(2) + ' لتر/ساعة (لا يوجد معيار معتمد بعد — يتعلمه النظام تلقائياً)';
     } else {
       pctFill.style.width = '0%'; pctFill.className = 'fill';
       pctLbl.textContent = '—';
-      $('pctHint').textContent = 'النسبة = (الكمية المطلوبة ÷ ساعات العمل) × 100';
+      $('pctHint').textContent = 'المعدل = الكمية المستهلكة ÷ ساعات العمل · النسبة = (المعدل الفعلي ÷ المعيار) × 100';
     }
 
     var chips = [];
@@ -629,8 +669,8 @@ td.d{color:var(--t1)}
     if (isFinite(c.free)) chips.push(['المساحة الفارغة بالخزان', fmt(Math.max(0, c.free), 1) + ' لتر', '']);
     if (isFinite(c.after)) chips.push(['الخزان بعد التعبئة', fmt(c.after, 1) + ' لتر', c.cap && c.after > c.cap + 1 ? 'warn' : 'good']);
     if (isFinite(c.cost)) chips.push(['كلفة التعبئة', fmt(c.cost, 3) + ' د.ت', isFinite(c.C) && c.cost > c.C + c.p ? 'warn' : '']);
-    if (isFinite(c.rate)) chips.push(['المعدل الفعلي', fmt(c.rate, 2) + ' لتر/س', c.std && c.rate >= c.std * 1.15 ? 'warn' : '']);
-    if (isFinite(c.ratePct)) chips.push(['النسبة المئوية', fmt(c.ratePct, 1) + '%', '']);
+    if (isFinite(c.rate)) chips.push(['المعدل الفعلي', fmt(c.rate, 2) + ' لتر/س', c.std && c.ratePct >= 115 ? 'warn' : '']);
+    if (isFinite(c.ratePct)) chips.push(['نسبة المعيار', fmt(c.ratePct, 0) + '%', c.ratePct > 115 ? 'warn' : '']);
     if (hrs.length) chips.push(['ساعات العدّاد', hrs.map(function (x) { return fmt(x, 1); }).join(' / ') + ' ساعة', '']);
 
     $('liveSum').innerHTML = chips.map(function (x) { return '<div class="sm ' + x[2] + '"><span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b></div>'; }).join('');
@@ -690,7 +730,7 @@ td.d{color:var(--t1)}
   };
 
   /* ══ تحميل الوثائق ══ */
-  function cols() { return isTwin ? 14 : 13; }
+  function cols() { return isTwin ? 15 : 14; }
   function showSkeleton() {
     var row = '<tr class="skel">' + new Array(cols() + 1).join('<td><span></span></td>') + '</tr>';
     $('fuelTableBody').innerHTML = row + row + row;
@@ -727,7 +767,8 @@ td.d{color:var(--t1)}
     var h = '<h5>' + (d.isFraud ? '🚨 وثيقة مشبوهة' : '✅ وثيقة سليمة') + ' — ' + ldate(d.date) + '</h5>';
     h += row('نوع الوقود', d.fuelType === 'benzine' ? 'بنزين' : 'غزوال');
     if (d.quota != null) h += row('المقرر', fmt(d.quota) + ' لتر');
-    h += row('المعدل الفعلي', fmt(d.totalActualRate, 2)) + row('المعيار', standards.standardRate ? fmt(standards.standardRate, 2) : 'غير مسجل');
+    h += row('المعدل الفعلي', d.totalActualRate ? fmt(d.totalActualRate, 2) + ' لتر/س' : '—');
+    h += row('المعيار', standards.standardRate ? fmt(standards.standardRate, 2) + ' لتر/س' : 'غير مسجل');
     if (typeof d.riskScore === 'number') h += row('درجة الخطر', d.riskScore + ' / 100');
     if (d.documentNumber) h += row('رقم الوثيقة', esc(d.documentNumber));
     if (d.remainingTank != null) h += row('الباقي بالخزان', fmt(d.remainingTank, 1) + ' لتر');
@@ -752,6 +793,10 @@ td.d{color:var(--t1)}
     tb.innerHTML = sorted.map(function (d) {
       var i = allDocs.indexOf(d);
       var ftLbl = d.fuelType === 'benzine' ? 'بنزين' : 'غزوال';
+      var rate = Number(d.totalActualRate) || 0;
+      var std = Number(standards.standardRate) || 0;
+      var pctVal = (std > 0 && rate > 0) ? (rate / std * 100) : null;
+      var pctCls = pctVal == null ? 'none' : pctVal > 115 ? 'high' : pctVal > 100 ? 'mid' : 'low';
       return '<tr>' +
         '<td class="d" data-label="التاريخ">' + ldate(d.date) + '</td>' +
         '<td data-label="رقم الوثيقة">' + (d.documentNumber ? esc(d.documentNumber) : '<span class="risk none">بدون رقم</span>') + '</td>' +
@@ -763,7 +808,8 @@ td.d{color:var(--t1)}
         '<td data-label="رصيد البطاقة">' + (d.cardDinars != null ? fmt(d.cardDinars, 3) + ' د.ت <small style="color:var(--t3)">(' + fmt(d.cardLiters, 0) + ' ل)</small>' : '—') + '</td>' +
         engCell(d.engines && d.engines.right, isTwin ? 'المحرك الأيمن' : 'المحرك') +
         (isTwin ? engCell(d.engines && d.engines.left, 'المحرك الأيسر') : '') +
-        '<td data-label="النسبة %">' + (d.totalActualRate ? Number(d.totalActualRate).toFixed(2) : 0) + '</td>' +
+        '<td data-label="المعدل الفعلي">' + (rate > 0 ? rate.toFixed(2) + ' ل/س' : '—') + '</td>' +
+        '<td data-label="نسبة المعيار">' + (pctVal != null ? '<span class="risk ' + pctCls + '" style="--w:' + Math.min(100, pctVal) + '%"><i></i>' + pctVal.toFixed(0) + '%</span>' : '—') + '</td>' +
         '<td data-label="درجة الخطر">' + riskBadge(d.riskScore) + '</td>' +
         '<td data-label="الحالة"><button type="button" class="badge ' + (d.isFraud ? 'bad' : 'ok') + '" data-i="' + i + '">' +
           (d.isFraud ? '<i class="fas fa-triangle-exclamation"></i>مشبوه' : '<i class="fas fa-circle-check"></i>سليم') + '</button></td>' +
@@ -908,10 +954,10 @@ td.d{color:var(--t1)}
       data: {
         labels: s.map(function (d) { return ldate(d.date, { day: '2-digit', month: '2-digit' }); }),
         datasets: [
-          { label: 'المعدل الفعلي', data: rates, order: 1, borderRadius: 8, borderSkipped: false, maxBarThickness: 38,
+          { label: 'المعدل الفعلي (لتر/س)', data: rates, order: 1, borderRadius: 8, borderSkipped: false, maxBarThickness: 38,
             backgroundColor: s.map(function (d) { return d.isFraud ? 'rgba(239,68,68,.92)' : C.navy; }),
             hoverBackgroundColor: s.map(function (d) { return d.isFraud ? C.red : C.navyH; }) },
-          { label: 'المعيار', data: s.map(function () { return std || null; }), type: 'line', order: 0, borderColor: C.gold, borderWidth: 2.5, borderDash: [6, 5], pointRadius: 0, pointHoverRadius: 0, fill: false }
+          { label: 'المعيار (لتر/س)', data: s.map(function () { return std || null; }), type: 'line', order: 0, borderColor: C.gold, borderWidth: 2.5, borderDash: [6, 5], pointRadius: 0, pointHoverRadius: 0, fill: false }
         ]
       },
       options: {
@@ -928,7 +974,12 @@ td.d{color:var(--t1)}
             callbacks: {
               title: function (it) { return ldate(s[it[0].dataIndex].date, { day: 'numeric', month: 'long', year: 'numeric' }); },
               label: function (c) { return ' ' + c.dataset.label + ': ' + Number(c.parsed.y).toFixed(2) + ' لتر/ساعة'; },
-              afterBody: function (it) { return s[it[0].dataIndex].isFraud ? ['⚠️ وثيقة مشبوهة'] : []; } } }
+              afterBody: function (it) {
+                var d = s[it[0].dataIndex]; var arr = [];
+                if (std > 0 && d.totalActualRate) arr.push('نسبة المعيار: ' + (d.totalActualRate / std * 100).toFixed(0) + '%');
+                if (d.isFraud) arr.push('⚠️ وثيقة مشبوهة');
+                return arr;
+              } } }
         },
         scales: {
           x: { reverse: true, grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
