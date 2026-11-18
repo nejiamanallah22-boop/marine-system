@@ -41,17 +41,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100
 .btn-line{background:#fff;color:var(--t2);border:1.5px solid var(--line)}
 .btn-line:hover:not(:disabled){background:var(--bg)}
 
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;display:flex;align-items:center;gap:14px;box-shadow:var(--sh);transition:var(--ease);position:relative;overflow:hidden}
-.stat::after{content:'';position:absolute;inset-inline:0;bottom:0;height:3px;background:var(--g)}
-.stat:hover{transform:translateY(-4px);box-shadow:var(--sh-l)}
-.stat i{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
-.s1{--g:linear-gradient(90deg,var(--info),#7fa8ec)}.s1 i{background:var(--info-bg);color:var(--info)}
-.s2{--g:linear-gradient(90deg,var(--gold),var(--gold-l))}.s2 i{background:var(--gold-bg);color:var(--gold-d)}
-.s3{--g:linear-gradient(90deg,var(--bad),#f08a8a)}.s3 i{background:var(--bad-bg);color:var(--bad)}
-.stat .v{font-size:26px;font-weight:900;line-height:1.2}
-.stat .l{font-size:12px;font-weight:700;color:var(--t3)}
-
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp);box-shadow:var(--sh);transition:box-shadow var(--ease)}
 .card:hover{box-shadow:var(--sh-l)}
 .card-title{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:900;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--line-2)}
@@ -60,7 +49,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--t1);min-height:100
 .notice i{margin-top:3px}
 
 .grid{display:grid;gap:16px}
-.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
 .fg label{display:block;font-size:12.5px;font-weight:800;color:var(--t2);margin-bottom:6px}
 .fg .req{color:var(--bad)}
 .field{position:relative}
@@ -84,63 +73,6 @@ select.fc{cursor:pointer}
 .audit.danger{background:var(--bad-bg);border-inline-start:4px solid var(--bad);color:#991b1b}
 .audit h4{font-size:14px;margin-bottom:4px}
 
-.cmp{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.cc{background:linear-gradient(180deg,#fff,#fafbfd);border:1px solid var(--line);border-radius:14px;padding:18px;transition:var(--ease)}
-.cc:hover{box-shadow:var(--sh-l);transform:translateY(-3px)}
-.cc.wide{grid-column:1/-1;border-inline-start:4px solid var(--info)}
-.cc-h{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.cc-h .ci{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--gold-bg);color:var(--gold-d)}
-.cc-h h3{font-size:14px;font-weight:800}
-.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:800}
-.pill.up{background:var(--bad-bg);color:var(--bad)}.pill.down{background:var(--ok-bg);color:var(--ok)}.pill.neutral{background:rgba(100,116,139,.12);color:var(--t2)}
-.cc-h .pill{margin-inline-start:auto}
-.cc-big{font-size:28px;font-weight:900;color:var(--navy)}
-.cc-big small{font-size:13px;color:var(--t3);font-weight:700}
-.cc-sub{font-size:13px;color:var(--t3);font-weight:700;margin-top:2px}
-.bar{height:7px;background:var(--line-2);border-radius:9px;margin-top:12px;overflow:hidden}
-.bar span{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--gold),var(--gold-l));transition:width .7s}
-.vs{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.vs>div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
-.vs .n{font-size:12px;color:var(--t3);font-weight:700}.vs .n b{color:var(--t1);font-size:14px}
-.vs .m{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:13px;font-weight:700;color:var(--t2)}
-.empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 10px;text-align:center;color:var(--t3)}
-.empty>i{font-size:30px;color:#a6b3c4}
-
-.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
-.filters .field{width:180px}
-.chart-box{position:relative;height:330px}
-.chart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;border:1.5px dashed var(--line);border-radius:14px;background:repeating-linear-gradient(135deg,#fafbfd 0 12px,#f6f8fb 12px 24px);color:var(--t3);font-weight:800}
-.chart-empty i{font-size:34px;color:var(--gold);opacity:.7}
-.chart-empty small{font-weight:600;font-size:12.5px}
-
-.t-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
-.t-head{background:var(--navy);border-bottom:3px solid var(--gold);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.t-head h2{font-size:15px;font-weight:800;color:#fff;display:flex;gap:10px;align-items:center}
-.t-head h2 i{color:var(--gold-l)}
-.count{background:var(--gold);color:var(--navy);font-weight:900;font-size:13px;padding:2px 13px;border-radius:99px}
-.t-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:1020px}
-th{background:#f6f8fb;padding:13px 12px;font-size:12px;font-weight:800;color:var(--t2);border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:13px 12px;text-align:center;font-size:13.5px;font-weight:700;color:var(--t2);border-bottom:1px solid var(--line-2)}
-tbody tr{transition:background var(--ease)}
-tbody tr:hover{background:#fffbee}
-tbody tr:last-child td{border-bottom:0}
-td.d{color:var(--t1)}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:99px;font-size:12px;font-weight:800;cursor:help;border:0;font-family:var(--font)}
-.badge.ok{background:var(--ok-bg);color:var(--ok)}.badge.bad{background:var(--bad-bg);color:var(--bad)}
-.badge.bad i{animation:pulse 1.6s infinite}
-@keyframes pulse{50%{opacity:.4}}
-.skel td{padding:16px}.skel span{display:block;height:14px;border-radius:7px;background:linear-gradient(90deg,#eef1f6 25%,#f8fafc 50%,#eef1f6 75%);background-size:200% 100%;animation:sk 1.2s infinite}
-@keyframes sk{to{background-position:-200% 0}}
-.tip{position:fixed;z-index:9999;max-width:290px;background:var(--navy);color:#fff;border-radius:12px;padding:12px 14px;font-size:12.5px;font-weight:600;box-shadow:0 16px 40px rgba(0,0,0,.3);pointer-events:none;line-height:1.7}
-.tip h5{color:var(--gold-l);font-size:13px;margin-bottom:4px}
-.tip .r{display:flex;justify-content:space-between;gap:14px}.tip .r b{color:#fff}
-.tip .w{color:#ffb4b4;margin-top:4px}
-
-.toast{position:fixed;bottom:22px;inset-inline-start:22px;z-index:10000;display:flex;align-items:center;gap:10px;padding:13px 20px;border-radius:12px;color:#fff;font-weight:800;font-size:13.5px;max-width:380px;box-shadow:0 16px 40px rgba(0,0,0,.28);animation:up .35s cubic-bezier(.34,1.56,.64,1)}
-.toast.success{background:var(--ok)}.toast.error{background:var(--bad)}.toast.info{background:var(--info)}
-@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-
 .dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}
 .dc{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);transition:var(--ease)}
 .dc:hover{transform:translateY(-4px);box-shadow:var(--sh-l)}
@@ -155,53 +87,17 @@ td.d{color:var(--t1)}
 .tbar{height:8px;border-radius:9px;background:var(--line-2);margin-top:10px;overflow:hidden}
 .tbar span{display:block;height:100%;width:0;border-radius:9px;background:var(--ok);transition:width .7s,background .3s}
 .tbar span.low{background:var(--bad)}.tbar span.mid{background:#e0a800}.tbar span.high{background:var(--ok)}
-@media(max-width:1100px){.dash{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:768px){.dash{grid-template-columns:repeat(2,1fr)}.dc b.v{font-size:18px}}
-@media(max-width:420px){.dash{grid-template-columns:1fr}}
 
 .risk{display:inline-flex;align-items:center;gap:8px;min-width:104px;font-weight:800;font-size:12px}
 .risk i{flex:1;min-width:56px;height:7px;border-radius:9px;background:var(--line-2);position:relative;overflow:hidden}
 .risk i::after{content:'';position:absolute;inset-block:0;inset-inline-start:0;width:var(--w);background:var(--c);border-radius:9px}
 .risk.low{--c:var(--ok);color:var(--ok)}.risk.mid{--c:#e0a800;color:#a67c00}.risk.high{--c:var(--bad);color:var(--bad)}.risk.none{color:var(--t3)}
-.au-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
-.au{background:linear-gradient(180deg,#fff,#fafbfd);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
-.au span{display:block;font-size:12px;color:var(--t3);font-weight:800}.au b{font-size:18px;font-weight:900;color:var(--navy)}
-.au-row{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:end}
 .rules{display:flex;gap:8px;flex-wrap:wrap}
 .chip{background:var(--gold-bg);color:var(--gold-d);border-radius:99px;padding:4px 12px;font-size:12px;font-weight:800}
 .detect{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .detect small{display:block;color:var(--t3);font-weight:700;font-size:12px}
 .detect .res{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--gold-bg);border:1px solid #ecd68a;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13px}
 .detect .res b{font-size:20px;color:var(--navy)}
-@media(max-width:768px){.au-grid{grid-template-columns:repeat(2,1fr)}.au-row{grid-template-columns:1fr}}
-@media(max-width:768px){
-  :root{--sp:16px}
-  body{padding:12px}
-  .header{padding:18px}.h-text h1{font-size:20px}.h-icon{width:48px;height:48px;font-size:21px}
-  .h-actions,.h-actions .btn{width:100%}
-  .g2,.g3,.cmp,.vs{grid-template-columns:1fr}
-  .nav .sp{margin:0;width:100%}.nav .btn{flex:1}
-  .filters .field{width:100%}
-  .chart-box{height:260px}
-  .toast{inset-inline:12px;bottom:12px;max-width:none}
-  table{min-width:0}table,tbody,tr,td{display:block;width:100%}thead{display:none}
-  tbody tr{margin:12px;width:auto;border:1px solid var(--line);border-radius:14px;padding:6px 14px;background:var(--card);box-shadow:var(--sh)}
-  td{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;padding:9px 0;border-bottom:1px dashed var(--line-2)}
-  td::before{content:attr(data-label);font-size:12px;color:var(--t3);font-weight:800}
-  td.st-empty{display:block;text-align:center}td.st-empty::before{content:none}
-}
-.acts{display:flex;gap:6px;justify-content:center}
-.ab{border:0;cursor:pointer;width:34px;height:34px;border-radius:10px;font-size:14px;display:inline-flex;align-items:center;justify-content:center;transition:transform .15s,background .15s}
-.ab:hover{transform:translateY(-2px)}.ab.ed{background:#e8f0fe;color:#1a56c4}.ab.ed:hover{background:#d3e3fd}
-.ab.dl{background:var(--bad-bg);color:var(--bad)}.ab.dl:hover{background:#f9d0d0}.ab:disabled{opacity:.5;cursor:wait}
-.eh{white-space:nowrap}.eh small{display:block;color:var(--t3);font-weight:700;font-size:11px}.eh b{font-size:14px}
-.stdinfo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.stdinfo .tag{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:800;background:var(--gold-bg);color:#6b4e07}
-.stdinfo .tag.l{background:var(--ok-bg);color:var(--ok)}.stdinfo .tag.n{background:#eef1f6;color:var(--t2)}
-.editbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#e8f0fe;border:1px solid #b9d0fb;color:#1a3f8f;border-radius:12px;padding:12px 16px;font-weight:800;font-size:13.5px;margin-bottom:16px}
-.editbar .btn{margin-inline-start:auto}
-@media print{.acts,.colAct{display:none!important}}
-@media print{.h-actions,#entryCard,#setupCard,.filters,.nav{display:none!important}body{background:#fff}.card,.t-card,.stat{box-shadow:none}.tip{display:none}}
 
 .sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:20px}
 .sm{background:linear-gradient(180deg,#fff,#fafbfd);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
@@ -218,7 +114,6 @@ td.d{color:var(--t1)}
 .mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 .mgrid.one{grid-template-columns:minmax(0,560px)}
 .used{margin-top:12px;font-size:13px;font-weight:800;color:var(--t2)}.used b{color:var(--navy);font-size:15px}
-@media(max-width:768px){.mgrid{grid-template-columns:1fr}.sum{grid-template-columns:repeat(2,1fr)}}
 
 /* شريط نسبة المعيار */
 .pct-bar{display:flex;align-items:center;gap:10px;margin-top:8px}
@@ -236,6 +131,14 @@ td.d{color:var(--t1)}
 .rate-display .cmp.ok{background:var(--ok-bg);color:var(--ok)}
 .rate-display .cmp.mid{background:#fff3cd;color:#a67c00}
 .rate-display .cmp.high{background:var(--bad-bg);color:var(--bad)}
+
+/* تحسينات للهواتف */
+@media(max-width:768px){
+  :root{--sp:16px}
+  body{padding:12px}
+  .g2,.g3,.g4,.cmp,.vs,.mgrid{grid-template-columns:1fr}
+  .sum{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
 <body>
@@ -259,7 +162,7 @@ td.d{color:var(--t1)}
     <div class="grid g3">
       <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc" onchange="toggleSetupEngineFields()"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div></div>
       <div class="fg"><label for="setupTankCapacity">سعة الخزان</label><div class="field has-unit"><i class="fas fa-oil-can"></i><input type="number" id="setupTankCapacity" class="fc" placeholder="سعة الخزان" min="1"><span class="unit">لتر</span></div></div>
-      <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري <small style="color:var(--t3);font-weight:700">(اختياري — يتعلمه النظام تلقائياً)</small></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" placeholder="اتركه فارغاً" step="0.01" min="0"><span class="unit">لتر/س</span></div></div>
+      <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري <small style="color:var(--t3);font-weight:700">(اختياري — يتعلمه النظام)</small></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" placeholder="اتركه فارغاً" step="0.01" min="0"><span class="unit">لتر/س</span></div></div>
     </div>
     <div class="grid g2" id="setupEngineDetails" style="margin-top:16px" hidden>
       <div class="fg"><label for="setupEngineRight">المحرك الأيمن</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineRight" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
@@ -306,12 +209,13 @@ td.d{color:var(--t1)}
         </select></div></div>
     </div>
 
-    <!-- الصف الثاني: المقرر + الكمية + الساعات -->
+    <!-- الصف الثاني: المقرر + الكمية المطلوبة + الكمية المستهلكة + الساعات -->
     <div class="pane-box" style="margin-bottom:18px">
       <h4 style="color:var(--gold-d)"><i class="fas fa-calculator"></i> معطيات الوثيقة</h4>
-      <div class="grid g3">
+      <div class="grid g4">
         <div class="fg"><label for="fQuota">المقرر (الكمية المرصودة) <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-clipboard-list"></i><input type="number" id="fQuota" class="fc" oninput="liveAudit()" placeholder="1000" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
         <div class="fg"><label for="fDocTotalLiters">الكمية المطلوبة <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gas-pump"></i><input type="number" id="fDocTotalLiters" class="fc" oninput="liveAudit()" placeholder="900" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
+        <div class="fg"><label for="fActualConsumedLiters">الكمية المستهلكة (فعلياً) <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-fire"></i><input type="number" id="fActualConsumedLiters" class="fc" oninput="liveAudit()" placeholder="أدخل الكمية المستهلكة" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
         <div class="fg"><label for="fDocTotalHours">ساعات العمل <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-clock"></i><input type="number" id="fDocTotalHours" class="fc" oninput="liveAudit()" placeholder="150" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
       </div>
     </div>
@@ -363,7 +267,7 @@ td.d{color:var(--t1)}
         <div class="track"><span class="fill" id="pctFill"></span></div>
         <span class="lbl" id="pctLbl">—</span>
       </div>
-      <div class="hint" id="pctHint">المعدل = الكمية المستهلكة ÷ ساعات العمل · النسبة = (المعدل الفعلي ÷ المعيار) × 100</div>
+      <div class="hint" id="pctHint">المعدل = (الكمية المستهلكة) ÷ ساعات العمل · النسبة = (المعدل الفعلي ÷ المعيار) × 100</div>
     </div>
 
     <div class="sum" id="liveSum"></div>
@@ -425,7 +329,7 @@ td.d{color:var(--t1)}
       <table>
         <thead><tr>
           <th>التاريخ</th><th>رقم الوثيقة</th><th>نوع الوقود</th><th>المقرر</th>
-          <th>ساعات العمل</th><th>الكمية المطلوبة</th><th>الباقي بالخزان</th><th>رصيد البطاقة</th>
+          <th>ساعات العمل</th><th>الكمية المطلوبة</th><th>المستهلك</th><th>الباقي بالخزان</th><th>رصيد البطاقة</th>
           <th id="thEngR">ساعات المحرك الأيمن</th><th id="thEngL">ساعات المحرك الأيسر</th>
           <th>المعدل الفعلي (لتر/س)</th><th>نسبة المعيار %</th><th>درجة الخطر</th><th>الحالة</th><th class="colAct">إجراءات</th>
         </tr></thead>
@@ -544,22 +448,25 @@ td.d{color:var(--t1)}
   };
 
   /* ══ الحسابات ══
+     الكمية المستهلكة = actualConsumed (إجباري)
      المعدل الفعلي = الكمية المستهلكة ÷ ساعات العمل (لتر/ساعة)
      نسبة المعيار = (المعدل الفعلي ÷ المعيار) × 100
   */
   function calc() {
-    var L = num('fDocTotalLiters'), H = num('fDocTotalHours'), T = num('fRemainingTank'), C = num('fCardDinars');
+    var L = num('fDocTotalLiters'), H = num('fDocTotalHours');
+    var Actual = num('fActualConsumedLiters');
+    var T = num('fRemainingTank'), C = num('fCardDinars');
     var Q = num('fQuota');
     var p = price(), cap = Number(standards.tankCapacity) || 0, std = Number(standards.standardRate) || 0;
     var sR = num('fStartR'), eR = num('fEndR'), sL = isTwin ? num('fStartL') : NaN, eL = isTwin ? num('fEndL') : NaN;
 
-    // المعدل الفعلي (لتر/ساعة)
-    var actualRate = (H > 0 && isFinite(L)) ? (L / H) : NaN;
+    // المعدل الفعلي (لتر/ساعة) = الكمية المستهلكة ÷ الساعات
+    var actualRate = (H > 0 && isFinite(Actual)) ? (Actual / H) : NaN;
     // نسبة المعيار = (المعدل الفعلي ÷ المعيار) × 100
     var ratePct = (std > 0 && isFinite(actualRate)) ? (actualRate / std) * 100 : NaN;
 
     return {
-      L: L, H: H, T: T, C: C, p: p, cap: cap, std: std, Q: Q,
+      L: L, H: H, T: T, C: C, p: p, cap: cap, std: std, Q: Q, Actual: Actual,
       cardL: isFinite(C) ? C / p : NaN,
       free: isFinite(T) && cap ? cap - T : NaN,
       after: isFinite(T) && isFinite(L) ? T + L : NaN,
@@ -580,6 +487,11 @@ td.d{color:var(--t1)}
     if (!isFinite(q) || q < 0) return bad('fQuota', 'أدخل المقرر (الكمية المرصودة)');
     var l = num('fDocTotalLiters'), h = num('fDocTotalHours');
     if (!isFinite(l) || l <= 0) return bad('fDocTotalLiters', 'الكمية المطلوبة يجب أن تكون رقماً أكبر من صفر');
+    
+    // التحقق من الكمية المستهلكة (إجباري)
+    var act = num('fActualConsumedLiters');
+    if (!isFinite(act) || act <= 0) return bad('fActualConsumedLiters', 'الكمية المستهلكة إجبارية ويجب أن تكون أكبر من صفر');
+
     if (!isFinite(h) || h <= 0) return bad('fDocTotalHours', 'ساعات العمل يجب أن تكون رقماً أكبر من صفر');
     var t = num('fRemainingTank'), c = num('fCardDinars');
     if (!isFinite(t) || t < 0) return bad('fRemainingTank', 'أدخل الباقي بالخزان (صفر أو أكثر)');
@@ -623,6 +535,9 @@ td.d{color:var(--t1)}
     else if (c.cap && isFinite(c.after) && c.after > c.cap + 1) msgs.push('تجاوز الخزان: الباقي + المطلوب = ' + fmt(c.after, 1) + ' لتر والسعة ' + c.cap + '.');
     if (isFinite(c.L) && isFinite(c.C) && c.L * c.p > c.C + c.p) msgs.push('رصيد البطاقة لا يكفي: ' + fmt(c.L) + ' لتر = ' + fmt(c.L * c.p, 3) + ' د.ت، والرصيد ' + fmt(c.C, 3) + ' د.ت.');
     if (isFinite(c.Q) && isFinite(c.L) && c.L > c.Q) msgs.push('الكمية المطلوبة (' + fmt(c.L) + ') تتجاوز المقرر (' + fmt(c.Q) + ').');
+    
+    if (isFinite(c.Actual) && isFinite(c.L) && c.Actual > c.L) msgs.push('الكمية المستهلكة (' + fmt(c.Actual) + ') أكبر من الكمية المطلوبة (' + fmt(c.L) + ').');
+
     if (c.std > 0 && isFinite(c.ratePct) && c.ratePct >= 115) msgs.push('استهلاك وهمي محتمل: المعدل ' + c.rate.toFixed(2) + ' لتر/س يمثل ' + c.ratePct.toFixed(0) + '% من المعيار ' + c.std + ' لتر/س.');
     if (hrs.length && isFinite(c.H) && Math.abs(Math.max.apply(null, hrs) - c.H) > 0.5) msgs.push('ساعات العمل (' + c.H + ') لا تطابق ساعات العدّاد (' + fmt(Math.max.apply(null, hrs), 1) + ').');
 
@@ -665,6 +580,7 @@ td.d{color:var(--t1)}
     var chips = [];
     if (isFinite(c.Q)) chips.push(['المقرر', fmt(c.Q) + ' لتر', '']);
     if (isFinite(c.quotaRemaining)) chips.push(['المتبقي من المقرر', fmt(c.quotaRemaining) + ' لتر', c.quotaRemaining < 0 ? 'warn' : 'good']);
+    if (isFinite(c.Actual)) chips.push(['الكمية المستهلكة', fmt(c.Actual) + ' لتر', c.L && c.Actual > c.L ? 'warn' : 'good']);
     if (isFinite(c.cardL)) chips.push(['رصيد البطاقة بالليتر', fmt(c.cardL, 1) + ' لتر', '']);
     if (isFinite(c.free)) chips.push(['المساحة الفارغة بالخزان', fmt(Math.max(0, c.free), 1) + ' لتر', '']);
     if (isFinite(c.after)) chips.push(['الخزان بعد التعبئة', fmt(c.after, 1) + ' لتر', c.cap && c.after > c.cap + 1 ? 'warn' : 'good']);
@@ -683,7 +599,7 @@ td.d{color:var(--t1)}
   };
 
   window.clearForm = function () {
-    ['fDocNumber', 'fQuota', 'fDocTotalLiters', 'fDocTotalHours', 'fRemainingTank', 'fCardDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL'].forEach(function (id) { $(id).value = ''; });
+    ['fDocNumber', 'fQuota', 'fDocTotalLiters', 'fActualConsumedLiters', 'fDocTotalHours', 'fRemainingTank', 'fCardDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL'].forEach(function (id) { $(id).value = ''; });
     $('fDate').value = today();
     $('fFuelType').value = 'gasoil';
     standards.fuelPrice = 1.998;
@@ -704,7 +620,9 @@ td.d{color:var(--t1)}
       fuelType: $('fFuelType').value,
       quota: num('fQuota'),
       documentNumber: $('fDocNumber').value.replace(/[<>]/g, '').trim().slice(0, 40) || undefined,
-      docTotalLiters: num('fDocTotalLiters'), docTotalHours: num('fDocTotalHours'),
+      docTotalLiters: num('fDocTotalLiters'), 
+      actualConsumedLiters: num('fActualConsumedLiters'), // تمت الإضافة هنا
+      docTotalHours: num('fDocTotalHours'),
       remainingTank: num('fRemainingTank'), cardDinars: num('fCardDinars'),
       engines: {
         right: { startHours: num('fStartR'), endHours: num('fEndR') },
@@ -730,7 +648,7 @@ td.d{color:var(--t1)}
   };
 
   /* ══ تحميل الوثائق ══ */
-  function cols() { return isTwin ? 15 : 14; }
+  function cols() { return isTwin ? 16 : 15; }
   function showSkeleton() {
     var row = '<tr class="skel">' + new Array(cols() + 1).join('<td><span></span></td>') + '</tr>';
     $('fuelTableBody').innerHTML = row + row + row;
@@ -767,6 +685,7 @@ td.d{color:var(--t1)}
     var h = '<h5>' + (d.isFraud ? '🚨 وثيقة مشبوهة' : '✅ وثيقة سليمة') + ' — ' + ldate(d.date) + '</h5>';
     h += row('نوع الوقود', d.fuelType === 'benzine' ? 'بنزين' : 'غزوال');
     if (d.quota != null) h += row('المقرر', fmt(d.quota) + ' لتر');
+    if (d.actualConsumedLiters != null) h += row('المستهلك فعلياً', fmt(d.actualConsumedLiters) + ' لتر');
     h += row('المعدل الفعلي', d.totalActualRate ? fmt(d.totalActualRate, 2) + ' لتر/س' : '—');
     h += row('المعيار', standards.standardRate ? fmt(standards.standardRate, 2) + ' لتر/س' : 'غير مسجل');
     if (typeof d.riskScore === 'number') h += row('درجة الخطر', d.riskScore + ' / 100');
@@ -774,7 +693,6 @@ td.d{color:var(--t1)}
     if (d.remainingTank != null) h += row('الباقي بالخزان', fmt(d.remainingTank, 1) + ' لتر');
     if (d.tankAfter != null) h += row('بعد التعبئة', fmt(d.tankAfter, 1) + ' لتر');
     if (d.cardDinars != null) h += row('رصيد البطاقة', fmt(d.cardDinars, 3) + ' د.ت ≈ ' + fmt(d.cardLiters, 1) + ' لتر');
-    if (d.actualConsumption != null) h += row('الاستهلاك المحسوب', fmt(d.actualConsumption, 1) + ' لتر');
     if (r) h += row(l ? 'الأيمن' : 'المحرك', engTxt(r));
     if (l) h += row('الأيسر', engTxt(l));
     if (d.fraudReason) notes = String(d.fraudReason).split(' | ');
@@ -804,6 +722,7 @@ td.d{color:var(--t1)}
         '<td data-label="المقرر">' + (d.quota != null ? fmt(d.quota, 1) + ' لتر' : '—') + '</td>' +
         '<td data-label="ساعات العمل">' + fmt(d.docTotalHours, 1) + '</td>' +
         '<td data-label="الكمية المطلوبة">' + fmt(d.docTotalLiters, 1) + ' لتر</td>' +
+        '<td data-label="المستهلك"><b style="color:var(--info)">' + (d.actualConsumedLiters != null ? fmt(d.actualConsumedLiters, 1) + ' لتر' : '—') + '</b></td>' +
         '<td data-label="الباقي بالخزان">' + (d.remainingTank != null ? fmt(d.remainingTank, 1) + ' لتر' : '—') + '</td>' +
         '<td data-label="رصيد البطاقة">' + (d.cardDinars != null ? fmt(d.cardDinars, 3) + ' د.ت <small style="color:var(--t3)">(' + fmt(d.cardLiters, 0) + ' ل)</small>' : '—') + '</td>' +
         engCell(d.engines && d.engines.right, isTwin ? 'المحرك الأيمن' : 'المحرك') +
@@ -852,6 +771,7 @@ td.d{color:var(--t1)}
     $('fQuota').value = d.quota != null ? d.quota : '';
     $('fDocNumber').value = d.documentNumber || '';
     $('fDocTotalLiters').value = d.docTotalLiters != null ? d.docTotalLiters : '';
+    $('fActualConsumedLiters').value = d.actualConsumedLiters != null ? d.actualConsumedLiters : ''; // تمت الإضافة هنا
     $('fDocTotalHours').value = d.docTotalHours != null ? d.docTotalHours : '';
     $('fRemainingTank').value = d.remainingTank != null ? d.remainingTank : '';
     $('fCardDinars').value = d.cardDinars != null ? d.cardDinars : '';
