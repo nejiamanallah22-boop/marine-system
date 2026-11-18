@@ -1,10 +1,8 @@
 /**
- * routes/fuel.js v3 — محرك التدقيق لوثائق تموين المحروقات
- * - المعطيات: الكمية المطلوبة، ساعات العمل، عدادات المحرك (بداية/نهاية الشهر)،
- *             الباقي بالخزان (لتر)، الباقي بالبطاقة الذكية (دينار → لتر).
- * - المعيار: يدوي إن وُجد، وإلا يتعلمه النظام تلقائياً (وسيط وثائق المركب السليمة).
- * - تعديل وحذف الوثائق مع سجل تغييرات وإعادة تدقيق الوثائق اللاحقة.
- * يتطلب: models/Vessel.js و models/FuelDocument.js
+ * routes/fuel.js v4 — محرك التدقيق لوثائق تموين المحروقات
+ * - المعطيات: المقرر، الكمية المطلوبة، الكمية المستهلكة، ساعات العمل، عدادات المحرك، الباقي بالخزان، الباقي بالبطاقة.
+ * - المعيار: يدوي إن وُجد، وإلا يتعلمه النظام تلقائياً.
+ * - تعديل وحذف الوثائق مع سجل تغييرات وإعادة تدقيق.
  */
 const express = require('express');
 const router = express.Router();
@@ -16,8 +14,11 @@ let authenticateAccessToken, csrfProtection, normalizeRole = r => String(r || ''
 let addLog = async () => {};
 const csrf = (req, res, next) => csrfProtection(req, res, next);
 
-// سعر اللتر (دينار تونسي) — يمكن تغييره عبر متغير البيئة FUEL_PRICE_DT
-const FUEL_PRICE = Number(process.env.FUEL_PRICE_DT) > 0 ? Number(process.env.FUEL_PRICE_DT) : 1.998;
+// أسعار المحروقات الثابتة حسب النوع (دينار تونسي)
+const PRICES = {
+  gasoil: 1.998,
+  benzine: 2.525
+};
 
 const WRITE_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit'];
 const DELETE_ROLES = ['admin', 'manager'];
@@ -106,22 +107,37 @@ const endOf = e => (e ? (e.endHours != null ? e.endHours : (e.totalHours > 0 ? e
 function parseDoc(b, v) {
   const date = new Date(b.date);
   if (isNaN(date) || date.getTime() > Date.now() + 864e5 || date.getTime() < new Date('2000-01-01').getTime()) return { err: 'تاريخ غير صالح' };
+  
+  const fuelType = b.fuelType === 'benzine' ? 'benzine' : 'gasoil';
+  const price = PRICES[fuelType];
+
+  const Q = n(b.quota); // المقرر
+  if (!(Q >= 0 && Q <= 1e6)) return { err: 'المقرر غير صالح' };
+
   const L = n(b.docTotalLiters), H = n(b.docTotalHours), T = n(b.remainingTank), C = n(b.cardDinars);
+  const Actual = n(b.actualConsumedLiters); // الكمية المستهلكة
+
   if (!(L > 0 && L <= 1e6)) return { err: 'الكمية المطلوبة غير صالحة' };
+  if (!(Actual > 0 && Actual <= 1e6)) return { err: 'الكمية المستهلكة غير صالحة ويجب أن تكون أكبر من صفر' };
   if (!(H > 0 && H <= 1e5)) return { err: 'ساعات العمل غير صالحة' };
   if (!(T >= 0 && T <= v.tankCapacity)) return { err: 'الباقي بالخزان غير صالح (من 0 إلى سعة الخزان)' };
   if (!(C >= 0 && C <= 1e7)) return { err: 'رصيد البطاقة غير صالح' };
+  
   const twin = v.engineCount === 2;
   const right = readEngine(b.engines && b.engines.right, twin ? 'الأيمن' : '');
   if (right.err) return { err: right.err };
+  
   let left = null;
   if (twin) { left = readEngine(b.engines && b.engines.left, 'الأيسر'); if (left.err) return { err: left.err }; }
+  
   const documentNumber = typeof b.documentNumber === 'string' ? b.documentNumber.replace(/[<>]/g, '').trim().slice(0, 40) : '';
-  return { input: { date, docTotalHours: H, docTotalLiters: L, remainingTank: T, cardDinars: C, price: FUEL_PRICE, documentNumber, engines: { right, left }, twin } };
+  
+  return { input: { date, fuelType, quota: Q, actualConsumedLiters: Actual, docTotalHours: H, docTotalLiters: L, remainingTank: T, cardDinars: C, price, documentNumber, engines: { right, left }, twin } };
 }
 
 const docFields = (d, a) => ({
   date: d.date, documentNumber: d.documentNumber,
+  fuelType: d.fuelType, quota: d.quota, actualConsumedLiters: d.actualConsumedLiters,
   docTotalLiters: d.docTotalLiters, docTotalHours: d.docTotalHours,
   remainingTank: r2(d.remainingTank), cardDinars: r3(d.cardDinars),
   cardLiters: r2(a.cardL), fuelPrice: d.price, tankAfter: r2(d.remainingTank + d.docTotalLiters),
@@ -139,8 +155,11 @@ async function runAudit(vessel, d, opts = {}) {
   if (opts.excludeId) base._id = { $ne: opts.excludeId };
   const std = Number(opts.std) || 0;
   const tank = Number(vessel.tankCapacity) || 0;
-  const L = d.docTotalLiters, H = d.docTotalHours, T = d.remainingTank, C = d.cardDinars, price = d.price;
-  const rate = H > 0 ? L / H : 0;
+  
+  const Q = d.quota, L = d.docTotalLiters, Actual = d.actualConsumedLiters, H = d.docTotalHours, T = d.remainingTank, C = d.cardDinars, price = d.price;
+  
+  // المعدل الفعلي = الكمية المستهلكة ÷ ساعات العمل
+  const rate = H > 0 ? Actual / H : 0;
   const cardL = price > 0 ? C / price : 0;
 
   // 1) ساعات العمل مقابل عدّادات المحرك (الأعلى بين المحركين)
@@ -209,18 +228,19 @@ async function runAudit(vessel, d, opts = {}) {
   return { rate, rules, score, consumed, cardL, isFraud: score > FRAUD_THRESHOLD, reason: rules.map(k => hits[k]).join(' | ') };
 }
 
-// إعادة تدقيق الوثائق اللاحقة بعد تعديل/حذف (حتى تبقى سلسلة العدّاد والرصيد متسقة)
+// إعادة تدقيق الوثائق اللاحقة بعد تعديل/حذف
 async function reauditFrom(v, req, fromDate) {
   try {
     const std = await effectiveStandard(v, req);
     const docs = await FuelDocument.find({ boatId: { $in: idsOf(v) }, date: { $gte: fromDate } }).sort({ date: 1 }).limit(200).lean();
     for (const d of docs) {
       const e = d.engines || {};
-      if (d.remainingTank == null || d.cardDinars == null || !e.right || e.right.startHours == null) continue; // وثائق النسخة القديمة
-      const input = { date: new Date(d.date), docTotalHours: d.docTotalHours, docTotalLiters: d.docTotalLiters, remainingTank: d.remainingTank,
-        cardDinars: d.cardDinars, price: d.fuelPrice || FUEL_PRICE, documentNumber: d.documentNumber || '', engines: { right: e.right, left: e.left || null } };
+      if (d.remainingTank == null || d.cardDinars == null || !e.right || e.right.startHours == null) continue;
+      const input = { date: new Date(d.date), fuelType: d.fuelType || 'gasoil', quota: d.quota || 0, actualConsumedLiters: d.actualConsumedLiters || d.docTotalLiters,
+        docTotalHours: d.docTotalHours, docTotalLiters: d.docTotalLiters, remainingTank: d.remainingTank,
+        cardDinars: d.cardDinars, price: d.fuelPrice || PRICES[d.fuelType || 'gasoil'], documentNumber: d.documentNumber || '', engines: { right: e.right, left: e.left || null } };
       const a = await runAudit(v, input, { std: std.rate, excludeId: d._id });
-      await FuelDocument.updateOne({ _id: d._id }, { $set: { riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules, actualConsumption: a.consumed } });
+      await FuelDocument.updateOne({ _id: d._id }, { $set: { riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules, actualConsumption: a.consumed, totalActualRate: r2(a.rate) } });
     }
   } catch (e) { console.error('❌ [FUEL] reaudit:', e.message); }
 }
@@ -233,7 +253,7 @@ async function getDoc(req, res) {
   if (!doc || !v || !allowed(req, v)) { res.status(404).json({ error: 'الوثيقة غير موجودة' }); return null; }
   return { doc, v };
 }
-const snapshot = d => ({ date: d.date, documentNumber: d.documentNumber, docTotalLiters: d.docTotalLiters, docTotalHours: d.docTotalHours,
+const snapshot = d => ({ date: d.date, documentNumber: d.documentNumber, fuelType: d.fuelType, quota: d.quota, actualConsumedLiters: d.actualConsumedLiters, docTotalLiters: d.docTotalLiters, docTotalHours: d.docTotalHours,
   remainingTank: d.remainingTank, cardDinars: d.cardDinars, engines: d.engines, riskScore: d.riskScore, isFraud: d.isFraud });
 const logDoc = (req, action, v, d, details) => addLog({
   userId: req.user.id, userName: req.user.name, action, resource: 'fuel-document',
@@ -247,7 +267,7 @@ router.get('/standards/:boatId', async (req, res) => {
     const v = await loadVessel(req, res); if (!v) return;
     const sd = await effectiveStandard(v, req);
     res.json({ engineCount: v.engineCount || 1, tankCapacity: v.tankCapacity || 0, standardRate: sd.rate,
-      standardSource: sd.source, standardBasedOn: sd.basedOn, manualRate: Number(v.standardRate) || 0, fuelPrice: FUEL_PRICE });
+      standardSource: sd.source, standardBasedOn: sd.basedOn, manualRate: Number(v.standardRate) || 0, fuelPrice: PRICES.gasoil });
   } catch (e) { fail(res, e, 'standards'); }
 });
 
@@ -337,7 +357,7 @@ router.get('/audit-report/:boatId', async (req, res) => {
       requestedLiters: r2(liters), avgRisk: docs.length ? r2(risk / docs.length) : 0, flagged, warned,
       expectedLiters: null, varianceLiters: null, variancePct: null, excessLiters: null,
       balanceLiters: null, balancePct: null,
-      lastRemainingTank: null, cardDinars: null, cardLiters: null, fuelPrice: FUEL_PRICE,
+      lastRemainingTank: null, cardDinars: null, cardLiters: null, fuelPrice: PRICES.gasoil,
       standard: { rate: std, source: sd.source, basedOn: sd.basedOn }
     };
     if (std > 0 && docs.length) {
@@ -407,4 +427,4 @@ module.exports = function (app, middlewares) {
   if (typeof middlewares.addSystemLog === 'function') addLog = middlewares.addSystemLog;
   app.use('/api/fuel', authenticateAccessToken, router);
 };
-module.exports._test = { runAudit, readEngine, parseDoc, effectiveStandard, FUEL_PRICE };
+module.exports._test = { runAudit, readEngine, parseDoc, effectiveStandard, PRICES };
