@@ -220,6 +220,10 @@ th:last-child{background:#f6f8fb}
 .detect .res{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--gold-bg);border:1px solid #ecd68a;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13px}
 .detect .res b{font-size:20px;color:var(--navy)}
 
+.eng-pick{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.eng-opt{flex:1;min-width:150px;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font:800 14px var(--font);color:var(--t2);cursor:pointer;transition:var(--ease)}
+.eng-opt:hover{border-color:#cbd5e1}
+.eng-opt.on{border-color:var(--gold);background:var(--gold-bg);color:var(--navy);box-shadow:0 0 0 3px rgba(212,160,23,.15)}
 /* ===== ملخص حي ===== */
 .sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:20px}
 .sm{background:linear-gradient(180deg,#fff,#fafbfd);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
@@ -362,6 +366,10 @@ th:last-child{background:#f6f8fb}
 
     <!-- الخطوة 3 -->
     <div class="pane" data-step="3" hidden>
+      <div class="eng-pick" role="radiogroup" aria-label="عدد محركات المركب">
+        <button type="button" class="eng-opt" data-n="1" role="radio"><i class="fas fa-cog"></i> محرك واحد</button>
+        <button type="button" class="eng-opt" data-n="2" role="radio"><i class="fas fa-cogs"></i> محركان (أيمن وأيسر)</button>
+      </div>
       <div class="mgrid" id="metersGrid">
         <div class="pane-box e1">
           <h4 style="color:var(--info)"><i class="fas fa-cog"></i> <span id="rightEngineLabel">المحرك</span> — عداد الساعات</h4>
@@ -581,15 +589,29 @@ th:last-child{background:#f6f8fb}
   }
 
   /* ══ الخطوات ══ */
-  function buildSteps() {
-    maxStep = 3;
+  function applyEngineMode() {
     $('rightEngineLabel').textContent = isTwin ? 'المحرك الأيمن' : 'المحرك';
     $('leftEngineBox').hidden = !isTwin;
     $('metersGrid').className = isTwin ? 'mgrid' : 'mgrid one';
+    document.querySelectorAll('.eng-opt').forEach(function (b) {
+      var on = (b.getAttribute('data-n') === '2') === isTwin;
+      b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    var s3 = document.querySelector('.stp[data-s="3"] span');
+    if (s3) s3.textContent = isTwin ? 'عدادات المحركين' : 'عداد المحرك';
+  }
+  function setEngines(n) {
+    isTwin = n === 2;
+    if (!isTwin) { $('fStartL').value = ''; $('fEndL').value = ''; }
+    applyEngineMode(); liveAudit();
+  }
+  function buildSteps() {
+    maxStep = 3;
     var defs = ['الأساسيات', 'الخزان والبطاقة', isTwin ? 'عدادات المحركين' : 'عداد المحرك'];
     $('stepper').innerHTML = defs.map(function (d, i) {
       return '<li><button type="button" class="stp" data-s="' + (i + 1) + '"><b>' + (i + 1) + '</b><span>' + d + '</span></button></li>';
     }).join('');
+    applyEngineMode();
     showStep(1);
     liveAudit();
   }
@@ -743,6 +765,8 @@ th:last-child{background:#f6f8fb}
     var d = allDocs.find(function (x) { return String(docId(x)) === String(id); });
     if (!d) return toast('الوثيقة غير موجودة', 'error');
     FORM_IDS.forEach(function (k) { $(k).value = ''; });
+    isTwin = d.engineCount === 2 || !!(d.engines && d.engines.left);
+    applyEngineMode();
     $('fDate').value = docDay(d) || today();
     $('fDocNumber').value = d.documentNumber || '';
     $('fDocTotalLiters').value = d.docTotalLiters != null ? d.docTotalLiters : '';
@@ -768,6 +792,7 @@ th:last-child{background:#f6f8fb}
       documentNumber: $('fDocNumber').value.replace(/[<>]/g, '').trim().slice(0, 40) || undefined,
       docTotalLiters: num('fDocTotalLiters'), docTotalHours: num('fDocTotalHours'),
       requestedLiters: num('fRequestedLiters') || 0,
+      engineCount: isTwin ? 2 : 1,
       remainingTank: num('fRemainingTank'), cardDinars: num('fCardDinars'),
       engines: {
         right: { startHours: num('fStartR'), endHours: num('fEndR') },
@@ -889,7 +914,7 @@ th:last-child{background:#f6f8fb}
         '<td data-label="الكمية المطلوبة">' + (d.requestedLiters ? fmt(d.requestedLiters, 1) + ' لتر' : '—') + '</td>' +
         '<td data-label="الباقي بالخزان">' + (d.remainingTank != null ? fmt(d.remainingTank, 1) + ' لتر' : '—') + '</td>' +
         '<td data-label="رصيد البطاقة">' + (d.cardDinars != null ? fmt(d.cardDinars, 3) + ' د.ت <small style="color:var(--t3)">(' + fmt(d.cardLiters, 0) + ' ل)</small>' : '—') + '</td>' +
-        '<td data-label="المحركات">' + (d.engineCount === 2 ? 'محركان' : 'محرك واحد') + '</td>' +
+        '<td data-label="المحركات">' + ((d.engineCount === 2 || (d.engines && d.engines.left)) ? 'محركان' : 'محرك واحد') + '</td>' +
         '<td data-label="المعدل">' + (d.totalActualRate ? Number(d.totalActualRate).toFixed(2) : '0') + '</td>' +
         '<td data-label="درجة الخطر">' + riskBadge(d.riskScore) + '</td>' +
         '<td data-label="الحالة"><button type="button" class="badge ' + (d.isFraud ? 'bad' : 'ok') + '" data-i="' + i + '">' +
@@ -1113,6 +1138,8 @@ th:last-child{background:#f6f8fb}
   $('csvBtn').addEventListener('click', exportCsv);
   $('tSearch').addEventListener('input', renderTable);
   $('tStatus').addEventListener('change', renderTable);
+
+  document.querySelectorAll('.eng-opt').forEach(function (b) { b.addEventListener('click', function () { setEngines(parseInt(b.getAttribute('data-n'), 10)); }); });
 
   // تحديث فوري عند كل تغيير في أي حقل من النموذج
   $('entryCard').addEventListener('input', liveAudit);
