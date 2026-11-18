@@ -108,16 +108,6 @@ select.fc{cursor:pointer}
 .rate-val small{font-size:13px;color:#cfdbe8;font-weight:800}
 .rate-side b{font-size:20px;font-weight:900;color:#fff}
 .rate-top .pill{margin-inline-start:auto}
-.rate-formula{font-size:12px;color:#9fb3c8;font-weight:700;margin-top:6px;position:relative}
-.gauge{position:relative;height:12px;border-radius:99px;background:rgba(255,255,255,.14);margin-top:16px;overflow:visible}
-.gauge>span{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--ok),#37d39a);transition:width .5s cubic-bezier(.4,0,.2,1),background .3s}
-.gauge>span.warn{background:linear-gradient(90deg,#e0a800,#ffd45a)}
-.gauge>span.bad{background:linear-gradient(90deg,#c62f2f,#ff7a7a)}
-.gauge>i{position:absolute;top:-5px;width:2px;height:22px;background:#fff;opacity:.85;transform:translateX(50%)}
-.gauge>i.thr{background:#ff9d9d}
-.gauge-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:11.5px;font-weight:700;color:#b7c7d8;position:relative}
-.gauge-legend span::before{content:'';display:inline-block;width:10px;height:3px;margin-inline-end:6px;vertical-align:middle;background:#fff}
-.gauge-legend .t::before{background:#ff9d9d}
 
 /* ===== المقارنة ===== */
 .cmp{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
@@ -295,11 +285,10 @@ th:last-child{background:#f6f8fb}
   <section class="card" id="setupCard" hidden>
     <div class="card-title"><i class="fas fa-cogs"></i> إعداد المركب (مرة واحدة)</div>
     <div class="notice"><i class="fas fa-circle-info"></i><span>هذا المركب غير مهيأ بعد. أكمل الإعدادات التالية لتفعيل تسجيل وثائق التموين.</span></div>
-    <div class="grid g3">
+    <div class="grid g2">
       <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div></div>
       <div class="fg"><label for="setupTankCapacity">سعة الخزان</label><div class="field has-unit"><i class="fas fa-oil-can"></i><input type="number" id="setupTankCapacity" class="fc" placeholder="سعة الخزان" min="1" inputmode="decimal"><span class="unit">لتر</span></div></div>
-      <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري</label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" placeholder="لتر / ساعة" step="0.01" min="0.01" inputmode="decimal"><span class="unit">لتر/س</span></div></div>
-    </div>
+          </div>
     <div class="grid g2" id="setupEngineDetails" style="margin-top:16px" hidden>
       <div class="fg"><label for="setupEngineRight">المحرك الأيمن</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineRight" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
       <div class="fg"><label for="setupEngineLeft">المحرك الأيسر</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineLeft" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
@@ -314,7 +303,6 @@ th:last-child{background:#f6f8fb}
       <div class="price field has-unit"><i class="fas fa-coins"></i><input type="number" id="fuelPrice" class="fc" min="0" step="0.001" placeholder="سعر اللتر" inputmode="decimal" aria-label="سعر اللتر" readonly><span class="unit">د.ت</span></div></div>
     <div class="dc green"><div class="h"><i class="fas fa-battery-three-quarters"></i>المتبقي في الخزان</div><b class="v" id="dTank">جاري التحميل...</b><small id="dTankNote"></small><div class="tbar"><span id="dTankBar"></span></div></div>
     <div class="dc teal"><div class="h"><i class="fas fa-credit-card"></i>رصيد البطاقة الذكية</div><b class="v" id="dCardL">جاري التحميل...</b><small id="dCardD"></small></div>
-    <div class="dc neutral" id="dCardVar"><div class="h"><i class="fas fa-scale-unbalanced"></i>الفائض / التوفير</div><b class="v" id="dVar">جاري التحميل...</b><small id="dVarPct"></small></div>
     <div class="dc orange"><div class="h"><i class="fas fa-shield-halved"></i>درجة الخطر</div><b class="v" id="dRisk">جاري التحميل...</b><small id="dFlagged"></small></div>
   </section>
 
@@ -322,11 +310,6 @@ th:last-child{background:#f6f8fb}
   <section class="card" id="auditCard">
     <div class="card-title"><i class="fas fa-magnifying-glass-chart"></i> لوحة التدقيق · توزيع المخالفات حسب القاعدة</div>
     <div class="rules" id="auRules"></div>
-    <div class="detect">
-      <div><b>الاستهلاك المعياري المقترح</b><small>يُحسب من وثائق سليمة في فئة المركب</small></div>
-      <button class="btn btn-line" id="detectBtn"><i class="fas fa-wand-magic-sparkles"></i> اكتشاف تلقائي</button>
-      <div class="res" id="dtResult" hidden><b id="dtRate">0</b> لتر/ساعة <span id="dtNote" style="font-weight:700;color:var(--t2)"></span><button class="btn btn-gold btn-sm" id="applyBtn"><i class="fas fa-check"></i> اعتماد</button></div>
-    </div>
   </section>
 
   <!-- نموذج الوثيقة -->
@@ -353,11 +336,8 @@ th:last-child{background:#f6f8fb}
           <div class="rate-top">
             <div><span class="lbl">معدل الاستهلاك (يُحسب تلقائياً)</span><div class="rate-val"><b id="rateVal">—</b><small>لتر / ساعة</small></div></div>
             <div class="rate-side"><span class="lbl">كلفة التعبئة</span><b id="costVal">—</b></div>
-            <span class="pill neutral" id="rateState">بانتظار الإدخال</span>
           </div>
           <div class="rate-formula">المعدل = كمية المحروقات المستعملة (لتر) ÷ ساعات العمل</div>
-          <div class="gauge" id="gauge"><span id="gFill"></span><i id="gStd" hidden></i><i class="thr" id="gThr" hidden></i></div>
-          <div class="gauge-legend"><span>المعيار: <b id="gStdTxt">غير مسجل</b></span><span class="t">حد الاشتباه (+15%): <b id="gThrTxt">—</b></span></div>
         </div>
       </div>
     </div>
@@ -487,7 +467,7 @@ th:last-child{background:#f6f8fb}
   var standards = { standardRate: 0, tankCapacity: 0, engineCount: 1, fuelPrice: 1.998 };
   var myChart = null, allDocs = [], shown = [];
   var range = { start: '', end: '' };
-  var auditData = null, detected = 0;
+  var auditData = null;
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ══ أدوات ══ */
@@ -567,6 +547,7 @@ th:last-child{background:#f6f8fb}
       var r0 = await fetch('/api/fuel/standards/' + boatId, { headers: auth() });
       if (r0.ok) {
         standards = Object.assign(standards, await r0.json());
+        standards.standardRate = 0; // الاستهلاك المعياري مُلغى في الواجهة
         ready = Number(standards.tankCapacity) > 0;
         isTwin = Number(standards.engineCount) === 2;
       } else { ready = false; }
@@ -584,11 +565,10 @@ th:last-child{background:#f6f8fb}
 
   /* ══ إعداد المركب ══ */
   async function saveEngineSetup() {
-    var tank = num('setupTankCapacity'), rate = num('setupStandardRate');
+    var tank = num('setupTankCapacity');
     if (!isFinite(tank) || tank <= 0) { $('setupTankCapacity').focus(); return toast('سعة الخزان يجب أن تكون أكبر من صفر', 'error'); }
-    if (!isFinite(rate) || rate <= 0) { $('setupStandardRate').focus(); return toast('الاستهلاك المعياري يجب أن يكون أكبر من صفر', 'error'); }
     var payload = {
-      engineCount: Number($('setupEngineCount').value), tankCapacity: tank, standardRate: rate,
+      engineCount: Number($('setupEngineCount').value), tankCapacity: tank,
       engineRight: $('setupEngineRight').value.trim().slice(0, 40), engineLeft: $('setupEngineLeft').value.trim().slice(0, 40)
     };
     var btn = $('saveSetupBtn'); btn.disabled = true;
@@ -689,30 +669,8 @@ th:last-child{background:#f6f8fb}
 
   /* ══ المعدل التلقائي + التدقيق الحي ══ */
   function updateRateCard(c) {
-    var has = isFinite(c.rate), std = c.std, thr = std * SUSPECT_FACTOR;
-    $('rateVal').textContent = has ? c.rate.toFixed(2) : '—';
+    $('rateVal').textContent = isFinite(c.rate) ? c.rate.toFixed(2) : '—';
     $('costVal').textContent = isFinite(c.cost) ? fmt(c.cost, 3) + ' د.ت' : '—';
-    $('gStdTxt').textContent = std ? fmt(std, 2) + ' لتر/س' : 'غير مسجل';
-    $('gThrTxt').textContent = std ? fmt(thr, 2) + ' لتر/س' : '—';
-    var state = $('rateState'), fill = $('gFill'), gs = $('gStd'), gt = $('gThr');
-    if (!has) {
-      state.className = 'pill neutral'; state.textContent = 'بانتظار الإدخال';
-      fill.style.width = '0'; fill.className = ''; gs.hidden = gt.hidden = true; return;
-    }
-    var max = std ? Math.max(thr * 1.25, c.rate * 1.1) : Math.max(c.rate * 1.2, 1);
-    fill.style.width = Math.min(100, c.rate / max * 100) + '%';
-    if (std) {
-      gs.hidden = gt.hidden = false;
-      gs.style.insetInlineStart = (std / max * 100) + '%';
-      gt.style.insetInlineStart = (thr / max * 100) + '%';
-      var pct = (c.rate / std - 1) * 100;
-      if (c.rate >= thr) { fill.className = 'bad'; state.className = 'pill bad'; state.innerHTML = '<i class="fas fa-triangle-exclamation"></i> +' + pct.toFixed(0) + '% فوق المعيار — مشبوه'; }
-      else if (c.rate > std) { fill.className = 'warn'; state.className = 'pill warn'; state.innerHTML = '<i class="fas fa-circle-exclamation"></i> أعلى من المعيار بـ ' + pct.toFixed(0) + '%'; }
-      else { fill.className = ''; state.className = 'pill ok'; state.innerHTML = '<i class="fas fa-circle-check"></i> ضمن المعيار'; }
-    } else {
-      fill.className = ''; gs.hidden = gt.hidden = true;
-      state.className = 'pill neutral'; state.textContent = 'لا يوجد معيار للمقارنة';
-    }
   }
 
   function liveAudit() {
@@ -897,7 +855,7 @@ th:last-child{background:#f6f8fb}
     var e = d.engines || {}, r = e.right, l = e.left, notes = [];
     var row = function (a, b) { return '<div class="r"><span>' + a + '</span><b>' + b + '</b></div>'; };
     var h = '<h5>' + (d.isFraud ? '🚨 وثيقة مشبوهة' : '✅ وثيقة سليمة') + ' — ' + ldate(d.date) + '</h5>';
-    h += row('المعدل الفعلي', fmt(d.totalActualRate, 2)) + row('المعيار', standards.standardRate ? fmt(standards.standardRate, 2) : 'غير مسجل');
+    h += row('المعدل الفعلي', fmt(d.totalActualRate, 2));
     if (typeof d.riskScore === 'number') h += row('درجة الخطر', d.riskScore + ' / 100');
     if (d.documentNumber) h += row('رقم الوثيقة', esc(d.documentNumber));
     if (d.requestedLiters) h += row('الكمية المطلوبة', fmt(d.requestedLiters, 1) + ' لتر');
@@ -1056,8 +1014,7 @@ th:last-child{background:#f6f8fb}
         datasets: [
           { label: 'المعدل الفعلي', data: rates, order: 1, borderRadius: 8, borderSkipped: false, maxBarThickness: 38,
             backgroundColor: s.map(function (d) { return d.isFraud ? 'rgba(239,68,68,.92)' : C.navy; }),
-            hoverBackgroundColor: s.map(function (d) { return d.isFraud ? C.red : C.navyH; }) },
-          { label: 'المعيار', data: s.map(function () { return std || null; }), type: 'line', order: 0, borderColor: C.gold, borderWidth: 2.5, borderDash: [6, 5], pointRadius: 0, pointHoverRadius: 0, fill: false }
+            hoverBackgroundColor: s.map(function (d) { return d.isFraud ? C.red : C.navyH; }) }
         ]
       },
       options: {
@@ -1068,8 +1025,7 @@ th:last-child{background:#f6f8fb}
           legend: { rtl: true, position: 'top', align: 'end', onClick: function () {},
             labels: { usePointStyle: true, boxWidth: 10, boxHeight: 10, padding: 16, generateLabels: function () { return [
               { text: 'سليم', fillStyle: C.navy, strokeStyle: C.navy, pointStyle: 'rectRounded', hidden: false },
-              { text: 'مشبوه', fillStyle: C.red, strokeStyle: C.red, pointStyle: 'rectRounded', hidden: false },
-              { text: 'المعيار', fillStyle: C.gold, strokeStyle: C.gold, pointStyle: 'line', hidden: false }]; } } },
+              { text: 'مشبوه', fillStyle: C.red, strokeStyle: C.red, pointStyle: 'rectRounded', hidden: false }]; } } },
           tooltip: { rtl: true, textDirection: 'rtl', backgroundColor: '#0b2239', titleColor: '#f3d77a', bodyColor: '#fff', padding: 12, cornerRadius: 10, boxPadding: 6, usePointStyle: true,
             callbacks: {
               title: function (it) { return ldate(s[it[0].dataIndex].date, { day: 'numeric', month: 'long', year: 'numeric' }); },
@@ -1123,7 +1079,7 @@ th:last-child{background:#f6f8fb}
   }
   function renderDash() {
     var t = auditData && auditData.totals, p = price();
-    if (!t) { ['dHours', 'dLiters', 'dTank', 'dCardL', 'dVar', 'dRisk'].forEach(function (id) { $(id).textContent = 'غير متاح'; }); return; }
+    if (!t) { ['dHours', 'dLiters', 'dTank', 'dCardL', 'dRisk'].forEach(function (id) { $(id).textContent = 'غير متاح'; }); return; }
     countTo($('dHours'), Number(t.totalHours) || 0, 1, ' ساعة');
     $('dHoursAvg').textContent = t.docs ? 'المتوسط ' + fmt(t.avgHours, 1) + ' ساعة / وثيقة' : 'لا توجد وثائق بعد';
     countTo($('dLiters'), Number(t.requestedLiters) || 0, 0, ' لتر');
@@ -1138,49 +1094,13 @@ th:last-child{background:#f6f8fb}
     }
     $('dCardL').textContent = t.cardLiters == null ? 'لا توجد بيانات' : fmt(t.cardLiters, 1) + ' لتر';
     $('dCardD').textContent = t.cardDinars == null ? '' : fmt(t.cardDinars, 3) + ' د.ت (آخر وثيقة)';
-    var v = t.varianceLiters, card = $('dCardVar');
-    if (v == null) { $('dVar').textContent = 'يتطلب معياراً مسجلاً'; $('dVarPct').textContent = ''; card.className = 'dc neutral'; }
-    else {
-      $('dVar').textContent = (v > 0 ? '+' : '') + fmt(v, 1) + ' لتر';
-      $('dVarPct').textContent = t.variancePct == null ? '' : (v > 0 ? 'فائض ' : v < 0 ? 'توفير ' : 'مطابق ') + fmt(Math.abs(t.variancePct), 1) + '% عن المتوقع';
-      card.className = 'dc ' + (v > 0 ? 'bad' : v < 0 ? 'good' : 'neutral');
-    }
     $('dRisk').textContent = fmt(t.avgRisk, 0) + ' / 100';
     $('dFlagged').textContent = (t.flagged || 0) + ' مشبوهة · ' + (t.warned || 0) + ' للمراجعة';
-  }
-
-  async function detectAutoRate() {
-    var btn = $('detectBtn'); btn.disabled = true;
-    try {
-      var res = await fetch('/api/fuel/auto-standard/' + boatId, { headers: auth() });
-      var d = await res.json();
-      if (!res.ok) throw new Error(d.error || 'فشل التحليل');
-      if (!(d.autoRate > 0)) { $('dtResult').hidden = true; return toast(d.message || 'لا توجد بيانات كافية', 'info'); }
-      detected = d.autoRate;
-      $('dtRate').textContent = d.autoRate;
-      $('dtNote').textContent = 'الفئة: ' + d.category + ' · ' + d.basedOn + ' وثيقة سليمة' + (d.excluded ? ' · استُبعدت ' + d.excluded + ' شاذة' : '') + ' · انحراف ' + d.stdDev + (d.caution ? ' — ' + d.caution : '');
-      $('dtResult').hidden = false;
-    } catch (e) { toast(e.message || 'تعذّر الاتصال بالخادم', 'error'); }
-    finally { btn.disabled = false; }
-  }
-  async function applyDetectedRate() {
-    if (!(detected > 0)) return;
-    if (!$('setupCard').hidden) { $('setupStandardRate').value = detected; $('setupCard').scrollIntoView({ behavior: 'smooth' }); return toast('عُبّئ الحقل. اضغط «حفظ الإعدادات»', 'info'); }
-    var ok = await confirmDialog({ title: 'اعتماد الاستهلاك المعياري', text: 'اعتماد ' + detected + ' لتر/ساعة كمعيار لهذا المركب؟ سيُستخدم في تحليل الوثائق الجديدة.', ok: 'اعتماد', icon: 'fa-gauge-high' });
-    if (!ok) return;
-    try {
-      var res = await fetch('/api/vessels/' + boatId, { method: 'PUT', headers: jsonHeaders(), body: JSON.stringify({ standardRate: detected }) });
-      if (!res.ok) throw new Error('فشل الاعتماد');
-      standards.standardRate = detected; toast('تم اعتماد الاستهلاك المعياري', 'success');
-      liveAudit(); renderAll(); loadAudit();
-    } catch (e) { toast(e.message, 'error'); }
   }
 
   /* ══ ربط الأحداث ══ */
   $('setupEngineCount').addEventListener('change', function () { $('setupEngineDetails').hidden = this.value !== '2'; });
   $('saveSetupBtn').addEventListener('click', saveEngineSetup);
-  $('detectBtn').addEventListener('click', detectAutoRate);
-  $('applyBtn').addEventListener('click', applyDetectedRate);
   $('prevBtn').addEventListener('click', prevStep);
   $('nextBtn').addEventListener('click', nextStep);
   $('clearBtn').addEventListener('click', clearForm);
