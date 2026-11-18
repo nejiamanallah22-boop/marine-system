@@ -23,13 +23,17 @@ const fuelDocumentSchema = new mongoose.Schema({
     documentNumber: { type: String, default: '', maxlength: 40 },
 
     // المعطيات الأساسية
-    docTotalLiters: { type: Number, required: true, min: 0 },   // الكمية المطلوبة
-    docTotalHours: { type: Number, required: true, min: 0 },    // ساعات العمل
-    remainingTank: { type: Number, default: null, min: 0 },     // الباقي بالخزان (لتر)
-    cardDinars: { type: Number, default: null, min: 0 },        // الباقي بالبطاقة الذكية (دينار)
-    cardLiters: { type: Number, default: null, min: 0 },        // المعادل بالليتر
-    fuelPrice: { type: Number, default: null, min: 0 },         // سعر اللتر وقت التسجيل
-    tankAfter: { type: Number, default: null, min: 0 },         // الخزان بعد التعبئة
+    fuelType: { type: String, enum: ['gasoil', 'benzine'], default: 'gasoil' }, // نوع المحروقات
+    quota: { type: Number, default: null, min: 0 },                            // المقرر (الكمية المرصودة)
+    docTotalLiters: { type: Number, required: true, min: 0 },                  // الكمية المطلوبة
+    actualConsumedLiters: { type: Number, required: true, min: 0 },            // الكمية المستهلكة فعلياً (إجباري)
+    docTotalHours: { type: Number, required: true, min: 0 },                   // ساعات العمل
+    
+    remainingTank: { type: Number, default: null, min: 0 },                    // الباقي بالخزان (لتر)
+    cardDinars: { type: Number, default: null, min: 0 },                       // الباقي بالبطاقة الذكية (دينار)
+    cardLiters: { type: Number, default: null, min: 0 },                       // المعادل بالليتر
+    fuelPrice: { type: Number, default: null, min: 0 },                        // سعر اللتر وقت التسجيل
+    tankAfter: { type: Number, default: null, min: 0 },                        // الخزان بعد التعبئة
 
     engineCount: { type: Number, default: 1, enum: [1, 2] },
     engines: {
@@ -38,7 +42,7 @@ const fuelDocumentSchema = new mongoose.Schema({
     },
 
     // نتائج التدقيق
-    totalActualRate: { type: Number, default: 0 },
+    totalActualRate: { type: Number, default: 0 },                             // المعدل الفعلي (لتر/ساعة)
     actualConsumption: { type: Number, default: null },
     riskScore: { type: Number, default: 0, min: 0, max: 100 },
     isFraud: { type: Boolean, default: false },
