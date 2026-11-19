@@ -71,6 +71,7 @@ select.fc{cursor:pointer}
 .nav .sp{margin-inline-start:auto;display:flex;gap:10px;flex-wrap:wrap}
 .audit{margin-top:16px;border-radius:12px;padding:14px 16px;font-size:13px;font-weight:700}
 .audit.danger{background:var(--bad-bg);border-inline-start:4px solid var(--bad);color:#991b1b}
+.audit.info{background:var(--info-bg);border-inline-start:4px solid var(--info);color:#1e3a8a}
 .audit h4{font-size:14px;margin-bottom:4px}
 
 .dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}
@@ -255,6 +256,7 @@ td.d{color:var(--t1)}
       <h4 style="color:var(--gold-d)"><i class="fas fa-calculator"></i> معطيات الوثيقة</h4>
       <div class="grid g4">
         <div class="fg"><label for="fQuota">المقرر (الكمية المرصودة) <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-clipboard-list"></i><input type="number" id="fQuota" class="fc" oninput="liveAudit()" placeholder="1000" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
+        <div class="fg"><label for="fExtraLiters">الكمية الإضافية (فوق المقرر)</label><div class="field has-unit"><i class="fas fa-plus"></i><input type="number" id="fExtraLiters" class="fc" oninput="liveAudit()" placeholder="0" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
         <div class="fg"><label for="fDocTotalLiters">الكمية المطلوبة <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gas-pump"></i><input type="number" id="fDocTotalLiters" class="fc" oninput="liveAudit()" placeholder="900" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
         <div class="fg"><label for="fActualConsumedLiters" style="color:var(--info)">الكمية المستهلكة (فعلياً) <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-fire"></i><input type="number" id="fActualConsumedLiters" class="fc" oninput="liveAudit()" placeholder="أدخل الكمية المستهلكة" min="0" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
         <div class="fg"><label for="fDocTotalHours">ساعات العمل <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-clock"></i><input type="number" id="fDocTotalHours" class="fc" oninput="liveAudit()" placeholder="150" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
@@ -271,7 +273,8 @@ td.d{color:var(--t1)}
       <div class="pane-box">
         <h4 style="color:var(--gold-d)"><i class="fas fa-credit-card"></i> البطاقة الذكية</h4>
         <div class="fg"><label for="fCardDinars">الباقي بالبطاقة <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-coins"></i><input type="number" id="fCardDinars" class="fc" oninput="liveAudit()" placeholder="2000" min="0" step="0.001" inputmode="decimal"><span class="unit">د.ت</span></div></div>
-        <div class="conv"><span>يعادل</span><b id="cardLiters">0</b><span>لتر</span><span>· سعر اللتر</span><b id="priceLbl">1.998</b><span>د.ت</span></div>
+        <div class="fg" style="margin-top:10px"><label for="fIncomingDinars">المبلغ الوارد (شحن البطاقة)</label><div class="field has-unit"><i class="fas fa-arrow-down"></i><input type="number" id="fIncomingDinars" class="fc" oninput="liveAudit()" placeholder="0" min="0" step="0.001" inputmode="decimal"><span class="unit">د.ت</span></div></div>
+        <div class="conv"><span>البطاقة تعادل</span><b id="cardLiters">0</b><span>لتر</span><span>· الوارد يعادل</span><b id="incomingLiters">0</b><span>لتر</span></div>
       </div>
     </div>
 
@@ -363,7 +366,7 @@ td.d{color:var(--t1)}
     <div class="t-wrap">
       <table>
         <thead><tr>
-          <th>التاريخ</th><th>رقم الوثيقة</th><th>نوع الوقود</th><th>المقرر</th>
+          <th>التاريخ</th><th>رقم الوثيقة</th><th>نوع الوقود</th><th>المقرر</th><th>الإضافي</th>
           <th>ساعات العمل</th><th>الكمية المطلوبة</th><th>المستهلك</th><th>الباقي بالخزان</th><th>رصيد البطاقة</th>
           <th id="thEngR">ساعات المحرك الأيمن</th><th id="thEngL">ساعات المحرك الأيسر</th>
           <th>المعدل الفعلي (لتر/س)</th><th>نسبة المعيار %</th><th>الوقود المُبالغ فيه</th><th>درجة الخطر</th><th>الحالة</th><th class="colAct">إجراءات</th>
@@ -439,7 +442,6 @@ td.d{color:var(--t1)}
         standards.basedOn = Number(standards.standardBasedOn || standards.basedOn) || 0;
         standards.source = standards.standardSource || standards.source || 'learning';
         standards.minRequired = Number(standards.standardMinRequired || standards.minRequired) || 3;
-        // لا يُعتمد المعيار إلا بعد 3 وثائق سليمة
         if (standards.standardRate > 35 || standards.basedOn < standards.minRequired) standards.standardRate = 0;
       } else { ready = false; }
     } catch (e) { ready = false; }
@@ -488,7 +490,8 @@ td.d{color:var(--t1)}
     var L = num('fDocTotalLiters'), H = num('fDocTotalHours');
     var Actual = num('fActualConsumedLiters');
     var T = num('fRemainingTank'), C = num('fCardDinars');
-    var Q = num('fQuota');
+    var Q = num('fQuota'), Extra = num('fExtraLiters') || 0;
+    var IncomingD = num('fIncomingDinars') || 0;
     var p = price(), cap = Number(standards.tankCapacity) || 0, std = Number(standards.standardRate) || 0;
     var sR = num('fStartR'), eR = num('fEndR'), sL = isTwin ? num('fStartL') : NaN, eL = isTwin ? num('fEndL') : NaN;
 
@@ -497,16 +500,27 @@ td.d{color:var(--t1)}
     var excessLiters = (std > 0 && isFinite(actualRate) && actualRate > std && H > 0) ? (actualRate - std) * H : 0;
     var excessDinars = excessLiters * p;
 
+    var cardL = isFinite(C) ? C / p : NaN;
+    var incomingL = isFinite(IncomingD) ? IncomingD / p : 0;
+
+    // توازن المعادلة
+    var balanceLeft = (isFinite(cardL) ? cardL : 0) + (isFinite(T) ? T : 0) + (isFinite(Actual) ? Actual : 0);
+    var balanceRight = (isFinite(Q) ? Q : 0) + Extra;
+    var balanceDiff = balanceLeft - balanceRight;
+    var balanceOk = Math.abs(balanceDiff) <= 1;
+
     return {
-      L: L, H: H, T: T, C: C, p: p, cap: cap, std: std, Q: Q, Actual: Actual,
-      cardL: isFinite(C) ? C / p : NaN,
+      L: L, H: H, T: T, C: C, p: p, cap: cap, std: std, Q: Q, Actual: Actual, Extra: Extra,
+      IncomingD: IncomingD, incomingL: incomingL,
+      cardL: cardL,
       free: isFinite(T) && cap ? cap - T : NaN,
       after: isFinite(T) && isFinite(L) ? T + L : NaN,
       hR: eR - sR, hL: eL - sL,
       rate: actualRate, ratePct: ratePct,
       excessLiters: excessLiters, excessDinars: excessDinars,
       cost: isFinite(L) ? L * p : NaN,
-      quotaRemaining: isFinite(Q) && isFinite(L) ? Q - L : NaN
+      quotaRemaining: isFinite(Q) && isFinite(L) ? Q - L : NaN,
+      balanceLeft: balanceLeft, balanceRight: balanceRight, balanceDiff: balanceDiff, balanceOk: balanceOk
     };
   }
 
@@ -546,6 +560,7 @@ td.d{color:var(--t1)}
   window.liveAudit = function () {
     var c = calc(), msgs = [], hrs = [];
     $('cardLiters').textContent = isFinite(c.cardL) ? fmt(c.cardL, 1) : '0';
+    $('incomingLiters').textContent = isFinite(c.incomingL) ? fmt(c.incomingL, 1) : '0';
     $('priceLbl').textContent = c.p.toFixed(3);
     $('usedR').textContent = isFinite(c.hR) && c.hR >= 0 ? fmt(c.hR, 1) + ' ساعة' : '—';
     if (isTwin) $('usedL').textContent = isFinite(c.hL) && c.hL >= 0 ? fmt(c.hL, 1) + ' ساعة' : '—';
@@ -561,10 +576,14 @@ td.d{color:var(--t1)}
     if (c.cap && c.T > c.cap) msgs.push('الباقي بالخزان (' + c.T + ') أكبر من سعته (' + c.cap + ').');
     else if (c.cap && isFinite(c.after) && c.after > c.cap + 1) msgs.push('تجاوز الخزان: الباقي + المطلوب = ' + fmt(c.after, 1) + ' لتر والسعة ' + c.cap + '.');
     if (isFinite(c.L) && isFinite(c.C) && c.L * c.p > c.C + c.p) msgs.push('رصيد البطاقة لا يكفي: ' + fmt(c.L) + ' لتر = ' + fmt(c.L * c.p, 3) + ' د.ت، والرصيد ' + fmt(c.C, 3) + ' د.ت.');
-    if (isFinite(c.Q) && isFinite(c.L) && c.L > c.Q) msgs.push('الكمية المطلوبة (' + fmt(c.L) + ') تتجاوز المقرر (' + fmt(c.Q) + ').');
-    if (isFinite(c.Actual) && isFinite(c.L) && c.Actual > c.L) msgs.push('الكمية المستهلكة (' + fmt(c.Actual) + ') أكبر من الكمية المطلوبة (' + fmt(c.L) + ').');
+    if (isFinite(c.Q) && isFinite(c.L) && c.L > c.Q + c.Extra) msgs.push('الكمية المطلوبة (' + fmt(c.L) + ') تتجاوز المقرر + الإضافي (' + fmt(c.Q + c.Extra) + ').');
 
-    // كشف السرقة: أي تجاوز للمعيار المعتمد
+    // توازن المعادلة (تنبيه إداري — ليس سرقة)
+    if (!c.balanceOk) {
+      msgs.push('⚠️ عدم توازن المعادلة: (البطاقة ' + fmt(c.cardL || 0, 1) + ' + الخزان ' + fmt(c.T || 0, 1) + ' + المستهلكة ' + fmt(c.Actual || 0, 1) + ') = ' + fmt(c.balanceLeft, 1) + ' لتر، بينما (المقرر ' + fmt(c.Q || 0) + ' + الإضافي ' + fmt(c.Extra) + ') = ' + fmt(c.balanceRight, 1) + ' لتر — الفرق ' + fmt(c.balanceDiff, 1) + ' لتر.');
+    }
+
+    // السرقة: تجاوز المعيار فقط
     if (c.std > 0 && c.std < 100 && isFinite(c.ratePct) && c.ratePct > 100) {
       msgs.push('🚨 سرقة: المعدل ' + c.rate.toFixed(2) + ' لتر/س يتجاوز المعيار ' + c.std.toFixed(2) + ' بنسبة ' + (c.ratePct - 100).toFixed(0) + '% — وقود مُبالغ فيه ≈ ' + c.excessLiters.toFixed(1) + ' لتر (' + c.excessDinars.toFixed(3) + ' د.ت).');
     }
@@ -602,8 +621,10 @@ td.d{color:var(--t1)}
 
     var chips = [];
     if (isFinite(c.Q)) chips.push(['المقرر', fmt(c.Q) + ' لتر', '']);
+    if (c.Extra > 0) chips.push(['الإضافي', fmt(c.Extra) + ' لتر', '']);
+    if (c.IncomingD > 0) chips.push(['المبلغ الوارد', fmt(c.IncomingD, 3) + ' د.ت ≈ ' + fmt(c.incomingL, 1) + ' لتر', '']);
     if (isFinite(c.quotaRemaining)) chips.push(['المتبقي من المقرر', fmt(c.quotaRemaining) + ' لتر', c.quotaRemaining < 0 ? 'warn' : 'good']);
-    if (isFinite(c.Actual)) chips.push(['الكمية المستهلكة', fmt(c.Actual) + ' لتر', c.L && c.Actual > c.L ? 'warn' : 'good']);
+    if (isFinite(c.Actual)) chips.push(['الكمية المستهلكة', fmt(c.Actual) + ' لتر', c.L && c.Actual > c.L ? 'good' : 'good']);
     if (isFinite(c.cardL)) chips.push(['رصيد البطاقة بالليتر', fmt(c.cardL, 1) + ' لتر', '']);
     if (isFinite(c.free)) chips.push(['المساحة الفارغة بالخزان', fmt(Math.max(0, c.free), 1) + ' لتر', '']);
     if (isFinite(c.after)) chips.push(['الخزان بعد التعبئة', fmt(c.after, 1) + ' لتر', c.cap && c.after > c.cap + 1 ? 'warn' : 'good']);
@@ -611,6 +632,7 @@ td.d{color:var(--t1)}
     if (isFinite(c.rate)) chips.push(['المعدل الفعلي', fmt(c.rate, 2) + ' لتر/س', c.std && c.ratePct > 100 ? 'warn' : '']);
     if (isFinite(c.ratePct)) chips.push(['نسبة المعيار', fmt(c.ratePct, 0) + '%', c.ratePct > 100 ? 'warn' : '']);
     if (c.excessLiters > 0) chips.push(['الوقود المُبالغ فيه', fmt(c.excessLiters, 1) + ' لتر (' + fmt(c.excessDinars, 3) + ' د.ت)', 'warn']);
+    chips.push(['توازن المعادلة', c.balanceOk ? '✅ متوازنة' : '⚠️ فرق ' + fmt(c.balanceDiff, 1) + ' لتر', c.balanceOk ? 'good' : 'warn']);
     if (hrs.length) chips.push(['ساعات العدّاد', hrs.map(function (x) { return fmt(x, 1); }).join(' / ') + ' ساعة', '']);
 
     $('liveSum').innerHTML = chips.map(function (x) { return '<div class="sm ' + x[2] + '"><span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b></div>'; }).join('');
@@ -623,7 +645,7 @@ td.d{color:var(--t1)}
   };
 
   window.clearForm = function () {
-    ['fDocNumber', 'fQuota', 'fDocTotalLiters', 'fActualConsumedLiters', 'fDocTotalHours', 'fRemainingTank', 'fCardDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL'].forEach(function (id) { $(id).value = ''; });
+    ['fDocNumber', 'fQuota', 'fExtraLiters', 'fDocTotalLiters', 'fActualConsumedLiters', 'fDocTotalHours', 'fRemainingTank', 'fCardDinars', 'fIncomingDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL'].forEach(function (id) { $(id).value = ''; });
     $('fDate').value = today();
     $('fFuelType').value = 'gasoil';
     standards.fuelPrice = 1.998;
@@ -642,6 +664,8 @@ td.d{color:var(--t1)}
       boatId: boatId, date: $('fDate').value,
       fuelType: $('fFuelType').value,
       quota: num('fQuota'),
+      extraLiters: num('fExtraLiters') || 0,
+      incomingDinars: num('fIncomingDinars') || 0,
       documentNumber: $('fDocNumber').value.replace(/[<>]/g, '').trim().slice(0, 40) || undefined,
       docTotalLiters: num('fDocTotalLiters'),
       actualConsumedLiters: num('fActualConsumedLiters'),
@@ -670,7 +694,7 @@ td.d{color:var(--t1)}
     finally { saving = false; btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> ' + (editingId ? 'حفظ التعديلات' : 'حفظ الوثيقة'); }
   };
 
-  function cols() { return isTwin ? 17 : 16; }
+  function cols() { return isTwin ? 18 : 17; }
   function showSkeleton() {
     var row = '<tr class="skel">' + new Array(cols() + 1).join('<td><span></span></td>') + '</tr>';
     $('fuelTableBody').innerHTML = row + row + row;
@@ -707,6 +731,8 @@ td.d{color:var(--t1)}
     var h = '<h5>' + (d.isFraud ? '🚨 وثيقة مشبوهة' : '✅ وثيقة سليمة') + ' — ' + ldate(d.date) + '</h5>';
     h += row('نوع الوقود', d.fuelType === 'benzine' ? 'بنزين' : 'غزوال');
     if (d.quota != null) h += row('المقرر', fmt(d.quota) + ' لتر');
+    if (d.extraLiters > 0) h += row('الإضافي', fmt(d.extraLiters) + ' لتر');
+    if (d.incomingDinars > 0) h += row('المبلغ الوارد', fmt(d.incomingDinars, 3) + ' د.ت');
     if (d.actualConsumedLiters != null) h += row('المستهلك فعلياً', fmt(d.actualConsumedLiters) + ' لتر');
     h += row('المعدل الفعلي', d.totalActualRate ? fmt(d.totalActualRate, 2) + ' لتر/س' : '—');
     h += row('المعيار', (standards.standardRate > 0 && standards.standardRate < 100) ? fmt(standards.standardRate, 2) + ' لتر/س' : 'غير مسجل');
@@ -715,6 +741,7 @@ td.d{color:var(--t1)}
     if (d.remainingTank != null) h += row('الباقي بالخزان', fmt(d.remainingTank, 1) + ' لتر');
     if (d.tankAfter != null) h += row('بعد التعبئة', fmt(d.tankAfter, 1) + ' لتر');
     if (d.cardDinars != null) h += row('رصيد البطاقة', fmt(d.cardDinars, 3) + ' د.ت ≈ ' + fmt(d.cardLiters, 1) + ' لتر');
+    if (d.balanceOk !== null && d.balanceOk !== undefined) h += row('توازن المعادلة', d.balanceOk ? '✅ متوازنة' : '⚠️ فرق ' + fmt(d.balanceDiff, 1) + ' لتر');
     if (d.excessLiters > 0) h += row('🚨 الوقود المُبالغ فيه', fmt(d.excessLiters, 1) + ' لتر (' + fmt(d.excessDinars, 3) + ' د.ت)');
     if (r) h += row(l ? 'الأيمن' : 'المحرك', engTxt(r));
     if (l) h += row('الأيسر', engTxt(l));
@@ -743,6 +770,7 @@ td.d{color:var(--t1)}
         '<td data-label="رقم الوثيقة">' + (d.documentNumber ? esc(d.documentNumber) : '<span class="risk none">بدون رقم</span>') + '</td>' +
         '<td data-label="نوع الوقود"><span class="badge ' + (d.fuelType === 'benzine' ? 'bad' : 'ok') + '" style="cursor:default">' + ftLbl + '</span></td>' +
         '<td data-label="المقرر">' + (d.quota != null ? fmt(d.quota, 1) + ' لتر' : '—') + '</td>' +
+        '<td data-label="الإضافي">' + (d.extraLiters > 0 ? fmt(d.extraLiters, 1) + ' لتر' : '—') + '</td>' +
         '<td data-label="ساعات العمل">' + fmt(d.docTotalHours, 1) + '</td>' +
         '<td data-label="الكمية المطلوبة">' + fmt(d.docTotalLiters, 1) + ' لتر</td>' +
         '<td data-label="المستهلك"><b style="color:var(--info)">' + (d.actualConsumedLiters != null ? fmt(d.actualConsumedLiters, 1) + ' لتر' : '—') + '</b></td>' +
@@ -792,6 +820,8 @@ td.d{color:var(--t1)}
     $('fuelPrice').value = price();
     $('priceLbl').textContent = price().toFixed(3);
     $('fQuota').value = d.quota != null ? d.quota : '';
+    $('fExtraLiters').value = d.extraLiters || '';
+    $('fIncomingDinars').value = d.incomingDinars || '';
     $('fDocNumber').value = d.documentNumber || '';
     $('fDocTotalLiters').value = d.docTotalLiters != null ? d.docTotalLiters : '';
     $('fActualConsumedLiters').value = d.actualConsumedLiters != null ? d.actualConsumedLiters : '';
@@ -946,7 +976,7 @@ td.d{color:var(--t1)}
   };
 
   var auditData = null, detected = 0;
-  var RULES = { METER_ROLLBACK: 'تراجع العداد', RATE_THEFT: 'سرقة (تجاوز المعيار)', RATE_INFLATED: 'استهلاك مرتفع', TANK_OVERFLOW: 'تجاوز الخزان', HOURS_MISMATCH: 'تعارض الساعات', LITERS_MISMATCH: 'تعارض الكميات', PHANTOM_TRIP: 'رحلة في فترة توقف', STAT_ANOMALY: 'انحراف إحصائي', VOLUME_INFLATION: 'تضخم الكمية', DOUBLE_DIP: 'تموين متكرر', CARD_INSUFFICIENT: 'رصيد البطاقة لا يكفي', TANK_BALANCE: 'رصيد الخزان غير متسق', CONSUMPTION_GAP: 'فجوة استهلاك', METER_GAP: 'ساعات غير موثقة' };
+  var RULES = { METER_ROLLBACK: 'تراجع العداد', RATE_THEFT: '🚨 سرقة (تجاوز المعيار)', BALANCE_MISMATCH: 'عدم توازن المعادلة', TANK_OVERFLOW: 'تجاوز الخزان', HOURS_MISMATCH: 'تعارض الساعات', PHANTOM_TRIP: 'رحلة في فترة توقف', STAT_ANOMALY: 'انحراف إحصائي', VOLUME_INFLATION: 'تضخم الكمية', DOUBLE_DIP: 'تموين متكرر', CARD_INSUFFICIENT: 'رصيد البطاقة لا يكفي', TANK_BALANCE: 'رصيد الخزان غير متسق', CONSUMPTION_GAP: 'فجوة استهلاك', METER_GAP: 'ساعات غير موثقة' };
   function riskBadge(sc) {
     sc = Number(sc);
     if (!isFinite(sc)) return '<span class="risk none">غير محسوبة</span>';
@@ -973,7 +1003,6 @@ td.d{color:var(--t1)}
     var t = auditData && auditData.totals, price = parseFloat($('fuelPrice').value);
     if (!t) { ['dHours', 'dLiters', 'dTank', 'dCardL', 'dVar', 'dRisk'].forEach(function (id) { $(id).textContent = 'غير متاح'; }); return; }
     var sd = t.standard || {};
-    // لا يُعتمد المعيار إلا بعد 3 وثائق سليمة
     if (sd.rate > 0 && sd.rate < 100 && (Number(sd.basedOn) || 0) >= 3) {
       standards.standardRate = sd.rate;
     } else {
@@ -1006,7 +1035,7 @@ td.d{color:var(--t1)}
       card.className = 'dc ' + (v > 0 ? 'bad' : v < 0 ? 'good' : 'neutral');
     }
     $('dRisk').textContent = fmt(t.avgRisk, 0) + ' / 100';
-    $('dFlagged').textContent = (t.flagged || 0) + ' مشبوهة · ' + (t.warned || 0) + ' للمراجعة';
+    $('dFlagged').textContent = (t.flagged || 0) + ' مشبوهة · ' + (t.theftCount || 0) + ' سرقة · ' + fmt(t.totalExcessLiters || 0, 1) + ' لتر مُبالغ فيه';
   }
   window.detectAutoRate = async function () {
     try {
