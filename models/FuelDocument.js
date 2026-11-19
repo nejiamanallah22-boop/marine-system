@@ -22,6 +22,10 @@ const fuelDocumentSchema = new mongoose.Schema({
 
     fuelType: { type: String, enum: ['gasoil', 'benzine'], default: 'gasoil' },
     quota: { type: Number, default: null, min: 0 },
+    extraLiters: { type: Number, default: 0, min: 0 },
+    incomingDinars: { type: Number, default: 0, min: 0 },
+    incomingLiters: { type: Number, default: 0, min: 0 },
+
     docTotalLiters: { type: Number, required: true, min: 0 },
     actualConsumedLiters: { type: Number, required: true, min: 0 },
     docTotalHours: { type: Number, required: true, min: 0 },
@@ -45,10 +49,14 @@ const fuelDocumentSchema = new mongoose.Schema({
     fraudReason: { type: String, default: '' },
     violations: { type: [String], default: [] },
 
-    // ✅ الحقول الجديدة لتتبع السرقة
-    excessLiters: { type: Number, default: null, min: 0 },   // الوقود المُبالغ فيه (لتر)
-    excessDinars: { type: Number, default: null, min: 0 },   // قيمة الوقود المُبالغ فيه (د.ت)
-    ratePct: { type: Number, default: null },                // نسبة المعيار %
+    balanceLeft: { type: Number, default: null },
+    balanceRight: { type: Number, default: null },
+    balanceDiff: { type: Number, default: null },
+    balanceOk: { type: Boolean, default: null },
+
+    excessLiters: { type: Number, default: null, min: 0 },
+    excessDinars: { type: Number, default: null, min: 0 },
+    ratePct: { type: Number, default: null },
 
     createdBy: { type: String, default: '' },
     editedAt: { type: Date, default: null },
@@ -58,6 +66,6 @@ const fuelDocumentSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 fuelDocumentSchema.index({ boatId: 1, date: -1 });
-fuelDocumentSchema.index({ boatId: 1, isFraud: 1, totalActualRate: 1 }); // ✅ فهرس لتسريع حساب المعيار
+fuelDocumentSchema.index({ boatId: 1, isFraud: 1, totalActualRate: 1 });
 
 module.exports = mongoose.models.FuelDocument || mongoose.model('FuelDocument', fuelDocumentSchema);
