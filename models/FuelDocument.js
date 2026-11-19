@@ -25,7 +25,7 @@ const fuelDocumentSchema = new mongoose.Schema({
     docTotalLiters: { type: Number, required: true, min: 0 },
     actualConsumedLiters: { type: Number, required: true, min: 0 },
     docTotalHours: { type: Number, required: true, min: 0 },
-    
+
     remainingTank: { type: Number, default: null, min: 0 },
     cardDinars: { type: Number, default: null, min: 0 },
     cardLiters: { type: Number, default: null, min: 0 },
@@ -45,6 +45,11 @@ const fuelDocumentSchema = new mongoose.Schema({
     fraudReason: { type: String, default: '' },
     violations: { type: [String], default: [] },
 
+    // ✅ الحقول الجديدة لتتبع السرقة
+    excessLiters: { type: Number, default: null, min: 0 },   // الوقود المُبالغ فيه (لتر)
+    excessDinars: { type: Number, default: null, min: 0 },   // قيمة الوقود المُبالغ فيه (د.ت)
+    ratePct: { type: Number, default: null },                // نسبة المعيار %
+
     createdBy: { type: String, default: '' },
     editedAt: { type: Date, default: null },
     editedBy: { type: String, default: '' },
@@ -53,5 +58,6 @@ const fuelDocumentSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 fuelDocumentSchema.index({ boatId: 1, date: -1 });
+fuelDocumentSchema.index({ boatId: 1, isFraud: 1, totalActualRate: 1 }); // ✅ فهرس لتسريع حساب المعيار
 
 module.exports = mongoose.models.FuelDocument || mongoose.model('FuelDocument', fuelDocumentSchema);
