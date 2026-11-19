@@ -393,6 +393,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
 
     const TITLES = {
         fleet: 'الأسطول البحري',
+        fuel: 'كشف المحروقات',
         vehicles: 'الوسائل البرية - الحرس البحري',
         efficiency: 'جاهزية الأسطول',
         maintenance: 'سجل الصيانة والتدخلات',
@@ -706,7 +707,9 @@ body.exporting .snapshot-body { width: 1600px !important; }
                     }
                 }
                 const value = (cell === null || cell === undefined || cell === '') ? '—' : esc(cell);
-                html += `<td style="padding:1mm 0.6mm;text-align:center;vertical-align:middle;word-break:break-word;font-size:7.5pt;color:#1e293b;font-weight:600;${tdBase}">${value}</td>`;
+                // التواريخ والأرقام القصيرة لا تُكسر على سطرين
+                const nw = /^[\d٠-٩\/\-.,:+%\s\u200e\u200f\u061c]{1,20}$/.test(String(value)) ? 'white-space:nowrap!important;word-break:keep-all!important;' : '';
+                html += `<td style="padding:1mm 0.6mm;text-align:center;vertical-align:middle;word-break:break-word;font-size:7.5pt;color:#1e293b;font-weight:600;${nw}${tdBase}">${value}</td>`;
             });
             html += '</tr>';
         });
