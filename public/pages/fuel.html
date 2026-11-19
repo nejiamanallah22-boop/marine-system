@@ -192,81 +192,6 @@ td.d{color:var(--t1)}
 .eng-opt:hover{border-color:#cbd5e1}
 .eng-opt.on{border-color:var(--gold);background:var(--gold-bg);color:var(--navy);box-shadow:0 0 0 3px rgba(212,160,23,.15)}
 
-/* ===== الطباعة الرسمية (موحّدة مع صفحة الأسطول) ===== */
-#printSheet{display:none}
-@page{size:A4 landscape;margin:7mm 8mm 13mm 8mm;
-  @bottom-right{content:"صفحة " counter(page) " من " counter(pages);font:700 7pt 'Cairo','Segoe UI',sans-serif;color:#475569}
-  @bottom-left{content:"منظومة الوسائل البحرية · كشف المحروقات";font:700 7pt 'Cairo','Segoe UI',sans-serif;color:#475569}
-}
-@media print{
-  html,body{background:#fff!important;margin:0!important;padding:0!important;min-height:0!important;font-size:8pt!important}
-  body>*:not(#printSheet){display:none!important}
-  #printSheet{display:block!important;direction:rtl;font-family:'Cairo','Segoe UI',Tahoma,sans-serif;color:#0a1628;line-height:1.45}
-  #printSheet,#printSheet *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;animation:none!important;transition:none!important}
-  .ps-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8mm;padding-bottom:2.5mm}
-  .ps-hr{flex:1;font-size:8pt;font-weight:700;line-height:1.5;text-align:right}
-  .ps-hc{flex:0 0 auto;text-align:center;align-self:center;padding:0 4mm}
-  .ps-logo{display:block;height:15mm;max-width:40mm;object-fit:contain;margin:0 auto 1mm}
-  .ps-title{font-size:20pt;font-weight:900;line-height:1.15;color:#0a1628}
-  .ps-sub{font-size:7pt;font-weight:800;color:#9a7209;letter-spacing:2.2px;direction:ltr}
-  .ps-hl{flex:1;font-size:8pt;font-weight:700;line-height:1.5;text-align:left}
-  .ps-hl .ref{display:inline-block;margin-top:2mm;font-weight:800}
-  .ps-rule{height:1.6pt;background:#0a1628;position:relative;margin:0 0 3.2mm}
-  .ps-rule::after{content:'';position:absolute;left:0;right:0;top:3pt;height:.7pt;background:#d4a017}
-  .ps-info{display:flex;flex-wrap:wrap;gap:2mm;margin-bottom:3mm}
-  .ps-chip{display:flex;align-items:center;gap:1.6mm;border:.5pt solid #cbd5e1;border-radius:1.5mm;padding:1mm 3mm;background:#f8fafc;font-size:7.5pt}
-  .ps-chip span{color:#64748b;font-weight:700}.ps-chip b{color:#0a1628;font-weight:900}
-  .ps-chip.vessel{background:#0a1628;border-color:#0a1628}.ps-chip.vessel span{color:#e0c35e}.ps-chip.vessel b{color:#fff;font-size:9pt}
-  .ps-chip.alert{background:#fdeaea;border-color:#f0b4b4}.ps-chip.alert b{color:#b42323}
-  .ps-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:2mm;margin-bottom:3.2mm}
-  .ps-kpi{border:.5pt solid #d6dde8;border-top:2.2pt solid var(--c);border-radius:1.5mm;padding:1.8mm 2.5mm;background:#fff;break-inside:avoid}
-  .ps-kpi span{display:block;font-size:6.5pt;font-weight:800;color:#475569}
-  .ps-kpi b{display:block;font-size:14pt;font-weight:900;color:#0a1628;line-height:1.25}
-  .ps-kpi small{font-size:6.3pt;font-weight:700;color:#64748b}
-  .ps-sec{display:flex;align-items:center;gap:2mm;font-size:9pt;font-weight:900;margin:0 0 1.6mm;color:#0a1628;break-after:avoid}
-  .ps-sec::before{content:'';width:1.3mm;height:4mm;background:#d4a017;border-radius:.6mm}
-  .ps-chart{border:.5pt solid #d6dde8;border-radius:1.5mm;padding:2mm 2.5mm;margin-bottom:3.2mm;break-inside:avoid}
-  .ps-chart img{display:block;width:100%;height:44mm;object-fit:contain}
-  /* الجدول: يُفرض شكل الجدول حتى لو تفعّلت قواعد الهاتف */
-  #printSheet table.ps-tbl{display:table!important;width:100%;min-width:0!important;border-collapse:collapse;font-size:7pt}
-  #printSheet .ps-tbl thead{display:table-header-group!important}
-  #printSheet .ps-tbl tbody{display:table-row-group!important}
-  #printSheet .ps-tbl tfoot{display:table-row-group!important}
-  #printSheet .ps-tbl tr{display:table-row!important;width:auto!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:none!important;break-inside:avoid}
-  #printSheet .ps-tbl th,#printSheet .ps-tbl td{display:table-cell!important;position:static!important;box-shadow:none!important}
-  .ps-tbl th{background:#0a1628;color:#fff;font-weight:800;font-size:6.6pt;padding:1.5mm .8mm;border:.4pt solid #0a1628;white-space:nowrap;text-align:center}
-  .ps-tbl td{padding:1.1mm .8mm;border:.3pt solid #cfd6e2;text-align:center;font-weight:700;white-space:nowrap;vertical-align:middle}
-  .ps-tbl td::before{content:none!important}
-  .ps-tbl tbody tr:nth-child(even) td{background:#f5f7fa}
-  .ps-tbl tbody tr.bad td{background:#fdecec}
-  .ps-tbl tbody tr.bad td:first-child{border-right:1.8pt solid #d93f3f}
-  .ps-tbl td.n{color:#64748b;width:6mm}
-  .ps-tbl td.rt{color:#0a1628;font-weight:900}
-  .ps-tbl td.ex{color:#b42323;font-weight:900}
-  .ps-tbl small{display:block;font-size:5.6pt;color:#64748b;font-weight:600}
-  .ps-tbl tfoot td{background:#eaeff6;font-weight:900;border-top:1pt solid #0a1628;color:#0a1628}
-  .ps-pill{display:inline-block;padding:.2mm 2.2mm;border-radius:5mm;font-size:6.5pt;font-weight:900;border:.4pt solid}
-  .ps-pill.ok{color:#0b7a55;background:#e3f6ee;border-color:#0b7a55}
-  .ps-pill.bad{color:#b42323;background:#fdeaea;border-color:#b42323}
-  .ps-pill.fuel{color:#1e3a5f;background:#e7effb;border-color:#9db8e3}
-  .ps-pill.fuel.b{color:#9a5b00;background:#fff3dc;border-color:#e3b873}
-  .ps-risk{display:inline-flex;align-items:center;gap:1mm;font-weight:900;font-size:6.5pt}
-  .ps-risk i{display:inline-block;width:9mm;height:1.5mm;border-radius:1mm;background:#e3e8f0;position:relative;overflow:hidden}
-  .ps-risk i::after{content:'';position:absolute;top:0;bottom:0;right:0;width:var(--w);background:var(--c)}
-  .ps-notes{margin-top:3mm;border:.5pt solid #f0b4b4;border-right:2.4pt solid #d93f3f;background:#fff7f7;border-radius:1.5mm;padding:2mm 3mm;break-inside:avoid}
-  .ps-notes.ok{border-color:#a7dcc4;border-right-color:#0f9d6b;background:#f3fbf7}
-  .ps-notes.warn{border-color:#ecd68a;border-right-color:#d4a017;background:#fffbee}
-  .ps-notes h4{font-size:8.5pt;font-weight:900;margin:0 0 1mm}
-  .ps-notes ul{margin:0;padding:0;list-style:none}
-  .ps-notes li{font-size:7pt;font-weight:600;margin:.5mm 0}
-  .ps-notes li b{font-weight:900}
-  .ps-sign{display:grid;grid-template-columns:repeat(3,1fr);gap:7mm;margin-top:5mm;break-inside:avoid}
-  .ps-sg{border:.5pt solid #b8c2d1;border-radius:1.5mm;height:28mm;padding:2mm 3mm;text-align:center;position:relative}
-  .ps-sg b{display:block;font-size:8pt;font-weight:900}
-  .ps-sg span{display:block;font-size:6.5pt;color:#64748b;font-weight:700}
-  .ps-sg::after{content:'';position:absolute;left:6mm;right:6mm;bottom:5mm;border-bottom:.5pt dashed #94a3b8}
-  .ps-gen{margin-top:2.5mm;text-align:center;font-size:6.2pt;color:#94a3b8;font-weight:600}
-}
 </style>
 </head>
 <body>
@@ -459,7 +384,6 @@ td.d{color:var(--t1)}
     </div>
   </section>
 </div>
-<div id="printSheet" aria-hidden="true"></div>
 <div class="tip" id="tip" hidden></div>
 
 <script>
@@ -1144,7 +1068,7 @@ td.d{color:var(--t1)}
     } catch (e) { toast(e.message, 'error'); }
   };
 
-  /* ══ الطباعة الرسمية (ترويسة موحّدة مع صفحة الأسطول) ══ */
+  /* ══ الطباعة: نفس صفحة الطباعة الموحّدة (/print.html) المستعملة في باقي الصفحات ══ */
   function priceOfType(ft) { return ft === 'benzine' ? 2.525 : 1.998; }
   function periodLabel(rows) {
     if (curRange.start && curRange.start !== '2000-01-01') return 'من ' + ldate(curRange.start) + ' إلى ' + (curRange.end ? ldate(curRange.end) : '…');
@@ -1153,145 +1077,66 @@ td.d{color:var(--t1)}
     return 'من ' + ldate(ds[0]) + ' إلى ' + ldate(ds[ds.length - 1]);
   }
 
-  // رسم بياني مخصّص للطباعة (خلفية بيضاء، قيم فوق الأعمدة، خط المعيار أو المعدل العام)
-  function printChartImg(rows, refVal, refLabel) {
+  function printFuel() {
     try {
-      if (typeof Chart === 'undefined' || !rows.length) return '';
-      var cv = document.createElement('canvas'); cv.width = 1800; cv.height = 340;
-      var rates = rows.map(function (d) { return Number(d.totalActualRate) || 0; });
-      var bg = { id: 'psBg', beforeDraw: function (c) { var x = c.ctx; x.save(); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.restore(); } };
-      var vals = { id: 'psVals', afterDatasetsDraw: function (c) {
-        if (rows.length > 26) return;
-        var x = c.ctx, m = c.getDatasetMeta(0);
-        x.save(); x.font = '700 17px Cairo, Segoe UI, sans-serif'; x.fillStyle = '#0a1628'; x.textAlign = 'center';
-        m.data.forEach(function (b, i) { x.fillText(rates[i].toFixed(1), b.x, b.y - 6); });
-        x.restore();
-      } };
-      var ch = new Chart(cv.getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: rows.map(function (d) { return ldate(d.date, { day: '2-digit', month: '2-digit' }); }),
-          datasets: [
-            { label: 'المعدل الفعلي (لتر/س)', data: rates, order: 1, borderRadius: 6, maxBarThickness: 46,
-              backgroundColor: rows.map(function (d) { return d.isFraud ? '#d93f3f' : '#1e3a5f'; }) },
-            { label: refLabel, data: rows.map(function () { return refVal || null; }), type: 'line', order: 0,
-              borderColor: '#d4a017', borderWidth: 3, borderDash: [10, 7], pointRadius: 0, fill: false }
-          ]
-        },
-        options: {
-          responsive: false, animation: false, devicePixelRatio: 1, layout: { padding: { top: 6 } },
-          plugins: { legend: { rtl: true, position: 'top', align: 'end', labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 16, boxHeight: 16, padding: 22, font: { size: 18, family: 'Cairo, Segoe UI, sans-serif', weight: '700' }, color: '#0a1628',
-            generateLabels: function () { return [
-              { text: 'سليم', fillStyle: '#1e3a5f', strokeStyle: '#1e3a5f', pointStyle: 'rectRounded', hidden: false },
-              { text: 'مشبوه', fillStyle: '#d93f3f', strokeStyle: '#d93f3f', pointStyle: 'rectRounded', hidden: false },
-              { text: refLabel, fillStyle: '#d4a017', strokeStyle: '#d4a017', pointStyle: 'rectRounded', hidden: false }]; } } }, tooltip: { enabled: false } },
-          scales: {
-            x: { reverse: true, grid: { display: false }, ticks: { font: { size: 17, family: 'Cairo, Segoe UI, sans-serif' }, color: '#475569', maxRotation: 0, autoSkip: true, maxTicksLimit: 30 } },
-            y: { position: 'right', beginAtZero: true, grace: '12%', grid: { color: 'rgba(100,116,139,.22)' }, ticks: { font: { size: 17 }, color: '#475569', maxTicksLimit: 5 } }
-          }
-        },
-        plugins: [bg, vals]
+      if (!allDocs.length) return toast('لا توجد وثائق للطباعة', 'info');
+      var docs = allDocs.slice().sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
+      var n = docs.length, H = 0, Cons = 0, Req = 0, Quota = 0, exL = 0, flagged = 0;
+      docs.forEach(function (d) {
+        H += Number(d.docTotalHours) || 0; Cons += Number(d.actualConsumedLiters) || 0;
+        Req += Number(d.docTotalLiters) || 0; Quota += Number(d.quota) || 0; exL += Number(d.excessLiters) || 0;
+        if (d.isFraud) flagged++;
       });
-      var url = ch.toBase64Image('image/png', 1); ch.destroy();
-      return url;
-    } catch (e) { return ''; }
-  }
+      var std = Number(standards.standardRate) || 0, hasStd = std > 0 && std < 100;
+      var avg = H > 0 && Cons > 0 ? Cons / H : 0;
+      var dash = '—', anyLeft = docs.some(function (d) { return d.engines && d.engines.left; });
+      var hrs = function (m) { return m ? fmt(m.usedHours != null ? m.usedHours : m.totalHours, 1) : dash; };
 
-  function buildPrintSheet() {
-    var rows = allDocs.slice().sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
-    var n = rows.length, H = 0, Cons = 0, Req = 0, Quota = 0, cost = 0, exL = 0, exD = 0, flagged = 0, theft = 0, riskSum = 0, riskN = 0;
-    rows.forEach(function (d) {
-      var c = Number(d.actualConsumedLiters) || 0, p = priceOfType(d.fuelType), ex = Number(d.excessLiters) || 0;
-      H += Number(d.docTotalHours) || 0; Cons += c; Req += Number(d.docTotalLiters) || 0; Quota += Number(d.quota) || 0;
-      cost += c * p; exL += ex; exD += ex * p;
-      if (d.isFraud) flagged++;
-      if (ex > 0) theft++;
-      if (d.riskScore != null && isFinite(Number(d.riskScore))) { riskSum += Number(d.riskScore); riskN++; }
-    });
-    var avg = H > 0 && Cons > 0 ? Cons / H : 0, avgRisk = riskN ? riskSum / riskN : null;
-    var std = Number(standards.standardRate) || 0, hasStd = std > 0 && std < 100;
-    var now = new Date(), nowD = ldate(now), nowT = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-    var vname = vesselTitle || ($('vesselName').textContent || '').trim() || '—';
-    var logo = ''; try { logo = localStorage.getItem('marine_logo') || ''; } catch (e) {}
-    if (!/^(data:image\/|https?:|\/)/.test(logo)) logo = '';
-    var twinAny = rows.some(function (d) { return d.engines && d.engines.left; });
+      var stats = [
+        { value: fmt(H, 1), label: '⏱️ ساعات العمل' },
+        { value: fmt(Cons, 1), label: '🔥 المستهلك فعلياً (لتر)' },
+        { value: fmt(Req, 1), label: '⛽ المطلوب الإضافي (لتر)' },
+        { value: avg ? avg.toFixed(2) : dash, label: '📈 المعدل العام (لتر/س)' },
+        { value: flagged + ' / ' + n, label: '🚨 الوثائق المشبوهة' }
+      ];
 
-    var kpi = function (c, label, val, sub) { return '<div class="ps-kpi" style="--c:' + c + '"><span>' + label + '</span><b>' + val + '</b><small>' + sub + '</small></div>'; };
-    var rc = function (sc) { return sc > 60 ? '#d93f3f' : sc >= 30 ? '#e0a800' : '#0f9d6b'; };
-    var dash = '—';
+      var columns = ['م', 'التاريخ', 'رقم الوثيقة', 'الوقود', 'المقرر (لتر)', 'المطلوب الإضافي (لتر)', 'ساعات العمل', 'المستهلك (لتر)', 'الباقي بالخزان (لتر)', 'رصيد البطاقة (د.ت)',
+        anyLeft ? 'ساعات المحركين (أيمن / أيسر)' : 'ساعات المحرك', 'المعدل', 'نسبة المعيار', 'مُبالغ فيه (لتر)', 'درجة الخطر', 'الحالة'];
 
-    var h = '<div class="ps-head">' +
-      '<div class="ps-hr">الجمهورية التونسية<br>وزارة الداخلية<br>كتابة الدولة للأمن<br>الإدارة العامة للحرس الوطني<br>الإدارة العامة لحرس الحدود<br>إدارة إسناد الوحدات البحرية</div>' +
-      '<div class="ps-hc">' + (logo ? '<img class="ps-logo" src="' + esc(logo) + '" alt="">' : '') + '<div class="ps-title">كشف المحروقات</div><div class="ps-sub">FUEL CONSUMPTION STATEMENT</div></div>' +
-      '<div class="ps-hl">العوينة في: ' + esc(nowD) + '<br><span class="ref">ع/ ______ /دد</span></div></div><div class="ps-rule"></div>';
+      var rows = docs.map(function (d, i) {
+        var e = d.engines || {}, rate = Number(d.totalActualRate) || 0, pct = hasStd && rate > 0 ? Math.round(rate / std * 100) + '%' : dash;
+        var benz = d.fuelType === 'benzine';
+        return [
+          i + 1, ldate(d.date), d.documentNumber || dash,
+          { type: 'badge', text: benz ? 'بنزين' : 'غزوال', variant: benz ? 'warning' : 'info' },
+          d.quota != null ? fmt(d.quota, 1) : dash, fmt(d.docTotalLiters, 1), fmt(d.docTotalHours, 1),
+          d.actualConsumedLiters != null ? fmt(d.actualConsumedLiters, 1) : dash,
+          d.remainingTank != null ? fmt(d.remainingTank, 1) : dash,
+          d.cardDinars != null ? fmt(d.cardDinars, 3) : dash,
+          e.left ? hrs(e.right) + ' / ' + hrs(e.left) : hrs(e.right),
+          rate > 0 ? rate.toFixed(2) : dash, pct,
+          d.excessLiters > 0 ? fmt(d.excessLiters, 1) : dash,
+          d.riskScore != null && isFinite(Number(d.riskScore)) ? Math.round(d.riskScore) : dash,
+          { type: 'badge', text: d.isFraud ? 'مشبوه' : 'سليم', variant: d.isFraud ? 'danger' : 'success' }
+        ];
+      });
+      // سطر المجاميع
+      rows.push(['', { type: 'badge', text: 'المجموع', variant: 'neutral' }, '', '', fmt(Quota, 1), fmt(Req, 1), fmt(H, 1), fmt(Cons, 1), '', '', '', avg ? avg.toFixed(2) : dash, '', exL > 0 ? fmt(exL, 1) : dash, '', '']);
 
-    h += '<div class="ps-info">' +
-      '<div class="ps-chip vessel"><span>المركب</span><b>' + esc(vname) + '</b></div>' +
-      '<div class="ps-chip"><span>الفترة</span><b>' + esc(periodLabel(rows)) + '</b></div>' +
-      '<div class="ps-chip"><span>عدد الوثائق</span><b>' + n + '</b></div>' +
-      '<div class="ps-chip"><span>المعيار المعتمد</span><b>' + (hasStd ? fmt(std, 2) + ' لتر/س' : 'قيد التعلّم') + '</b></div>' +
-      '<div class="ps-chip' + (flagged ? ' alert' : '') + '"><span>الوثائق المشبوهة</span><b>' + flagged + ' / ' + n + '</b></div>' +
-      '<div class="ps-chip"><span>تاريخ الطبع</span><b>' + esc(nowD + ' — ' + nowT) + '</b></div></div>';
-
-    h += '<div class="ps-kpis">' +
-      kpi('#2f6fd0', 'ساعات العمل', fmt(H, 1), 'ساعة') +
-      kpi('#d4a017', 'المستهلك فعلياً', fmt(Cons, 1), 'لتر') +
-      kpi('#0e8f9b', 'المطلوب (الإضافي)', fmt(Req, 1), 'لتر · المقرر ' + fmt(Quota, 0)) +
-      kpi('#1e3a5f', 'المعدل العام', avg ? avg.toFixed(2) : dash, 'لتر / ساعة') +
-      kpi('#e8830c', 'كلفة المستهلك', fmt(cost, 3), 'دينار تونسي') +
-      kpi(exL > 0 ? '#d93f3f' : '#0f9d6b', 'الوقود المُبالغ فيه', fmt(exL, 1), 'لتر · ' + fmt(exD, 3) + ' د.ت') +
-      '</div>';
-
-    var img = printChartImg(rows, hasStd ? std : avg, hasStd ? 'المعيار ' + std.toFixed(2) : 'المعدل العام ' + avg.toFixed(2));
-    if (img) h += '<div class="ps-sec">منحنى معدل الاستهلاك حسب الوثيقة</div><div class="ps-chart"><img src="' + img + '" alt=""></div>';
-
-    var heads = ['م', 'التاريخ', 'رقم الوثيقة', 'الوقود', 'المقرر (لتر)', 'المطلوب الإضافي (لتر)', 'ساعات العمل', 'المستهلك (لتر)', 'الباقي بالخزان (لتر)', 'رصيد البطاقة (د.ت)', twinAny ? 'ساعات المحركين (أيمن / أيسر)' : 'ساعات المحرك', 'المعدل (لتر/س)', 'نسبة المعيار', 'مُبالغ فيه (لتر)', 'درجة الخطر', 'الحالة'];
-    h += '<div class="ps-sec">السجل التفصيلي لوثائق التموين</div><table class="ps-tbl"><thead><tr>' + heads.map(function (t) { return '<th>' + t + '</th>'; }).join('') + '</tr></thead><tbody>';
-    h += n ? rows.map(function (d, i) {
-      var e = d.engines || {}, used = function (m) { return m ? fmt(m.usedHours != null ? m.usedHours : m.totalHours, 1) : dash; };
-      var rate = Number(d.totalActualRate) || 0, pct = hasStd && rate > 0 ? rate / std * 100 : null, sc = d.riskScore;
-      var risk = sc == null || !isFinite(Number(sc)) ? dash : '<span class="ps-risk" style="--w:' + Math.min(100, Number(sc)) + '%;--c:' + rc(Number(sc)) + '"><i></i>' + Math.round(sc) + '</span>';
-      var ft = d.fuelType === 'benzine';
-      return '<tr class="' + (d.isFraud ? 'bad' : '') + '"><td class="n">' + (i + 1) + '</td><td>' + ldate(d.date) + '</td><td>' + (d.documentNumber ? esc(d.documentNumber) : dash) + '</td>' +
-        '<td><span class="ps-pill fuel' + (ft ? ' b' : '') + '">' + (ft ? 'بنزين' : 'غزوال') + '</span></td>' +
-        '<td>' + (d.quota != null ? fmt(d.quota, 1) : dash) + '</td><td>' + fmt(d.docTotalLiters, 1) + '</td><td>' + fmt(d.docTotalHours, 1) + '</td>' +
-        '<td class="rt">' + (d.actualConsumedLiters != null ? fmt(d.actualConsumedLiters, 1) : dash) + '</td>' +
-        '<td>' + (d.remainingTank != null ? fmt(d.remainingTank, 1) : dash) + '</td>' +
-        '<td>' + (d.cardDinars != null ? fmt(d.cardDinars, 3) : dash) + '</td>' +
-        '<td>' + (e.left ? used(e.right) + ' / ' + used(e.left) : used(e.right)) + '</td>' +
-        '<td class="rt">' + (rate > 0 ? rate.toFixed(2) : dash) + '</td>' +
-        '<td>' + (pct != null ? Math.round(pct) + '%' : dash) + '</td>' +
-        '<td class="' + (d.excessLiters > 0 ? 'ex' : '') + '">' + (d.excessLiters > 0 ? fmt(d.excessLiters, 1) : dash) + '</td>' +
-        '<td>' + risk + '</td>' +
-        '<td><span class="ps-pill ' + (d.isFraud ? 'bad' : 'ok') + '">' + (d.isFraud ? 'مشبوه' : 'سليم') + '</span></td></tr>';
-    }).join('') : '<tr><td colspan="16" style="padding:8mm;color:#64748b">لا توجد وثائق ضمن الفترة المحددة</td></tr>';
-    h += '</tbody>' + (n ? '<tfoot><tr><td colspan="4">المجموع / المعدل العام</td><td>' + fmt(Quota, 1) + '</td><td>' + fmt(Req, 1) + '</td><td>' + fmt(H, 1) + '</td><td>' + fmt(Cons, 1) + '</td><td colspan="3"></td><td>' + (avg ? avg.toFixed(2) : dash) + '</td><td></td><td>' + fmt(exL, 1) + '</td><td colspan="2"></td></tr></tfoot>' : '') + '</table>';
-
-    if (n) {
-      var bad = rows.filter(function (d) { return d.isFraud; });
-      var unbal = rows.filter(function (d) { return d.balanceOk === false; });
-      if (bad.length) {
-        h += '<div class="ps-notes"><h4>ملاحظات التدقيق — وثائق مشبوهة (' + bad.length + ')' + (theft ? ' · ' + theft + ' تجاوز للمعيار' : '') + '</h4><ul>' +
-          bad.slice(0, 8).map(function (d) {
-            var why = d.fraudReason ? String(d.fraudReason).split(' | ').map(esc).join('؛ ') : 'صُنّفت مشبوهة حسب قواعد التدقيق';
-            return '<li><b><bdi>' + ldate(d.date) + '</bdi>' + (d.documentNumber ? ' · رقم <bdi>' + esc(d.documentNumber) + '</bdi>' : '') + '</b> — ' + why + '</li>';
-          }).join('') + (bad.length > 8 ? '<li>… و ' + (bad.length - 8) + ' وثائق أخرى</li>' : '') + '</ul></div>';
-      } else h += '<div class="ps-notes ok"><h4>لم تُرصد أي مخالفة في الوثائق المعروضة</h4></div>';
-      if (unbal.length) {
-        h += '<div class="ps-notes warn"><h4>تنبيهات إدارية — عدم توازن المعادلة (' + unbal.length + ')</h4><ul>' +
-          unbal.slice(0, 6).map(function (d) { return '<li><b><bdi>' + ldate(d.date) + '</bdi>' + (d.documentNumber ? ' · رقم <bdi>' + esc(d.documentNumber) + '</bdi>' : '') + '</b> — فرق ' + fmt(d.balanceDiff, 1) + ' لتر بين (البطاقة + الخزان + المستهلك) و(المقرر + الإضافي)</li>'; }).join('') +
-          (unbal.length > 6 ? '<li>… و ' + (unbal.length - 6) + ' أخرى</li>' : '') + '</ul></div>';
-      }
+      var vname = vesselTitle || ($('vesselName').textContent || '').trim();
+      var printData = {
+        type: 'fuel',
+        title: 'كشف المحروقات',
+        subtitle: 'Fuel Consumption Statement',
+        sectionTitle: 'المركب: ' + vname + '  ·  ' + periodLabel(docs) + '  ·  المعيار المعتمد: ' + (hasStd ? fmt(std, 2) + ' لتر/س' : 'قيد التعلّم') + '  ·  عدد الوثائق: ' + n,
+        stats: stats, columns: columns, rows: rows
+      };
+      localStorage.setItem('print_data', JSON.stringify(printData));
+      window.open('/print.html?type=fuel&key=print_data', '_blank');
+    } catch (e) {
+      console.error('Print error:', e);
+      toast('حدث خطأ في تحضير الطباعة: ' + e.message, 'error');
     }
-
-    h += '<div class="ps-sign"><div class="ps-sg"><b>محرّر الكشف</b><span>الاسم والإمضاء</span></div><div class="ps-sg"><b>رئيس الوحدة</b><span>الاسم والإمضاء</span></div><div class="ps-sg"><b>الختم</b><span>ختم الإدارة</span></div></div>';
-    $('printSheet').innerHTML = h;
-  }
-  function doPrint() {
-    if (!allDocs.length) return toast('لا توجد وثائق للطباعة', 'info');
-    tip.hidden = true;
-    buildPrintSheet();
-    setTimeout(function () { window.print(); }, 250);
   }
 
   function applyEngineMode() {
@@ -1309,8 +1154,7 @@ td.d{color:var(--t1)}
     applyEngineMode(); window.liveAudit();
   };
   document.querySelectorAll('.eng-opt').forEach(function (b) { b.addEventListener('click', function () { window.setEngines(parseInt(b.getAttribute('data-n'), 10)); }); });
-  $('printBtn').addEventListener('click', doPrint);
-  window.addEventListener('beforeprint', buildPrintSheet);
+  $('printBtn').addEventListener('click', printFuel);
 
   init();
 })();
