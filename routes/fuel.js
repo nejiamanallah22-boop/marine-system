@@ -1,8 +1,9 @@
 /**
- * routes/fuel.js v6 — محرك التدقيق لوثائق تموين المحروقات
- * - المعيار: لا يُعتمد إلا بعد 3 وثائق سليمة (وسيط Median لمقاومة الشواذ).
- * - أي وثيقة تتجاوز المعيار المعتمد تُصنَّف كـ"سرقة/تلاعب" (RATE_THEFT).
- * - تعديل وحذف الوثائق مع سجل تغييرات وإعادة تدقيق.
+ * routes/fuel.js v7 — محرك التدقيق لوثائق تموين المحروقات
+ * - دعم المحرك الواحد والمحركين.
+ * - المعيار: لا يُعتمد إلا بعد 3 وثائق سليمة (وسيط Median).
+ * - السرقة: تجاوز المعيار المعتمد فقط (وليس Actual > L).
+ * - توازن المعادلة: (بطاقة لتر + خزان + مستهلكة) = (مقرر + إضافي).
  */
 const express = require('express');
 const router = express.Router();
@@ -14,10 +15,7 @@ let authenticateAccessToken, csrfProtection, normalizeRole = r => String(r || ''
 let addLog = async () => {};
 const csrf = (req, res, next) => csrfProtection(req, res, next);
 
-// أسعار المحروقات الثابتة حسب النوع (دينار تونسي)
 const PRICES = { gasoil: 1.998, benzine: 2.525 };
-
-// الحد الأقصى المنطقي للمعدل (لتجاهل البيانات الخاطئة القديمة)
 const MAX_SENSIBLE_RATE = 35;
 
 const WRITE_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit'];
@@ -26,15 +24,15 @@ const PRIVILEGED = ['admin', 'manager'];
 const FRAUD_THRESHOLD = 60;
 const WARN_THRESHOLD = 30;
 
-// ✅ التغيير 1: رفع الحد الأدنى لاعتماد المعيار إلى 3 وثائق سليمة
-const LEARN_MIN_OWN = 3;        // كان 2 → أصبح 3
-const LEARN_MIN_CATEGORY = 3;   // يبقى 3 للفئة
+const LEARN_MIN_OWN = 3;
+const LEARN_MIN_CATEGORY = 3;
+const BALANCE_TOLERANCE = 1;
 
-// ✅ التغيير 2: إضافة قاعدة "سرقة" بوزن مرتفع
 const WEIGHTS = {
   METER_ROLLBACK: 70, TANK_OVERFLOW: 70, PHANTOM_TRIP: 65, TANK_BALANCE: 55,
-  CARD_INSUFFICIENT: 50, RATE_THEFT: 70, RATE_INFLATED: 45, DOUBLE_DIP: 45,
-  VOLUME_INFLATION: 40, HOURS_MISMATCH: 35, CONSUMPTION_GAP: 35, STAT_ANOMALY: 25, METER_GAP: 20
+  CARD_INSUFFICIENT: 50, RATE_THEFT: 70, DOUBLE_DIP: 45,
+  VOLUME_INFLATION: 40, HOURS_MISMATCH: 35, CONSUMPTION_GAP: 35,
+  BALANCE_MISMATCH: 30, STAT_ANOMALY: 25, METER_GAP: 20
 };
 
 const n = v => { const x = Number(v); return Number.isFinite(x) ? x : NaN; };
@@ -76,27 +74,22 @@ async function cleanRates(ids, excludeId) {
     boatId: { $in: ids },
     isFraud: false,
     riskScore: { $lt: WARN_THRESHOLD },
-    totalActualRate: { $gt: 0, $lt: MAX_SENSIBLE_RATE }
+    totalActualRate: { $gt: 0, $lt: MAX_SENSIBLE_RATE },
+    balanceOk: { $ne: false }
   };
   if (excludeId) q._id = { $ne: excludeId };
   const docs = await FuelDocument.find(q).select('totalActualRate').limit(500).lean();
   return docs.map(d => d.totalActualRate);
 }
 
-/**
- * ✅ التغيير 3: إرجاع حالة "learning" صريحة عندما تكون الوثائق < 3
- * حتى تعرض الواجهة "قيد التعلّم — X / 3".
- */
 async function effectiveStandard(v, req, excludeId) {
   const manual = Number(v.standardRate) || 0;
   if (manual > 0 && manual < MAX_SENSIBLE_RATE)
     return { rate: manual, source: 'manual', basedOn: 0, minRequired: LEARN_MIN_OWN };
 
   const own = await cleanRates(idsOf(v), excludeId);
-  if (own.length >= LEARN_MIN_OWN) {
-    // ✅ الوسيط (Median) أكثر مقاومة للشواذ من المتوسط
+  if (own.length >= LEARN_MIN_OWN)
     return { rate: r2(median(own)), source: 'learned', basedOn: own.length, minRequired: LEARN_MIN_OWN };
-  }
 
   const sibs = await siblingsOf(req, v);
   if (sibs.length) {
@@ -104,9 +97,21 @@ async function effectiveStandard(v, req, excludeId) {
     if (rs.length >= LEARN_MIN_CATEGORY)
       return { rate: r2(median(rs)), source: 'category', basedOn: rs.length, minRequired: LEARN_MIN_CATEGORY };
   }
-
-  // ✅ لا معيار معتمد بعد — الواجهة ستعرض "قيد التعلّم"
   return { rate: 0, source: 'learning', basedOn: own.length, minRequired: LEARN_MIN_OWN };
+}
+
+function checkBalance(d) {
+  const price = Number(d.price) || 0;
+  const cardL = price > 0 ? (Number(d.cardDinars) || 0) / price : 0;
+  const tank = Number(d.remainingTank) || 0;
+  const actual = Number(d.actualConsumedLiters) || 0;
+  const quota = Number(d.quota) || 0;
+  const extra = Number(d.extraLiters) || 0;
+
+  const left = r2(cardL + tank + actual);
+  const right = r2(quota + extra);
+  const diff = r2(left - right);
+  return { left, right, diff, ok: Math.abs(diff) <= BALANCE_TOLERANCE };
 }
 
 function readEngine(e, label) {
@@ -131,6 +136,13 @@ function parseDoc(b, v) {
   const Q = n(b.quota);
   if (!(Q >= 0 && Q <= 1e6)) return { err: 'المقرر غير صالح' };
 
+  const Extra = n(b.extraLiters) || 0;
+  if (!(Extra >= 0 && Extra <= 1e6)) return { err: 'الكمية الإضافية غير صالحة' };
+
+  const IncomingD = n(b.incomingDinars) || 0;
+  if (!(IncomingD >= 0 && IncomingD <= 1e7)) return { err: 'المبلغ الوارد غير صالح' };
+  const IncomingL = r2(IncomingD / price);
+
   const L = n(b.docTotalLiters), H = n(b.docTotalHours), T = n(b.remainingTank), C = n(b.cardDinars);
   const Actual = n(b.actualConsumedLiters);
 
@@ -149,19 +161,44 @@ function parseDoc(b, v) {
 
   const documentNumber = typeof b.documentNumber === 'string' ? b.documentNumber.replace(/[<>]/g, '').trim().slice(0, 40) : '';
 
-  return { input: { date, fuelType, quota: Q, actualConsumedLiters: Actual, docTotalHours: H, docTotalLiters: L, remainingTank: T, cardDinars: C, price, documentNumber, engines: { right, left }, twin } };
+  return {
+    input: {
+      date, fuelType, quota: Q, extraLiters: Extra,
+      incomingDinars: IncomingD, incomingLiters: IncomingL,
+      actualConsumedLiters: Actual, docTotalHours: H, docTotalLiters: L,
+      remainingTank: T, cardDinars: C, price, documentNumber,
+      engines: { right, left }, twin
+    }
+  };
 }
 
 const docFields = (d, a) => ({
   date: d.date, documentNumber: d.documentNumber,
-  fuelType: d.fuelType, quota: d.quota, actualConsumedLiters: d.actualConsumedLiters,
+  fuelType: d.fuelType, quota: d.quota,
+  extraLiters: d.extraLiters, incomingDinars: d.incomingDinars, incomingLiters: d.incomingLiters,
+  actualConsumedLiters: d.actualConsumedLiters,
   docTotalLiters: d.docTotalLiters, docTotalHours: d.docTotalHours,
   remainingTank: r2(d.remainingTank), cardDinars: r3(d.cardDinars),
   cardLiters: r2(a.cardL), fuelPrice: d.price, tankAfter: r2(d.remainingTank + d.docTotalLiters),
-  engineCount: d.twin ? 2 : 1, engines: { right: d.engines.right, left: d.engines.left },
+  engineCount: d.twin ? 2 : 1,
+  engines: { right: d.engines.right, left: d.engines.left || null },
   totalActualRate: r2(a.rate), actualConsumption: a.consumed,
-  riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules
+  riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules,
+  balanceLeft: a.balance.left, balanceRight: a.balance.right,
+  balanceDiff: a.balance.diff, balanceOk: a.balance.ok,
+  excessLiters: a.stealInfo ? a.stealInfo.excessLiters : 0,
+  excessDinars: a.stealInfo ? a.stealInfo.excessDinars : 0,
+  ratePct: a.stealInfo ? a.stealInfo.ratePct : null
 });
+
+function computeExcess(rate, std, hours, price) {
+  if (!(std > 0) || !(rate > std) || !(hours > 0)) {
+    return { excessLiters: 0, excessDinars: 0, ratePct: std > 0 ? r2(rate / std * 100) : null };
+  }
+  const excessLiters = r2((rate - std) * hours);
+  const excessDinars = r3(excessLiters * (price || 0));
+  return { excessLiters, excessDinars, ratePct: r2(rate / std * 100) };
+}
 
 async function runAudit(vessel, d, opts = {}) {
   const hits = {};
@@ -172,9 +209,18 @@ async function runAudit(vessel, d, opts = {}) {
   const std = Number(opts.std) || 0;
   const tank = Number(vessel.tankCapacity) || 0;
 
-  const L = d.docTotalLiters, Actual = d.actualConsumedLiters, H = d.docTotalHours, T = d.remainingTank, C = d.cardDinars, price = d.price;
+  const L = d.docTotalLiters, Actual = d.actualConsumedLiters, H = d.docTotalHours;
+  const T = d.remainingTank, C = d.cardDinars, price = d.price;
   const rate = H > 0 ? Actual / H : 0;
   const cardL = price > 0 ? C / price : 0;
+
+  const balance = checkBalance(d);
+  if (!balance.ok) {
+    add('BALANCE_MISMATCH',
+      'عدم توازن: (بطاقة ' + r2(cardL) + ' + خزان ' + T + ' + مستهلكة ' + Actual + ') = ' + balance.left +
+      ' لتر، بينما (مقرر ' + d.quota + ' + إضافي ' + d.extraLiters + ') = ' + balance.right +
+      ' لتر — الفرق ' + balance.diff + ' لتر');
+  }
 
   const used = [d.engines.right, d.engines.left].filter(Boolean).map(e => e.usedHours);
   const maxUsed = used.length ? Math.max(...used) : 0;
@@ -184,17 +230,13 @@ async function runAudit(vessel, d, opts = {}) {
 
   if (L * price > C + price) add('CARD_INSUFFICIENT', 'كلفة ' + L + ' لتر = ' + r3(L * price) + ' د.ت تتجاوز رصيد البطاقة ' + r3(C) + ' د.ت (= ' + r2(cardL) + ' لتر)');
 
-  // ✅ التغيير 4: أي تجاوز للمعيار المعتمد = سرقة (وليس فقط 115%)
+  let stealInfo = null;
   if (std > 0 && rate > std * 1.001) {
-    const excessRate = rate - std;
-    const excessLiters = r2(excessRate * H);
-    const pct = r2((rate / std - 1) * 100);
+    stealInfo = computeExcess(rate, std, H, price);
+    const pctOver = r2((rate / std - 1) * 100);
     add('RATE_THEFT',
-      '🚨 سرقة: المعدل ' + r2(rate) + ' لتر/س يتجاوز المعيار المعتمد ' + std +
-      ' بنسبة ' + pct + '% — وقود مُبالغ فيه ≈ ' + excessLiters + ' لتر');
-  } else if (std > 0 && rate >= std * 1.15) {
-    // احتياطي: إذا كان المعيار غير معتمد بعد، نُبقي التحذير القديم
-    add('RATE_INFLATED', 'المعدل ' + r2(rate) + ' يتجاوز المعيار ' + std + ' بـ 15% أو أكثر');
+      '🚨 سرقة: المعدل ' + r2(rate) + ' لتر/س يتجاوز المعيار ' + std +
+      ' بنسبة ' + pctOver + '% — وقود مُبالغ فيه: ' + stealInfo.excessLiters + ' لتر (' + stealInfo.excessDinars + ' د.ت)');
   }
 
   if (tank > 0 && L >= 0.9 * tank && H < 10) add('VOLUME_INFLATION', 'تعبئة ≥ 90% من الخزان مقابل أقل من 10 ساعات');
@@ -242,8 +284,14 @@ async function runAudit(vessel, d, opts = {}) {
   }
 
   const rules = Object.keys(hits);
-  const score = Math.min(100, rules.reduce((s, k) => s + (WEIGHTS[k] || 0), 0));
-  return { rate, rules, score, consumed, cardL, isFraud: score > FRAUD_THRESHOLD, reason: rules.map(k => hits[k]).join(' | ') };
+  let score = Math.min(100, rules.reduce((s, k) => s + (WEIGHTS[k] || 0), 0));
+  if (stealInfo && stealInfo.excessLiters > 0) score = Math.min(100, score + 50);
+
+  return {
+    rate, rules, score, consumed, cardL, stealInfo, balance,
+    isFraud: score > FRAUD_THRESHOLD,
+    reason: rules.map(k => hits[k]).join(' | ')
+  };
 }
 
 async function reauditFrom(v, req, fromDate) {
@@ -253,11 +301,28 @@ async function reauditFrom(v, req, fromDate) {
     for (const d of docs) {
       const e = d.engines || {};
       if (d.remainingTank == null || d.cardDinars == null || !e.right || e.right.startHours == null) continue;
-      const input = { date: new Date(d.date), fuelType: d.fuelType || 'gasoil', quota: d.quota || 0, actualConsumedLiters: d.actualConsumedLiters || d.docTotalLiters,
-        docTotalHours: d.docTotalHours, docTotalLiters: d.docTotalLiters, remainingTank: d.remainingTank,
-        cardDinars: d.cardDinars, price: d.fuelPrice || PRICES[d.fuelType || 'gasoil'], documentNumber: d.documentNumber || '', engines: { right: e.right, left: e.left || null } };
+      const input = {
+        date: new Date(d.date), fuelType: d.fuelType || 'gasoil', quota: d.quota || 0,
+        extraLiters: d.extraLiters || 0, incomingDinars: d.incomingDinars || 0,
+        incomingLiters: d.incomingLiters || 0,
+        actualConsumedLiters: d.actualConsumedLiters || d.docTotalLiters,
+        docTotalHours: d.docTotalHours, docTotalLiters: d.docTotalLiters,
+        remainingTank: d.remainingTank, cardDinars: d.cardDinars,
+        price: d.fuelPrice || PRICES[d.fuelType || 'gasoil'],
+        documentNumber: d.documentNumber || '',
+        engines: { right: e.right, left: e.left || null },
+        twin: d.engineCount === 2
+      };
       const a = await runAudit(v, input, { std: std.rate, excludeId: d._id });
-      await FuelDocument.updateOne({ _id: d._id }, { $set: { riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules, actualConsumption: a.consumed, totalActualRate: r2(a.rate) } });
+      await FuelDocument.updateOne({ _id: d._id }, { $set: {
+        riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason,
+        violations: a.rules, actualConsumption: a.consumed, totalActualRate: r2(a.rate),
+        balanceLeft: a.balance.left, balanceRight: a.balance.right,
+        balanceDiff: a.balance.diff, balanceOk: a.balance.ok,
+        excessLiters: a.stealInfo ? a.stealInfo.excessLiters : 0,
+        excessDinars: a.stealInfo ? a.stealInfo.excessDinars : 0,
+        ratePct: a.stealInfo ? a.stealInfo.ratePct : null
+      }});
     }
   } catch (e) { console.error('❌ [FUEL] reaudit:', e.message); }
 }
@@ -270,8 +335,13 @@ async function getDoc(req, res) {
   if (!doc || !v || !allowed(req, v)) { res.status(404).json({ error: 'الوثيقة غير موجودة' }); return null; }
   return { doc, v };
 }
-const snapshot = d => ({ date: d.date, documentNumber: d.documentNumber, fuelType: d.fuelType, quota: d.quota, actualConsumedLiters: d.actualConsumedLiters, docTotalLiters: d.docTotalLiters, docTotalHours: d.docTotalHours,
-  remainingTank: d.remainingTank, cardDinars: d.cardDinars, engines: d.engines, riskScore: d.riskScore, isFraud: d.isFraud });
+const snapshot = d => ({
+  date: d.date, documentNumber: d.documentNumber, fuelType: d.fuelType, quota: d.quota,
+  extraLiters: d.extraLiters, incomingDinars: d.incomingDinars,
+  actualConsumedLiters: d.actualConsumedLiters, docTotalLiters: d.docTotalLiters,
+  docTotalHours: d.docTotalHours, remainingTank: d.remainingTank, cardDinars: d.cardDinars,
+  engines: d.engines, riskScore: d.riskScore, isFraud: d.isFraud
+});
 const logDoc = (req, action, v, d, details) => addLog({
   userId: req.user.id, userName: req.user.name, action, resource: 'fuel-document',
   resourceId: String(d._id), resourceName: v.name + ' — ' + new Date(d.date).toISOString().slice(0, 10),
@@ -285,9 +355,9 @@ router.get('/standards/:boatId', async (req, res) => {
     res.json({
       engineCount: v.engineCount || 1, tankCapacity: v.tankCapacity || 0,
       standardRate: sd.rate,
-      standardSource: sd.source,        // ✅ manual | learned | category | learning
-      standardBasedOn: sd.basedOn,      // ✅ عدد الوثائق السليمة
-      standardMinRequired: sd.minRequired, // ✅ الحد الأدنى المطلوب (3)
+      standardSource: sd.source, standardBasedOn: sd.basedOn,
+      standardMinRequired: sd.minRequired,
+      basedOn: sd.basedOn, source: sd.source,
       manualRate: Number(v.standardRate) || 0, fuelPrice: PRICES.gasoil
     });
   } catch (e) { fail(res, e, 'standards'); }
@@ -305,12 +375,13 @@ router.post('/documents', csrf, async (req, res) => {
     const sd = await effectiveStandard(v, req);
     const a = await runAudit(v, p.input, { std: sd.rate });
     const doc = await FuelDocument.create(Object.assign({ boatId: v.id || String(v._id), createdBy: req.user.id }, docFields(p.input, a)));
-
-    // ✅ التغيير 5: إرجاع معلومات المعيار للواجهة
     res.status(201).json({
       ok: true, id: doc._id, riskScore: a.score, isFraud: a.isFraud,
       fraudReason: a.reason, violations: a.rules,
-      standardRate: sd.rate, standardSource: sd.source, standardBasedOn: sd.basedOn
+      standardRate: sd.rate, standardSource: sd.source, standardBasedOn: sd.basedOn,
+      excessLiters: a.stealInfo ? a.stealInfo.excessLiters : 0,
+      excessDinars: a.stealInfo ? a.stealInfo.excessDinars : 0,
+      balanceOk: a.balance.ok, balanceDiff: a.balance.diff
     });
   } catch (e) { fail(res, e, 'create'); }
 });
@@ -333,7 +404,10 @@ router.put('/documents/:docId', csrf, async (req, res) => {
     await reauditFrom(v, req, new Date(Math.min(new Date(doc.date).getTime(), p.input.date.getTime())));
     await logDoc(req, 'update', v, doc, { before, after: snapshot(Object.assign({}, p.input, { riskScore: a.score, isFraud: a.isFraud })) });
     res.json({ ok: true, riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules,
-      standardRate: sd.rate, standardSource: sd.source, standardBasedOn: sd.basedOn });
+      standardRate: sd.rate, standardSource: sd.source, standardBasedOn: sd.basedOn,
+      excessLiters: a.stealInfo ? a.stealInfo.excessLiters : 0,
+      excessDinars: a.stealInfo ? a.stealInfo.excessDinars : 0,
+      balanceOk: a.balance.ok, balanceDiff: a.balance.diff });
   } catch (e) { fail(res, e, 'update'); }
 });
 
@@ -367,11 +441,12 @@ router.get('/audit-report/:boatId', async (req, res) => {
   try {
     const v = await loadVessel(req, res); if (!v) return;
     const docs = await FuelDocument.find({ boatId: { $in: idsOf(v) } }).select('-history').lean();
-    let liters = 0, hours = 0, risk = 0, flagged = 0, warned = 0;
+    let liters = 0, hours = 0, risk = 0, flagged = 0, warned = 0, theftCount = 0, totalExcessL = 0, totalExcessD = 0;
     const byRule = {};
     docs.forEach(d => {
       liters += d.docTotalLiters || 0; hours += d.docTotalHours || 0; risk += d.riskScore || 0;
       if (d.isFraud) flagged++; else if ((d.riskScore || 0) >= WARN_THRESHOLD) warned++;
+      if (d.excessLiters > 0) { theftCount++; totalExcessL += d.excessLiters; totalExcessD += d.excessDinars || 0; }
       (d.violations || []).forEach(k => { byRule[k] = (byRule[k] || 0) + 1; });
     });
     const sd = await effectiveStandard(v, req);
@@ -379,10 +454,10 @@ router.get('/audit-report/:boatId', async (req, res) => {
     const t = {
       docs: docs.length, totalHours: r2(hours), avgHours: docs.length ? r2(hours / docs.length) : 0,
       requestedLiters: r2(liters), avgRisk: docs.length ? r2(risk / docs.length) : 0, flagged, warned,
+      theftCount, totalExcessLiters: r2(totalExcessL), totalExcessDinars: r3(totalExcessD),
       expectedLiters: null, varianceLiters: null, variancePct: null, excessLiters: null,
       balanceLiters: null, balancePct: null,
       lastRemainingTank: null, cardDinars: null, cardLiters: null, fuelPrice: PRICES.gasoil,
-      // ✅ التغيير 6: إرجاع minRequired و source بدقة
       standard: { rate: std, source: sd.source, basedOn: sd.basedOn, minRequired: sd.minRequired }
     };
     if (std > 0 && docs.length) {
@@ -412,8 +487,11 @@ router.get('/auto-standard/:boatId', async (req, res) => {
     const sibs = await siblingsOf(req, v);
     const ids = idsOf(v).concat(...sibs.map(s => [s.id, String(s._id)].filter(Boolean)));
     let rs = await cleanRates(ids);
-    // ✅ التغيير 7: رفع الحد الأدنى إلى 3 للاعتماد اليدوي أيضاً
-    if (rs.length < 3) return res.json({ autoRate: 0, message: 'لا توجد بيانات كافية (يلزم 3 وثائق سليمة على الأقل)' });
+    if (rs.length < LEARN_MIN_OWN) return res.json({
+      autoRate: 0,
+      message: 'لا توجد بيانات كافية (يلزم ' + LEARN_MIN_OWN + ' وثائق سليمة على الأقل، المتوفر: ' + rs.length + ')',
+      basedOn: rs.length, minRequired: LEARN_MIN_OWN
+    });
     const stat = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return { m, sd: Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length) }; };
     let s = stat(rs); const before = rs.length;
     if (s.sd > 0) { rs = rs.filter(x => Math.abs(x - s.m) <= 2 * s.sd); s = stat(rs); }
@@ -450,4 +528,4 @@ module.exports = function (app, middlewares) {
   if (typeof middlewares.addSystemLog === 'function') addLog = middlewares.addSystemLog;
   app.use('/api/fuel', authenticateAccessToken, router);
 };
-module.exports._test = { runAudit, readEngine, parseDoc, effectiveStandard, PRICES };
+module.exports._test = { runAudit, readEngine, parseDoc, effectiveStandard, checkBalance, PRICES };
