@@ -192,6 +192,7 @@ td.d{color:var(--t1)}
 .eng-opt:hover{border-color:#cbd5e1}
 .eng-opt.on{border-color:var(--gold);background:var(--gold-bg);color:var(--navy);box-shadow:0 0 0 3px rgba(212,160,23,.15)}
 
+.edit-note{display:flex;gap:10px;align-items:flex-start;background:var(--info-bg);border:1px solid #bcd1f3;border-inline-start:4px solid var(--info);border-radius:12px;padding:10px 14px;margin-bottom:16px;font-weight:700;font-size:13px;color:#1c4a99}
 </style>
 </head>
 <body>
@@ -208,19 +209,25 @@ td.d{color:var(--t1)}
     </div>
   </header>
 
-  <section class="card" id="setupCard" hidden>
-    <div class="card-title"><i class="fas fa-cogs"></i> إعداد المركب (مرة واحدة)</div>
-    <div class="notice"><i class="fas fa-circle-info"></i><span>هذا المركب غير مهيأ بعد. أكمل الإعدادات التالية لتفعيل تسجيل وثائق التموين.</span></div>
-    <div class="grid g3">
-      <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc" onchange="toggleSetupEngineFields()"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div></div>
-      <div class="fg"><label for="setupTankCapacity">سعة الخزان</label><div class="field has-unit"><i class="fas fa-oil-can"></i><input type="number" id="setupTankCapacity" class="fc" placeholder="سعة الخزان" min="1"><span class="unit">لتر</span></div></div>
-      <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري <small style="color:var(--t3);font-weight:700">(اختياري)</small></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" placeholder="اتركه فارغاً" step="0.01" min="0"><span class="unit">لتر/س</span></div></div>
+  <section class="card" id="setupCard">
+    <div class="card-title"><i class="fas fa-cogs"></i> <span id="setupTitle">إعدادات المركب</span>
+      <button type="button" class="btn btn-line btn-sm" id="setupEditBtn" style="margin-inline-start:auto" hidden><i class="fas fa-pen"></i> تعديل الإعدادات</button>
     </div>
-    <div class="grid g2" id="setupEngineDetails" style="margin-top:16px" hidden>
-      <div class="fg"><label for="setupEngineRight">المحرك الأيمن</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineRight" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
-      <div class="fg"><label for="setupEngineLeft">المحرك الأيسر</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineLeft" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
+    <div class="notice" id="setupNotice" hidden><i class="fas fa-circle-info"></i><span>هذا المركب غير مهيأ بعد. أكمل الإعدادات التالية لتفعيل تسجيل وثائق التموين.</span></div>
+    <div class="sum" id="setupView" style="margin-top:0"></div>
+    <div id="setupForm" hidden>
+      <div class="edit-note"><i class="fas fa-pen-to-square"></i> عدّل القيمة الخاطئة ثم اضغط «حفظ الإعدادات». الوثائق المسجلة سابقاً لا تتغير، والوثائق الجديدة تُفحص بالقيم الجديدة.</div>
+      <div class="grid g3">
+        <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc" onchange="toggleSetupEngineFields()"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div></div>
+        <div class="fg"><label for="setupTankCapacity">سعة الخزان</label><div class="field has-unit"><i class="fas fa-oil-can"></i><input type="number" id="setupTankCapacity" class="fc" placeholder="سعة الخزان" min="1" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
+        <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري <small style="color:var(--t3);font-weight:700">(اختياري — اتركه فارغاً للتعلّم التلقائي)</small></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" placeholder="اتركه فارغاً" step="0.01" min="0" inputmode="decimal"><span class="unit">لتر/س</span></div></div>
+      </div>
+      <div class="grid g2" id="setupEngineDetails" style="margin-top:16px" hidden>
+        <div class="fg"><label for="setupEngineRight">المحرك الأيمن</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineRight" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
+        <div class="fg"><label for="setupEngineLeft">المحرك الأيسر</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineLeft" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
+      </div>
+      <div class="nav"><button class="btn btn-gold" id="setupSaveBtn" type="button"><i class="fas fa-save"></i> حفظ الإعدادات</button><button class="btn btn-line" id="setupCancelBtn" type="button" hidden><i class="fas fa-xmark"></i> إلغاء</button></div>
     </div>
-    <div class="nav"><button class="btn btn-gold" onclick="saveEngineSetup()"><i class="fas fa-save"></i> حفظ الإعدادات</button></div>
   </section>
 
   <section class="dash" aria-label="لوحة القيادة">
@@ -390,7 +397,7 @@ td.d{color:var(--t1)}
 (function () {
   'use strict';
   var boatId = new URLSearchParams(window.location.search).get('id');
-  var isTwin = false, saving = false, vesselTitle = '';
+  var isTwin = false, saving = false, vesselTitle = '', vesselData = null, setupWasReady = false;
   var curRange = { start: '', end: '' };
   var standards = { standardRate: 0, tankCapacity: 0, engineCount: 1, fuelPrice: 1.998, basedOn: 0, source: 'learning', minRequired: 3 };
   var myChart = null, allDocs = [];
@@ -439,6 +446,7 @@ td.d{color:var(--t1)}
       if (v) {
         $('vesselName').innerHTML = '<i class="fas fa-anchor"></i> ' + esc(v.name);
         vesselTitle = v.name || '';
+        vesselData = v;
         ready = !!(v.engineCount && v.tankCapacity);
         isTwin = v.engineCount === 2;
       } else { $('vesselName').textContent = 'المركب غير موجود'; ready = false; }
@@ -457,7 +465,8 @@ td.d{color:var(--t1)}
       } else { ready = false; }
     } catch (e) { ready = false; }
 
-    $('setupCard').hidden = ready;
+    setupWasReady = ready;
+    renderSetup(ready);
     $('entryCard').hidden = !ready;
 
     var pr = $('fuelPrice');
@@ -472,23 +481,69 @@ td.d{color:var(--t1)}
     loadOtherVesselCompare();
   }
 
+  /* ══ إعدادات المركب: عرض دائم + زر تعديل ══ */
+  function engCountNow() { return Number(standards.engineCount) === 2 ? 2 : 1; }
+  function renderSetup(ready) {
+    var view = $('setupView');
+    $('setupNotice').hidden = ready;
+    $('setupEditBtn').hidden = !ready;
+    $('setupTitle').textContent = ready ? 'إعدادات المركب' : 'إعداد المركب (مرة واحدة)';
+    if (!ready) { view.hidden = true; openSetupEdit(true); return; }
+    $('setupForm').hidden = true; view.hidden = false;
+    var std = Number(standards.standardRate) || 0, v = vesselData || {};
+    var chips = [
+      ['عدد المحركات', engCountNow() === 2 ? 'محركان (أيمن وأيسر)' : 'محرك واحد'],
+      ['سعة الخزان', fmt(standards.tankCapacity, 1) + ' لتر'],
+      ['سعر اللتر (غزوال / بنزين)', '1.998 / 2.525 د.ت'],
+      ['الاستهلاك المعياري', std > 0 && std < 100 ? fmt(std, 2) + ' لتر/س' : 'قيد التعلّم (' + (standards.basedOn || 0) + ' / ' + (standards.minRequired || 3) + ' وثائق)']
+    ];
+    if (v.engineRight) chips.push([engCountNow() === 2 ? 'المحرك الأيمن' : 'المحرك', String(v.engineRight)]);
+    if (engCountNow() === 2 && v.engineLeft) chips.push(['المحرك الأيسر', String(v.engineLeft)]);
+    view.innerHTML = chips.map(function (c) { return '<div class="sm"><span>' + esc(c[0]) + '</span><b>' + esc(c[1]) + '</b></div>'; }).join('');
+  }
+  function openSetupEdit(firstTime) {
+    var v = vesselData || {};
+    $('setupEngineCount').value = String(engCountNow());
+    $('setupTankCapacity').value = Number(standards.tankCapacity) > 0 ? standards.tankCapacity : '';
+    $('setupStandardRate').value = '';
+    $('setupEngineRight').value = v.engineRight || '';
+    $('setupEngineLeft').value = v.engineLeft || '';
+    window.toggleSetupEngineFields();
+    $('setupView').hidden = true; $('setupForm').hidden = false;
+    $('setupEditBtn').hidden = true;
+    $('setupCancelBtn').hidden = !!firstTime;
+    $('setupNotice').hidden = !firstTime;
+    $('setupEditBtn').setAttribute('aria-expanded', 'true');
+    if (!firstTime) { $('setupTankCapacity').focus(); $('setupCard').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  }
+  function closeSetupEdit() { renderSetup(true); }
   window.toggleSetupEngineFields = function () { $('setupEngineDetails').hidden = $('setupEngineCount').value !== '2'; };
   window.saveEngineSetup = async function () {
     var tank = num('setupTankCapacity'), rate = num('setupStandardRate');
     if (!isFinite(tank) || tank <= 0) { $('setupTankCapacity').focus(); return toast('سعة الخزان يجب أن تكون أكبر من صفر', 'error'); }
     if (!isFinite(rate) || rate < 0) rate = 0;
-    var payload = {
-      engineCount: Number($('setupEngineCount').value), tankCapacity: tank, standardRate: rate,
-      engineRight: $('setupEngineRight').value.trim().slice(0, 40), engineLeft: $('setupEngineLeft').value.trim().slice(0, 40)
-    };
+    var n = Number($('setupEngineCount').value) === 2 ? 2 : 1;
+    var right = $('setupEngineRight').value.trim().slice(0, 40), left = $('setupEngineLeft').value.trim().slice(0, 40);
+    var payload = { engineCount: n, tankCapacity: tank };
+    if (!setupWasReady) payload.standardRate = rate;          // أول إعداد: كما كان
+    else if (rate > 0) payload.standardRate = rate;           // تعديل: لا نمسح المعيار المتعلَّم إلا إن كتب المستخدم قيمة
+    if (right) payload.engineRight = right;
+    if (n === 2 && left) payload.engineLeft = left;
+    var btn = $('setupSaveBtn'); btn.disabled = true;
     try {
       var res = await fetch('/api/vessels/' + boatId, {
         method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() }, auth()), body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error('فشل الحفظ');
-      toast('تم حفظ الإعدادات', 'success');
-      setTimeout(function () { location.reload(); }, 800);
+      if (!res.ok) { var out = await res.json().catch(function () { return {}; }); throw new Error(out.error || 'فشل الحفظ'); }
+      toast(setupWasReady ? 'تم تعديل إعدادات المركب' : 'تم حفظ الإعدادات', 'success');
+      if (!setupWasReady) return setTimeout(function () { location.reload(); }, 800);
+      standards.tankCapacity = tank; standards.engineCount = n;
+      if (payload.standardRate > 0) { standards.standardRate = payload.standardRate; standards.basedOn = Math.max(standards.basedOn || 0, standards.minRequired || 3); }
+      vesselData = Object.assign({}, vesselData || {}, { engineCount: n, tankCapacity: tank, engineRight: right || (vesselData && vesselData.engineRight) || '', engineLeft: n === 2 ? (left || (vesselData && vesselData.engineLeft) || '') : '' });
+      isTwin = n === 2; applyEngineMode();
+      renderSetup(true); window.liveAudit(); renderTable(); renderChart(); loadAudit();
     } catch (e) { toast(e.message, 'error'); }
+    finally { btn.disabled = false; }
   };
 
   function calc() {
@@ -1059,7 +1114,7 @@ td.d{color:var(--t1)}
   };
   window.applyDetectedRate = async function () {
     if (!(detected > 0 && detected < 100)) return;
-    if (!$('setupCard').hidden) { $('setupStandardRate').value = detected; $('setupCard').scrollIntoView({ behavior: 'smooth' }); return toast('عُبّئ الحقل. اضغط «حفظ الإعدادات»', 'info'); }
+    if (!$('setupForm').hidden) { $('setupStandardRate').value = detected; $('setupCard').scrollIntoView({ behavior: 'smooth' }); return toast('عُبّئ الحقل. اضغط «حفظ الإعدادات»', 'info'); }
     if (!confirm('اعتماد ' + detected + ' لتر/ساعة كاستهلاك معياري لهذا المركب؟ سيُستخدم في تحليل الوثائق الجديدة.')) return;
     try {
       var res = await fetch('/api/vessels/' + boatId, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() }, auth()), body: JSON.stringify({ standardRate: detected }) });
@@ -1155,6 +1210,9 @@ td.d{color:var(--t1)}
   };
   document.querySelectorAll('.eng-opt').forEach(function (b) { b.addEventListener('click', function () { window.setEngines(parseInt(b.getAttribute('data-n'), 10)); }); });
   $('printBtn').addEventListener('click', printFuel);
+  $('setupEditBtn').addEventListener('click', function () { openSetupEdit(false); });
+  $('setupCancelBtn').addEventListener('click', closeSetupEdit);
+  $('setupSaveBtn').addEventListener('click', window.saveEngineSetup);
 
   init();
 })();
