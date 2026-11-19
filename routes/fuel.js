@@ -1,7 +1,7 @@
 /**
- * routes/fuel.js v5 — محرك التدقيق لوثائق تموين المحروقات
- * - المعطيات: المقرر، الكمية المطلوبة، الكمية المستهلكة، ساعات العمل، عدادات المحرك، الباقي بالخزان، الباقي بالبطاقة.
- * - المعيار: يتعلمه النظام تلقائياً من الوثائق السليمة (بعد وثيقتين).
+ * routes/fuel.js v6 — محرك التدقيق لوثائق تموين المحروقات
+ * - المعيار: لا يُعتمد إلا بعد 3 وثائق سليمة (وسيط Median لمقاومة الشواذ).
+ * - أي وثيقة تتجاوز المعيار المعتمد تُصنَّف كـ"سرقة/تلاعب" (RATE_THEFT).
  * - تعديل وحذف الوثائق مع سجل تغييرات وإعادة تدقيق.
  */
 const express = require('express');
@@ -15,10 +15,7 @@ let addLog = async () => {};
 const csrf = (req, res, next) => csrfProtection(req, res, next);
 
 // أسعار المحروقات الثابتة حسب النوع (دينار تونسي)
-const PRICES = {
-  gasoil: 1.998,
-  benzine: 2.525
-};
+const PRICES = { gasoil: 1.998, benzine: 2.525 };
 
 // الحد الأقصى المنطقي للمعدل (لتجاهل البيانات الخاطئة القديمة)
 const MAX_SENSIBLE_RATE = 35;
@@ -28,13 +25,16 @@ const DELETE_ROLES = ['admin', 'manager'];
 const PRIVILEGED = ['admin', 'manager'];
 const FRAUD_THRESHOLD = 60;
 const WARN_THRESHOLD = 30;
-const LEARN_MIN_OWN = 2;        // التعلم المبكر بعد وثيقتين سليمتين
-const LEARN_MIN_CATEGORY = 3;   // التعلم من الفئة بعد 3 وثائق
 
+// ✅ التغيير 1: رفع الحد الأدنى لاعتماد المعيار إلى 3 وثائق سليمة
+const LEARN_MIN_OWN = 3;        // كان 2 → أصبح 3
+const LEARN_MIN_CATEGORY = 3;   // يبقى 3 للفئة
+
+// ✅ التغيير 2: إضافة قاعدة "سرقة" بوزن مرتفع
 const WEIGHTS = {
   METER_ROLLBACK: 70, TANK_OVERFLOW: 70, PHANTOM_TRIP: 65, TANK_BALANCE: 55,
-  CARD_INSUFFICIENT: 50, RATE_INFLATED: 45, DOUBLE_DIP: 45, VOLUME_INFLATION: 40,
-  HOURS_MISMATCH: 35, CONSUMPTION_GAP: 35, STAT_ANOMALY: 25, METER_GAP: 20
+  CARD_INSUFFICIENT: 50, RATE_THEFT: 70, RATE_INFLATED: 45, DOUBLE_DIP: 45,
+  VOLUME_INFLATION: 40, HOURS_MISMATCH: 35, CONSUMPTION_GAP: 35, STAT_ANOMALY: 25, METER_GAP: 20
 };
 
 const n = v => { const x = Number(v); return Number.isFinite(x) ? x : NaN; };
@@ -72,10 +72,10 @@ async function siblingsOf(req, v) {
 }
 
 async function cleanRates(ids, excludeId) {
-  const q = { 
-    boatId: { $in: ids }, 
-    isFraud: false, 
-    riskScore: { $lt: WARN_THRESHOLD }, 
+  const q = {
+    boatId: { $in: ids },
+    isFraud: false,
+    riskScore: { $lt: WARN_THRESHOLD },
     totalActualRate: { $gt: 0, $lt: MAX_SENSIBLE_RATE }
   };
   if (excludeId) q._id = { $ne: excludeId };
@@ -83,19 +83,30 @@ async function cleanRates(ids, excludeId) {
   return docs.map(d => d.totalActualRate);
 }
 
+/**
+ * ✅ التغيير 3: إرجاع حالة "learning" صريحة عندما تكون الوثائق < 3
+ * حتى تعرض الواجهة "قيد التعلّم — X / 3".
+ */
 async function effectiveStandard(v, req, excludeId) {
   const manual = Number(v.standardRate) || 0;
-  if (manual > 0 && manual < MAX_SENSIBLE_RATE) return { rate: manual, source: 'manual', basedOn: 0 };
-  
+  if (manual > 0 && manual < MAX_SENSIBLE_RATE)
+    return { rate: manual, source: 'manual', basedOn: 0, minRequired: LEARN_MIN_OWN };
+
   const own = await cleanRates(idsOf(v), excludeId);
-  if (own.length >= LEARN_MIN_OWN) return { rate: r2(median(own)), source: 'learned', basedOn: own.length };
-  
+  if (own.length >= LEARN_MIN_OWN) {
+    // ✅ الوسيط (Median) أكثر مقاومة للشواذ من المتوسط
+    return { rate: r2(median(own)), source: 'learned', basedOn: own.length, minRequired: LEARN_MIN_OWN };
+  }
+
   const sibs = await siblingsOf(req, v);
   if (sibs.length) {
     const rs = await cleanRates([].concat(...sibs.map(s => [s.id, String(s._id)].filter(Boolean))), excludeId);
-    if (rs.length >= LEARN_MIN_CATEGORY) return { rate: r2(median(rs)), source: 'category', basedOn: rs.length };
+    if (rs.length >= LEARN_MIN_CATEGORY)
+      return { rate: r2(median(rs)), source: 'category', basedOn: rs.length, minRequired: LEARN_MIN_CATEGORY };
   }
-  return { rate: 0, source: 'none', basedOn: own.length };
+
+  // ✅ لا معيار معتمد بعد — الواجهة ستعرض "قيد التعلّم"
+  return { rate: 0, source: 'learning', basedOn: own.length, minRequired: LEARN_MIN_OWN };
 }
 
 function readEngine(e, label) {
@@ -113,31 +124,31 @@ const endOf = e => (e ? (e.endHours != null ? e.endHours : (e.totalHours > 0 ? e
 function parseDoc(b, v) {
   const date = new Date(b.date);
   if (isNaN(date) || date.getTime() > Date.now() + 864e5 || date.getTime() < new Date('2000-01-01').getTime()) return { err: 'تاريخ غير صالح' };
-  
+
   const fuelType = b.fuelType === 'benzine' ? 'benzine' : 'gasoil';
   const price = PRICES[fuelType];
 
-  const Q = n(b.quota); // المقرر
+  const Q = n(b.quota);
   if (!(Q >= 0 && Q <= 1e6)) return { err: 'المقرر غير صالح' };
 
   const L = n(b.docTotalLiters), H = n(b.docTotalHours), T = n(b.remainingTank), C = n(b.cardDinars);
-  const Actual = n(b.actualConsumedLiters); // الكمية المستهلكة
+  const Actual = n(b.actualConsumedLiters);
 
   if (!(L > 0 && L <= 1e6)) return { err: 'الكمية المطلوبة غير صالحة' };
   if (!(Actual > 0 && Actual <= 1e6)) return { err: 'الكمية المستهلكة غير صالحة ويجب أن تكون أكبر من صفر' };
   if (!(H > 0 && H <= 1e5)) return { err: 'ساعات العمل غير صالحة' };
   if (!(T >= 0 && T <= v.tankCapacity)) return { err: 'الباقي بالخزان غير صالح (من 0 إلى سعة الخزان)' };
   if (!(C >= 0 && C <= 1e7)) return { err: 'رصيد البطاقة غير صالح' };
-  
+
   const twin = v.engineCount === 2;
   const right = readEngine(b.engines && b.engines.right, twin ? 'الأيمن' : '');
   if (right.err) return { err: right.err };
-  
+
   let left = null;
   if (twin) { left = readEngine(b.engines && b.engines.left, 'الأيسر'); if (left.err) return { err: left.err }; }
-  
+
   const documentNumber = typeof b.documentNumber === 'string' ? b.documentNumber.replace(/[<>]/g, '').trim().slice(0, 40) : '';
-  
+
   return { input: { date, fuelType, quota: Q, actualConsumedLiters: Actual, docTotalHours: H, docTotalLiters: L, remainingTank: T, cardDinars: C, price, documentNumber, engines: { right, left }, twin } };
 }
 
@@ -160,7 +171,7 @@ async function runAudit(vessel, d, opts = {}) {
   if (opts.excludeId) base._id = { $ne: opts.excludeId };
   const std = Number(opts.std) || 0;
   const tank = Number(vessel.tankCapacity) || 0;
-  
+
   const L = d.docTotalLiters, Actual = d.actualConsumedLiters, H = d.docTotalHours, T = d.remainingTank, C = d.cardDinars, price = d.price;
   const rate = H > 0 ? Actual / H : 0;
   const cardL = price > 0 ? C / price : 0;
@@ -173,7 +184,19 @@ async function runAudit(vessel, d, opts = {}) {
 
   if (L * price > C + price) add('CARD_INSUFFICIENT', 'كلفة ' + L + ' لتر = ' + r3(L * price) + ' د.ت تتجاوز رصيد البطاقة ' + r3(C) + ' د.ت (= ' + r2(cardL) + ' لتر)');
 
-  if (std > 0 && rate >= std * 1.15) add('RATE_INFLATED', 'المعدل ' + r2(rate) + ' يتجاوز المعيار ' + std + ' بـ 15% أو أكثر');
+  // ✅ التغيير 4: أي تجاوز للمعيار المعتمد = سرقة (وليس فقط 115%)
+  if (std > 0 && rate > std * 1.001) {
+    const excessRate = rate - std;
+    const excessLiters = r2(excessRate * H);
+    const pct = r2((rate / std - 1) * 100);
+    add('RATE_THEFT',
+      '🚨 سرقة: المعدل ' + r2(rate) + ' لتر/س يتجاوز المعيار المعتمد ' + std +
+      ' بنسبة ' + pct + '% — وقود مُبالغ فيه ≈ ' + excessLiters + ' لتر');
+  } else if (std > 0 && rate >= std * 1.15) {
+    // احتياطي: إذا كان المعيار غير معتمد بعد، نُبقي التحذير القديم
+    add('RATE_INFLATED', 'المعدل ' + r2(rate) + ' يتجاوز المعيار ' + std + ' بـ 15% أو أكثر');
+  }
+
   if (tank > 0 && L >= 0.9 * tank && H < 10) add('VOLUME_INFLATION', 'تعبئة ≥ 90% من الخزان مقابل أقل من 10 ساعات');
 
   const t = d.date.getTime();
@@ -259,8 +282,14 @@ router.get('/standards/:boatId', async (req, res) => {
   try {
     const v = await loadVessel(req, res); if (!v) return;
     const sd = await effectiveStandard(v, req);
-    res.json({ engineCount: v.engineCount || 1, tankCapacity: v.tankCapacity || 0, standardRate: sd.rate,
-      standardSource: sd.source, standardBasedOn: sd.basedOn, manualRate: Number(v.standardRate) || 0, fuelPrice: PRICES.gasoil });
+    res.json({
+      engineCount: v.engineCount || 1, tankCapacity: v.tankCapacity || 0,
+      standardRate: sd.rate,
+      standardSource: sd.source,        // ✅ manual | learned | category | learning
+      standardBasedOn: sd.basedOn,      // ✅ عدد الوثائق السليمة
+      standardMinRequired: sd.minRequired, // ✅ الحد الأدنى المطلوب (3)
+      manualRate: Number(v.standardRate) || 0, fuelPrice: PRICES.gasoil
+    });
   } catch (e) { fail(res, e, 'standards'); }
 });
 
@@ -276,7 +305,13 @@ router.post('/documents', csrf, async (req, res) => {
     const sd = await effectiveStandard(v, req);
     const a = await runAudit(v, p.input, { std: sd.rate });
     const doc = await FuelDocument.create(Object.assign({ boatId: v.id || String(v._id), createdBy: req.user.id }, docFields(p.input, a)));
-    res.status(201).json({ ok: true, id: doc._id, riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules });
+
+    // ✅ التغيير 5: إرجاع معلومات المعيار للواجهة
+    res.status(201).json({
+      ok: true, id: doc._id, riskScore: a.score, isFraud: a.isFraud,
+      fraudReason: a.reason, violations: a.rules,
+      standardRate: sd.rate, standardSource: sd.source, standardBasedOn: sd.basedOn
+    });
   } catch (e) { fail(res, e, 'create'); }
 });
 
@@ -297,7 +332,8 @@ router.put('/documents/:docId', csrf, async (req, res) => {
     });
     await reauditFrom(v, req, new Date(Math.min(new Date(doc.date).getTime(), p.input.date.getTime())));
     await logDoc(req, 'update', v, doc, { before, after: snapshot(Object.assign({}, p.input, { riskScore: a.score, isFraud: a.isFraud })) });
-    res.json({ ok: true, riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules });
+    res.json({ ok: true, riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules,
+      standardRate: sd.rate, standardSource: sd.source, standardBasedOn: sd.basedOn });
   } catch (e) { fail(res, e, 'update'); }
 });
 
@@ -346,7 +382,8 @@ router.get('/audit-report/:boatId', async (req, res) => {
       expectedLiters: null, varianceLiters: null, variancePct: null, excessLiters: null,
       balanceLiters: null, balancePct: null,
       lastRemainingTank: null, cardDinars: null, cardLiters: null, fuelPrice: PRICES.gasoil,
-      standard: { rate: std, source: sd.source, basedOn: sd.basedOn }
+      // ✅ التغيير 6: إرجاع minRequired و source بدقة
+      standard: { rate: std, source: sd.source, basedOn: sd.basedOn, minRequired: sd.minRequired }
     };
     if (std > 0 && docs.length) {
       t.expectedLiters = r2(std * hours);
@@ -375,7 +412,8 @@ router.get('/auto-standard/:boatId', async (req, res) => {
     const sibs = await siblingsOf(req, v);
     const ids = idsOf(v).concat(...sibs.map(s => [s.id, String(s._id)].filter(Boolean)));
     let rs = await cleanRates(ids);
-    if (rs.length < 2) return res.json({ autoRate: 0, message: 'لا توجد بيانات كافية (يلزم وثيقتين سليمتين على الأقل)' });
+    // ✅ التغيير 7: رفع الحد الأدنى إلى 3 للاعتماد اليدوي أيضاً
+    if (rs.length < 3) return res.json({ autoRate: 0, message: 'لا توجد بيانات كافية (يلزم 3 وثائق سليمة على الأقل)' });
     const stat = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return { m, sd: Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length) }; };
     let s = stat(rs); const before = rs.length;
     if (s.sd > 0) { rs = rs.filter(x => Math.abs(x - s.m) <= 2 * s.sd); s = stat(rs); }
