@@ -441,6 +441,17 @@ td.d{color:var(--t1)}
     liveAudit();
   };
 
+  var NUM_KEYS = ['num', 'number', 'vesselNum', 'vesselNumber', 'boatNum', 'boatNumber', 'no', 'code'];
+  function pickNum(o) { if (!o) return ''; for (var i = 0; i < NUM_KEYS.length; i++) { var x = o[NUM_KEYS[i]]; if (x != null && String(x).trim() && String(x).trim() !== '-') return String(x).trim(); } return ''; }
+  function vesselNumNow() { return pickNum(vesselData) || pickNum({ num: standards.vesselNum }); }
+  function vesselNameNow() { return String((vesselData && vesselData.name) || standards.vesselName || vesselTitle || '').trim(); }
+  async function fetchVesselOne() {   // احتياط: لو لم تكن الوسيلة (أو رقمها) في قائمة /api/vessels
+    var paths = ['/api/vessels/' + encodeURIComponent(boatId)];
+    for (var i = 0; i < paths.length; i++) {
+      try { var r = await fetch(paths[i], { headers: auth() }); if (!r.ok) continue; var j = await r.json(); j = (j && (j.vessel || j.data)) || j; if (j && (j.name || pickNum(j))) return j; } catch (e) {}
+    }
+    return null;
+  }
   async function init() {
     if (!boatId) { toast('لم يتم تحديد المركب', 'error'); return; }
     $('fDate').value = today();
@@ -457,6 +468,13 @@ td.d{color:var(--t1)}
         isTwin = v.engineCount === 2;
       } else { $('vesselName').textContent = 'المركب غير موجود'; ready = false; }
     } catch (e) { $('vesselName').textContent = 'تعذّر تحميل بيانات المركب'; }
+    if (!vesselData || !pickNum(vesselData) || !vesselData.name) {
+      var one = await fetchVesselOne();
+      if (one) {
+        vesselData = Object.assign({}, vesselData || {}, one);
+        if (one.name) { vesselTitle = one.name; $('vesselName').innerHTML = '<i class="fas fa-anchor"></i> ' + esc(one.name); }
+      }
+    }
 
     try {
       var r0 = await fetch('/api/fuel/standards/' + boatId, { headers: auth() });
@@ -468,6 +486,7 @@ td.d{color:var(--t1)}
         standards.source = standards.standardSource || standards.source || 'learning';
         standards.minRequired = Number(standards.standardMinRequired || standards.minRequired) || 3;
         if (standards.standardRate > 35 || standards.basedOn < standards.minRequired) standards.standardRate = 0;
+        if (!vesselTitle && standards.vesselName) { vesselTitle = standards.vesselName; $('vesselName').innerHTML = '<i class="fas fa-anchor"></i> ' + esc(vesselTitle); }
       } else { ready = false; }
     } catch (e) { ready = false; }
 
@@ -503,7 +522,7 @@ td.d{color:var(--t1)}
       ['سعر اللتر (غزوال / بنزين)', '1.998 / 2.525 د.ت'],
       ['الاستهلاك المعياري', std > 0 && std < 100 ? fmt(std, 2) + ' لتر/س' : 'قيد التعلّم (' + (standards.basedOn || 0) + ' / ' + (standards.minRequired || 3) + ' وثائق)']
     ];
-    chips.unshift(['الوسيلة', (v.name || vesselTitle || '—') + (v.num ? ' · رقم ' + v.num : ' · الرقم غير مسجَّل')]);
+    chips.unshift(['الوسيلة', (vesselNameNow() || '—') + (vesselNumNow() ? ' · رقم ' + vesselNumNow() : ' · الرقم غير مسجَّل')]);
     if (v.engineRight) chips.push([engCountNow() === 2 ? 'المحرك الأيمن' : 'المحرك', String(v.engineRight)]);
     if (engCountNow() === 2 && v.engineLeft) chips.push(['المحرك الأيسر', String(v.engineLeft)]);
     view.innerHTML = chips.map(function (c) { return '<div class="sm"><span>' + esc(c[0]) + '</span><b>' + esc(c[1]) + '</b></div>'; }).join('');
@@ -1269,7 +1288,7 @@ td.d{color:var(--t1)}
   function printFuel() {
     try {
       if (!allDocs.length) return toast('لا توجد وثائق للطباعة', 'info');
-      var vname0 = String((vesselData && vesselData.name) || vesselTitle || '').trim(), vnum0 = String((vesselData && vesselData.num) || '').trim();
+      var vname0 = vesselNameNow(), vnum0 = vesselNumNow();
       if (!vname0 || !vnum0) {
         toast('اسم الوسيلة ورقمها إجباريان في الطباعة — ' + (!vname0 ? 'الاسم' : 'الرقم') + ' غير مسجَّل في سجل هذه الوسيلة بصفحة الوسائل البحرية، عدّل الوسيلة هناك ثم أعد المحاولة', 'error');
         return;
