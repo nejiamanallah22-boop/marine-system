@@ -225,7 +225,6 @@ td.d{color:var(--t1)}
       <div class="edit-note"><i class="fas fa-pen-to-square"></i> عدّل القيمة الخاطئة ثم اضغط «حفظ الإعدادات». الوثائق المسجلة سابقاً لا تتغير، والوثائق الجديدة تُفحص بالقيم الجديدة.</div>
       <div class="grid g3">
         <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc" onchange="toggleSetupEngineFields()"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div></div>
-        <div class="fg"><label for="setupVesselNum">رقم الوسيلة <small style="color:var(--t3);font-weight:700">(إجباري للطباعة)</small></label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupVesselNum" class="fc" placeholder="رقم الوسيلة" maxlength="40"></div></div>
         <div class="fg"><label for="setupTankCapacity">سعة الخزان</label><div class="field has-unit"><i class="fas fa-oil-can"></i><input type="number" id="setupTankCapacity" class="fc" placeholder="سعة الخزان" min="1" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
         <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري <small style="color:var(--t3);font-weight:700">(اختياري — اتركه فارغاً للتعلّم التلقائي)</small></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" placeholder="اتركه فارغاً" step="0.01" min="0" inputmode="decimal"><span class="unit">لتر/س</span></div></div>
       </div>
@@ -397,14 +396,6 @@ td.d{color:var(--t1)}
       </table>
     </div>
   </section>
-  <section class="t-card opn" aria-label="آراء المسؤولين">
-    <h3><i class="fas fa-signature"></i> الآراء والتأشيرات</h3>
-    <div class="og">
-      <div class="ob"><b>رأي رئيس قسم التجهيز</b></div>
-      <div class="ob"><b>رأي رئيس إدارة</b></div>
-      <div class="ob"><b>رأي مدير إدارة</b></div>
-    </div>
-  </section>
 </div>
 <div class="tip" id="tip" hidden></div>
 
@@ -512,7 +503,7 @@ td.d{color:var(--t1)}
       ['سعر اللتر (غزوال / بنزين)', '1.998 / 2.525 د.ت'],
       ['الاستهلاك المعياري', std > 0 && std < 100 ? fmt(std, 2) + ' لتر/س' : 'قيد التعلّم (' + (standards.basedOn || 0) + ' / ' + (standards.minRequired || 3) + ' وثائق)']
     ];
-    chips.unshift(['رقم الوسيلة', v.num ? String(v.num) : 'غير مسجَّل']);
+    chips.unshift(['الوسيلة', (v.name || vesselTitle || '—') + (v.num ? ' · رقم ' + v.num : ' · الرقم غير مسجَّل')]);
     if (v.engineRight) chips.push([engCountNow() === 2 ? 'المحرك الأيمن' : 'المحرك', String(v.engineRight)]);
     if (engCountNow() === 2 && v.engineLeft) chips.push(['المحرك الأيسر', String(v.engineLeft)]);
     view.innerHTML = chips.map(function (c) { return '<div class="sm"><span>' + esc(c[0]) + '</span><b>' + esc(c[1]) + '</b></div>'; }).join('');
@@ -522,7 +513,6 @@ td.d{color:var(--t1)}
     $('setupEngineCount').value = String(engCountNow());
     $('setupTankCapacity').value = Number(standards.tankCapacity) > 0 ? standards.tankCapacity : '';
     $('setupStandardRate').value = '';
-    $('setupVesselNum').value = v.num || '';
     $('setupEngineRight').value = v.engineRight || '';
     $('setupEngineLeft').value = v.engineLeft || '';
     window.toggleSetupEngineFields();
@@ -541,9 +531,7 @@ td.d{color:var(--t1)}
     if (!isFinite(rate) || rate < 0) rate = 0;
     var n = Number($('setupEngineCount').value) === 2 ? 2 : 1;
     var right = $('setupEngineRight').value.trim().slice(0, 40), left = $('setupEngineLeft').value.trim().slice(0, 40);
-    var vnum = $('setupVesselNum').value.trim().slice(0, 40);
     var payload = { engineCount: n, tankCapacity: tank };
-    if (vnum) payload.num = vnum;
     if (!setupWasReady) payload.standardRate = rate;          // أول إعداد: كما كان
     else if (rate > 0) payload.standardRate = rate;           // تعديل: لا نمسح المعيار المتعلَّم إلا إن كتب المستخدم قيمة
     if (right) payload.engineRight = right;
@@ -558,7 +546,7 @@ td.d{color:var(--t1)}
       if (!setupWasReady) return setTimeout(function () { location.reload(); }, 800);
       standards.tankCapacity = tank; standards.engineCount = n;
       if (payload.standardRate > 0) { standards.standardRate = payload.standardRate; standards.basedOn = Math.max(standards.basedOn || 0, standards.minRequired || 3); }
-      vesselData = Object.assign({}, vesselData || {}, { num: vnum || (vesselData && vesselData.num) || '', engineCount: n, tankCapacity: tank, engineRight: right || (vesselData && vesselData.engineRight) || '', engineLeft: n === 2 ? (left || (vesselData && vesselData.engineLeft) || '') : '' });
+      vesselData = Object.assign({}, vesselData || {}, { engineCount: n, tankCapacity: tank, engineRight: right || (vesselData && vesselData.engineRight) || '', engineLeft: n === 2 ? (left || (vesselData && vesselData.engineLeft) || '') : '' });
       isTwin = n === 2; applyEngineMode();
       renderSetup(true); window.liveAudit(); renderTable(); renderChart(); loadAudit();
     } catch (e) { toast(e.message, 'error'); }
@@ -1204,13 +1192,86 @@ td.d{color:var(--t1)}
     return 'من ' + ldate(ds[0]) + ' إلى ' + ldate(ds[ds.length - 1]);
   }
 
+  /* ===== رسوم الطباعة (SVG ثابت الألوان، من اليمين: الأقدم) ===== */
+  function niceMax(v) { v = v > 0 ? v : 1; var p = Math.pow(10, Math.floor(Math.log(v) / Math.LN10)), m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
+  function sx(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function shortDate(v) { var x = String(v).slice(0, 10).split('-'); return x.length === 3 ? x[2] + '/' + x[1] : String(v); }
+  function svgOpen(W, H) { return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block;font-family:inherit;direction:ltr" direction="ltr">'; }
+  function legendSvg(items, W, y) {
+    var x = W - 10, out = '';
+    items.forEach(function (it) {
+      var w = it[0] === 'lbl' ? it[1].length * 6.4 + 10 : 14 + it[1].length * 6.1 + 14;
+      x -= w;
+      if (it[0] === 'lbl') { out += '<text x="' + (x + w) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10.5" font-weight="800" fill="#0f2744">' + sx(it[1]) + '</text>'; return; }
+      out += (it[2] === 'line' ? '<line x1="' + (x + w - 12) + '" y1="' + y + '" x2="' + (x + w - 2) + '" y2="' + y + '" stroke="' + it[0] + '" stroke-width="2.4"' + (it[3] ? ' stroke-dasharray="4 3"' : '') + '/>' : '<rect x="' + (x + w - 12) + '" y="' + (y - 5) + '" width="10" height="10" rx="2" fill="' + it[0] + '"/>') +
+        '<text x="' + (x + w - 16) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10.5" font-weight="700" fill="#334155">' + sx(it[1]) + '</text>';
+    });
+    return out;
+  }
+  function gridSvg(W, H, l, r, t, b, max, fmtV, side) {
+    var out = '';
+    for (var k = 0; k <= 4; k++) {
+      var y = t + (H - t - b) * (1 - k / 4), v = max * k / 4;
+      out += '<line x1="' + l + '" y1="' + y + '" x2="' + (W - r) + '" y2="' + y + '" stroke="' + (k ? '#e2e8f0' : '#94a3b8') + '" stroke-width="' + (k ? 0.8 : 1.2) + '"' + (k ? ' stroke-dasharray="3 3"' : '') + '/>' +
+        (side === 'left' ? '<text x="' + (l - 6) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="10" fill="#64748b" font-weight="700">' + fmtV(v) + '</text>' : '');
+    }
+    return out;
+  }
+  // الرسم 1: الاستهلاك + المعدل مقابل المعيار
+  function svgConsumption(docs, std) {
+    var W = 600, H = 260, l = 46, r = 46, t = 44, b = 38, n = docs.length, slot = (W - l - r) / n, hasStd = std > 0 && std < 100;
+    var maxL = niceMax(Math.max.apply(null, docs.map(function (d) { return Math.max(Number(d.actualConsumedLiters) || 0, Number(d.docTotalLiters) || 0); })) * 1.12);
+    var maxR = niceMax(Math.max.apply(null, docs.map(function (d) { return Number(d.totalActualRate) || 0; }).concat([hasStd ? std : 0])) * 1.2);
+    var yL = function (v) { return t + (H - t - b) * (1 - v / maxL); }, yR = function (v) { return t + (H - t - b) * (1 - v / maxR); };
+    var o = svgOpen(W, H) + '<rect width="' + W + '" height="' + H + '" fill="#fff"/>' + gridSvg(W, H, l, r, t, b, maxL, function (v) { return fmt(v, 0); }, 'left');
+    for (var k = 0; k <= 4; k++) o += '<text x="' + (W - r + 6) + '" y="' + (t + (H - t - b) * (1 - k / 4) + 3.5) + '" font-size="10" fill="#0d9488" font-weight="700">' + fmt(maxR * k / 4, 1) + '</text>';
+    o += '<text x="' + (l - 6) + '" y="' + (t - 10) + '" text-anchor="end" font-size="9.5" fill="#64748b" font-weight="800">لتر</text><text x="' + (W - r + 6) + '" y="' + (t - 10) + '" font-size="9.5" fill="#0d9488" font-weight="800">ل/س</text>';
+    var bw = Math.min(26, slot * 0.34), pts = [];
+    docs.forEach(function (d, i) {
+      var cx = W - r - slot * (i + 0.5), cons = Number(d.actualConsumedLiters) || 0, req = Number(d.docTotalLiters) || 0, rate = Number(d.totalActualRate) || 0;
+      o += '<rect x="' + (cx - bw - 1) + '" y="' + yL(cons) + '" width="' + bw + '" height="' + Math.max(0, yL(0) - yL(cons)) + '" rx="2.5" fill="#1e3a5f"/>' +
+           '<rect x="' + (cx + 1) + '" y="' + yL(req) + '" width="' + bw + '" height="' + Math.max(0, yL(0) - yL(req)) + '" rx="2.5" fill="#c9a227"/>';
+      if (n <= 10) o += '<text x="' + (cx - bw / 2 - 1) + '" y="' + (yL(cons) - 3) + '" text-anchor="middle" font-size="9" font-weight="800" fill="#1e3a5f">' + fmt(cons, 0) + '</text>';
+      o += '<text x="' + cx + '" y="' + (H - b + 14) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">' + shortDate(d.date) + '</text>';
+      if (rate > 0) pts.push([cx, yR(rate), rate]);
+    });
+    if (hasStd) o += '<line x1="' + l + '" y1="' + yR(std) + '" x2="' + (W - r) + '" y2="' + yR(std) + '" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="6 4"/><text x="' + (l + 4) + '" y="' + (yR(std) - 4) + '" font-size="10" font-weight="800" fill="#dc2626">المعيار ' + fmt(std, 2) + '</text>';
+    if (pts.length > 1) o += '<polyline fill="none" stroke="#0d9488" stroke-width="2.4" stroke-linejoin="round" points="' + pts.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' ') + '"/>';
+    pts.forEach(function (q) {
+      var bad = hasStd && q[2] > std;
+      o += '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="4.2" fill="' + (bad ? '#dc2626' : '#0d9488') + '" stroke="#fff" stroke-width="1.5"/>' +
+           (n <= 10 ? '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] - 8).toFixed(1) + '" text-anchor="middle" font-size="9" font-weight="800" fill="' + (bad ? '#dc2626' : '#0d9488') + '">' + fmt(q[2], 2) + '</text>' : '');
+    });
+    o += legendSvg([['#1e3a5f', 'المستهلك فعلياً (لتر)'], ['#c9a227', 'المطلوب الإضافي (لتر)'], ['#0d9488', 'المعدل الفعلي (ل/س)', 'line']].concat(hasStd ? [['#dc2626', 'المعيار', 'line', true]] : []), W, 16);
+    return o + '</svg>';
+  }
+  // الرسم 2: تفسير الكميات: المتوفر مقابل المحاسَب
+  function svgBalance(docs) {
+    var W = 600, H = 260, l = 46, r = 14, t = 56, b = 38, n = docs.length, slot = (W - l - r) / n;
+    var vals = docs.map(function (d) { var op = d._open && d._open.known ? d._open.liters : 0; return Math.max(op + (Number(d.quota) || 0) + (Number(d.docTotalLiters) || 0), carryOf(d) + (Number(d.actualConsumedLiters) || 0)); });
+    var max = niceMax(Math.max.apply(null, vals) * 1.1), yV = function (v) { return t + (H - t - b) * (1 - v / max); };
+    var o = svgOpen(W, H) + '<rect width="' + W + '" height="' + H + '" fill="#fff"/>' + gridSvg(W, H, l, r, t, b, max, function (v) { return fmt(v, 0); }, 'left') +
+      '<text x="' + (l - 6) + '" y="' + (t - 10) + '" text-anchor="end" font-size="9.5" fill="#64748b" font-weight="800">لتر</text>';
+    var bw = Math.min(24, slot * 0.34);
+    function stack(x, parts) { var acc = 0, out = ''; parts.forEach(function (q) { if (q[0] > 0) { out += '<rect x="' + x + '" y="' + yV(acc + q[0]) + '" width="' + bw + '" height="' + Math.max(0, yV(acc) - yV(acc + q[0])) + '" fill="' + q[1] + '"/>'; acc += q[0]; } }); return out; }
+    docs.forEach(function (d, i) {
+      var cx = W - r - slot * (i + 0.5), known = d._open && d._open.known, op = known ? d._open.liters : 0;
+      o += stack(cx + 1, [[op, '#94a3b8'], [Number(d.quota) || 0, '#1e3a5f'], [Number(d.docTotalLiters) || 0, '#c9a227']]) +
+           stack(cx - bw - 1, [[Number(d.actualConsumedLiters) || 0, '#0d9488'], [Number(d.remainingTank) || 0, '#2563eb'], [Number(d.cardLiters) || 0, '#8b5cf6']]);
+      var top = Math.min(yV(vals[i]), H) - 5, ok = !known || Math.abs(d._gap) <= BAL_TOL;
+      o += '<text x="' + cx + '" y="' + top + '" text-anchor="middle" font-size="9.5" font-weight="800" fill="' + (!known ? '#64748b' : ok ? '#059669' : '#dc2626') + '">' + (!known ? 'بداية' : ok ? '✓ 0' : (d._gap > 0 ? '+' : '') + fmt(d._gap, 1)) + '</text>' +
+           '<text x="' + cx + '" y="' + (H - b + 14) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">' + shortDate(d.date) + '</text>';
+    });
+    o += legendSvg([['lbl', 'المتوفر (العمود الأيمن):'], ['#94a3b8', 'المرحَّل'], ['#1e3a5f', 'المقرر'], ['#c9a227', 'الإضافي']], W, 14) + legendSvg([['lbl', 'المحاسَب (العمود الأيسر):'], ['#0d9488', 'المستهلك'], ['#2563eb', 'الباقي بالخزان'], ['#8b5cf6', 'رصيد البطاقة']], W, 32);
+    return o + '</svg>';
+  }
+
   function printFuel() {
     try {
       if (!allDocs.length) return toast('لا توجد وثائق للطباعة', 'info');
       var vname0 = String((vesselData && vesselData.name) || vesselTitle || '').trim(), vnum0 = String((vesselData && vesselData.num) || '').trim();
       if (!vname0 || !vnum0) {
-        toast('اسم الوسيلة ورقمها إجباريان للطباعة — أكمل ' + (!vname0 ? 'الاسم' : 'رقم الوسيلة') + ' من إعدادات المركب', 'error');
-        if (!vnum0 && !$('setupEditBtn').hidden) { openSetupEdit(false); $('setupVesselNum').focus(); }
+        toast('اسم الوسيلة ورقمها إجباريان في الطباعة — ' + (!vname0 ? 'الاسم' : 'الرقم') + ' غير مسجَّل في سجل هذه الوسيلة بصفحة الوسائل البحرية، عدّل الوسيلة هناك ثم أعد المحاولة', 'error');
         return;
       }
       enrichDocs();
@@ -1259,13 +1320,17 @@ td.d{color:var(--t1)}
       // سطر المجاميع
       rows.push(['', { type: 'badge', text: 'المجموع', variant: 'neutral' }, '', '', fmt(Quota, 1), fmt(Req, 1), fmt(H, 1), fmt(Cons, 1), '', '', '', avg ? avg.toFixed(2) : dash, '', exL > 0 ? fmt(exL, 1) : dash, '', '', '', '']);
 
-      var vname = vname0;
+      var vname = vname0, cdocs = docs.slice(-16);
       var printData = {
         type: 'fuel',
         title: 'كشف المحروقات',
         subtitle: 'Fuel Consumption Statement',
         sectionTitle: 'الوسيلة: ' + vname + '  ·  رقم الوسيلة: ' + vnum0 + '  ·  ' + periodLabel(docs) + '  ·  المعيار المعتمد: ' + (hasStd ? fmt(std, 2) + ' لتر/س' : 'قيد التعلّم') + '  ·  عدد الوثائق: ' + n,
         stats: stats, columns: columns, rows: rows,
+        charts: [
+          { title: 'الاستهلاك والمعدل مقابل المعيار' + (cdocs.length < n ? ' (آخر ' + cdocs.length + ' وثيقة)' : ''), svg: svgConsumption(cdocs, std) },
+          { title: 'تفسير الكميات: المتوفر = المحاسَب' + (cdocs.length < n ? ' (آخر ' + cdocs.length + ' وثيقة)' : ''), svg: svgBalance(cdocs) }
+        ],
         signatures: ['رأي رئيس قسم التجهيز', 'رأي رئيس إدارة', 'رأي مدير إدارة']
       };
       localStorage.setItem('print_data', JSON.stringify(printData));
