@@ -714,6 +714,13 @@ body.exporting .snapshot-body { width: 1600px !important; }
             html += '</tr>';
         });
         html += '</tbody></table></div>';
+        if (Array.isArray(data.signatures) && data.signatures.length) {
+            html += '<div style="padding:6mm 4mm 0;page-break-inside:avoid;break-inside:avoid;"><div style="display:flex;gap:14mm;">' +
+                data.signatures.map(function (lbl) {
+                    return '<div style="flex:1;min-height:34mm;text-align:center;">' +
+                        '<div style="font-size:10pt;font-weight:800;color:#0f2744;border-bottom:.4mm solid #0f2744;padding-bottom:1.5mm;">' + esc(lbl) + '</div></div>';
+                }).join('') + '</div></div>';
+        }
         html += '<div style="padding:0 4mm 3mm;">' + buildFooter() + '</div>';
         return html;
     }
