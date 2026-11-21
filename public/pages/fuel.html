@@ -165,6 +165,7 @@ td.d{color:var(--t1)}
 .acts{display:flex;gap:6px;justify-content:center}
 .ab{border:0;cursor:pointer;width:34px;height:34px;border-radius:10px;font-size:14px;display:inline-flex;align-items:center;justify-content:center;transition:transform .15s,background .15s}
 .ab:hover{transform:translateY(-2px)}.ab.ed{background:#e8f0fe;color:#1a56c4}.ab.ed:hover{background:#d3e3fd}
+.ab.pr{background:#fff4d6;color:#8a6508}.ab.pr:hover{background:#ffe9a8}
 .ab.dl{background:var(--bad-bg);color:var(--bad)}.ab.dl:hover{background:#f9d0d0}.ab:disabled{opacity:.5;cursor:wait}
 .eh{white-space:nowrap}.eh small{display:block;color:var(--t3);font-weight:700;font-size:11px}.eh b{font-size:14px}
 .vd{display:inline-block;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:800;white-space:nowrap}
@@ -923,6 +924,7 @@ td.d{color:var(--t1)}
         '<td data-label="ملاحظة"><span class="vd ' + d._v.c + '">' + esc(d._v.t) + '</span><span class="vwhy">' + esc(d._v.w) + '</span></td>' +
         '<td class="colAct" data-label="إجراءات"><div class="acts">' +
           '<button type="button" class="ab ed" data-act="edit" data-id="' + esc(d._id) + '" title="تعديل" aria-label="تعديل"><i class="fas fa-pen"></i></button>' +
+ '<button type="button" class="ab pr" data-act="print" data-id="' + esc(d._id) + '" title="طباعة هذه الوثيقة فقط" aria-label="طباعة"><i class="fas fa-print"></i></button>' +
           '<button type="button" class="ab dl" data-act="del" data-id="' + esc(d._id) + '" title="حذف" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
         '</div></td></tr>';
     }).join('');
@@ -994,7 +996,7 @@ td.d{color:var(--t1)}
   document.getElementById('fuelTableBody').addEventListener('click', function (e) {
     var b = e.target.closest('.ab'); if (!b) return;
     var id = b.getAttribute('data-id');
-    if (b.getAttribute('data-act') === 'edit') window.startEdit(id); else deleteDoc(id, b);
+    var act = b.getAttribute('data-act'); if (act === 'edit') window.startEdit(id); else if (act === 'print') printFuel(id); else deleteDoc(id, b);
   });
 
   function setDelta(badge, bar, cur, prev) {
@@ -1290,8 +1292,54 @@ td.d{color:var(--t1)}
     return o + '</svg>';
   }
 
-  function printFuel() {
+
+  // وثيقة واحدة: معادلة الكميات بأشرطة أفقية
+  function svgEquationOne(d) {
+    var W = 600, H = 250, l = 14, r = 14, top = 34, bw = W - l - r;
+    var op = d._open && d._open.known ? d._open.liters : 0, q = Number(d.quota) || 0, ex = Number(d.docTotalLiters) || 0;
+    var cons = Number(d.actualConsumedLiters) || 0, tk = Number(d.remainingTank) || 0, cd = Number(d.cardLiters) || 0;
+    var S = op + q + ex, A = cons + tk + cd, max = Math.max(S, A, 1);
+    var o = svgOpen(W, H) + '<rect width="' + W + '" height="' + H + '" fill="#fff"/>';
+    function bar(y, label, parts, total) {
+      var x = W - r, out = '<text x="' + (W - r) + '" y="' + (y - 8) + '" text-anchor="end" font-size="12" font-weight="900" fill="#0f2744">' + sx(label) + ' = ' + fmt(total, 1) + ' لتر</text>';
+      parts.forEach(function (p) {
+        if (!(p[0] > 0)) return; var w = p[0] / max * bw; x -= w;
+        out += '<rect x="' + x.toFixed(1) + '" y="' + y + '" width="' + w.toFixed(1) + '" height="34" fill="' + p[1] + '" stroke="#fff" stroke-width="1.5"/>';
+        if (w > 46) out += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (y + 21) + '" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">' + fmt(p[0], 1) + '</text>';
+      });
+      return out;
+    }
+    o += bar(top + 14, 'المتوفر', [[op, '#94a3b8'], [q, '#1e3a5f'], [ex, '#c9a227']], S);
+    o += bar(top + 98, 'المحاسَب', [[cons, '#0d9488'], [tk, '#2563eb'], [cd, '#8b5cf6']], A);
+    var known = d._open && d._open.known, ok = !known || Math.abs(d._gap) <= BAL_TOL;
+    o += '<text x="' + (W / 2) + '" y="' + (top + 170) + '" text-anchor="middle" font-size="14" font-weight="900" fill="' + (!known ? '#64748b' : ok ? '#059669' : '#dc2626') + '">' + (!known ? 'أول وثيقة في السجل — لا مرحَّل سابق للمقارنة' : ok ? '✓ كل كمية مفسَّرة — الفرق 0' : 'فرق غير مفسَّر: ' + (d._gap > 0 ? '+' : '') + fmt(d._gap, 1) + ' لتر') + '</text>';
+    o += legendSvg([['#94a3b8', 'المرحَّل'], ['#1e3a5f', 'المقرر'], ['#c9a227', 'الإضافي'], ['#0d9488', 'المستهلك'], ['#2563eb', 'الخزان'], ['#8b5cf6', 'البطاقة']], W, H - 14);
+    return o + '</svg>';
+  }
+  // وثيقة واحدة: مقياس المعدل مقابل المعيار
+  function svgRateGauge(d, std) {
+    var W = 600, H = 250, l = 30, r = 30, y = 110, bh = 40, bw = W - l - r, rate = Number(d.totalActualRate) || 0, hasStd = std > 0 && std < 100;
+    var o = svgOpen(W, H) + '<rect width="' + W + '" height="' + H + '" fill="#fff"/>';
+    if (!hasStd) {
+      o += '<text x="' + (W / 2) + '" y="105" text-anchor="middle" font-size="15" font-weight="900" fill="#64748b">المعيار لم يُعتمد بعد (قيد التعلّم)</text><text x="' + (W / 2) + '" y="135" text-anchor="middle" font-size="12" font-weight="700" fill="#64748b">يُعتمد بعد ' + (standards.minRequired || 3) + ' وثائق سليمة</text><text x="' + (W / 2) + '" y="185" text-anchor="middle" font-size="22" font-weight="900" fill="#0d9488">المعدل الفعلي: ' + fmt(rate, 2) + ' ل/س</text>';
+      return o + '</svg>';
+    }
+    var max = Math.max(std * 1.5, rate * 1.15), X = function (v) { return W - r - v / max * bw; };
+    function zone(a, b, c) { return '<rect x="' + X(b).toFixed(1) + '" y="' + y + '" width="' + (X(a) - X(b)).toFixed(1) + '" height="' + bh + '" fill="' + c + '"/>'; }
+    o += zone(0, std * 0.85, '#bbf7d0') + zone(std * 0.85, std, '#fde68a') + zone(std, max, '#fecaca');
+    o += '<rect x="' + l + '" y="' + y + '" width="' + bw + '" height="' + bh + '" fill="none" stroke="#94a3b8" stroke-width="1.2"/>';
+    [0, 0.5, 1, 1.5].forEach(function (k) { var v = std * k; if (v > max) return; o += '<text x="' + X(v).toFixed(1) + '" y="' + (y + bh + 16) + '" text-anchor="middle" font-size="10" font-weight="700" fill="#64748b">' + fmt(v, 1) + '</text>'; });
+    o += '<line x1="' + X(std) + '" y1="' + (y - 14) + '" x2="' + X(std) + '" y2="' + (y + bh + 4) + '" stroke="#dc2626" stroke-width="2.4" stroke-dasharray="5 3"/><text x="' + X(std) + '" y="' + (y - 20) + '" text-anchor="middle" font-size="12" font-weight="900" fill="#dc2626">المعيار ' + fmt(std, 2) + '</text>';
+    var bad = rate > std, c = bad ? '#dc2626' : '#0d9488', xr = X(rate);
+    o += '<polygon points="' + xr + ',' + (y + bh + 2) + ' ' + (xr - 9) + ',' + (y + bh + 24) + ' ' + (xr + 9) + ',' + (y + bh + 24) + '" fill="' + c + '"/><text x="' + xr + '" y="' + (y + bh + 46) + '" text-anchor="middle" font-size="14" font-weight="900" fill="' + c + '">المعدل ' + fmt(rate, 2) + ' ل/س</text>';
+    o += '<text x="' + (W / 2) + '" y="30" text-anchor="middle" font-size="22" font-weight="900" fill="' + c + '"><tspan style="unicode-bidi:isolate;direction:ltr">' + Math.round(rate / std * 100) + '%</tspan> من المعيار</text>';
+    o += legendSvg([['#bbf7d0', 'عادي (حتى 85%)'], ['#fde68a', 'مقبول (85–100%)'], ['#fecaca', 'مشبوه (فوق 100%)']], W, H - 14);
+    return o + '</svg>';
+  }
+
+  function printFuel(onlyId) {
     try {
+      onlyId = typeof onlyId === 'string' ? onlyId : '';
       if (!allDocs.length) return toast('لا توجد وثائق للطباعة', 'info');
       var vname0 = vesselNameNow(), vnum0 = vesselNumNow();
       if (!vname0 || !vnum0) {
@@ -1301,6 +1349,7 @@ td.d{color:var(--t1)}
       }
       enrichDocs();
       var docs = allDocs.slice().sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
+      if (onlyId) { docs = docs.filter(function (d) { return String(d._id) === onlyId; }); if (!docs.length) return toast('الوثيقة غير موجودة', 'error'); }
       var n = docs.length, H = 0, Cons = 0, Req = 0, Quota = 0, exL = 0, flagged = 0;
       docs.forEach(function (d) {
         H += Number(d.docTotalHours) || 0; Cons += Number(d.actualConsumedLiters) || 0;
@@ -1320,42 +1369,80 @@ td.d{color:var(--t1)}
         { value: flagged + ' / ' + n, label: '🚨 الوثائق المشبوهة' }
       ];
 
-      var columns = ['م', 'التاريخ', 'رقم الوثيقة', 'الوقود', 'المقرر (لتر)', 'المطلوب الإضافي (لتر)', 'ساعات العمل', 'المستهلك (لتر)', 'الباقي بالخزان (لتر)', 'رصيد البطاقة (د.ت)',
-        anyLeft ? 'ساعات المحركين (أيمن / أيسر)' : 'ساعات المحرك', 'المعدل', 'نسبة المعيار', 'مُبالغ فيه (لتر)', 'درجة الخطر', 'المرحَّل (لتر)', 'فرق المعادلة', 'ملاحظة'];
+      var vclr = { ok: 'success', acc: 'info', bad: 'danger', warn: 'warning', neu: 'neutral' };
+      var vcol = { ok: '#047857', acc: '#1d4ed8', bad: '#dc2626', warn: '#b45309', neu: '#475569' };
+      var kindOf = function (d) { return d._v.c === 'bad' ? 'bad' : d._v.c === 'warn' ? 'warn' : ''; };
+      var cardL = function (d) { return d.cardLiters != null ? d.cardLiters : (Number(d.cardDinars) || 0) / (priceOfType(d.fuelType) || 1); };
+      var gapTxt = function (d) { return d._open && d._open.known ? (Math.abs(d._gap) <= BAL_TOL ? '0 ✓' : (d._gap > 0 ? '+' : '') + fmt(d._gap, 1)) : dash; };
 
-      var rows = docs.map(function (d, i) {
-        var e = d.engines || {}, rate = Number(d.totalActualRate) || 0, pct = hasStd && rate > 0 ? Math.round(rate / std * 100) + '%' : dash;
-        var benz = d.fuelType === 'benzine';
-        return [
-          i + 1, ldate(d.date), d.documentNumber || dash,
-          { type: 'badge', text: benz ? 'بنزين' : 'غزوال', variant: benz ? 'warning' : 'info' },
-          d.quota != null ? fmt(d.quota, 1) : dash, fmt(d.docTotalLiters, 1), fmt(d.docTotalHours, 1),
-          d.actualConsumedLiters != null ? fmt(d.actualConsumedLiters, 1) : dash,
-          d.remainingTank != null ? fmt(d.remainingTank, 1) : dash,
-          d.cardDinars != null ? fmt(d.cardDinars, 3) : dash,
-          e.left ? hrs(e.right) + ' / ' + hrs(e.left) : hrs(e.right),
-          rate > 0 ? rate.toFixed(2) : dash, pct,
-          d.excessLiters > 0 ? fmt(d.excessLiters, 1) : dash,
-          d.riskScore != null && isFinite(Number(d.riskScore)) ? Math.round(d.riskScore) : dash,
-          d._open && d._open.known ? fmt(d._open.liters, 1) : dash,
-          d._open && d._open.known ? (Math.abs(d._gap) <= BAL_TOL ? '0' : (d._gap > 0 ? '+' : '') + fmt(d._gap, 1)) : dash,
-          { type: 'badge', text: d._v.t, variant: { ok: 'success', acc: 'info', bad: 'danger', warn: 'warning', neu: 'neutral' }[d._v.c] }
-        ];
-      });
-      // سطر المجاميع
-      rows.push(['', { type: 'badge', text: 'المجموع', variant: 'neutral' }, '', '', fmt(Quota, 1), fmt(Req, 1), fmt(H, 1), fmt(Cons, 1), '', '', '', avg ? avg.toFixed(2) : dash, '', exL > 0 ? fmt(exL, 1) : dash, '', '', '', '']);
+      // الجدول 1: الكميات والمخزون
+      var t1 = {
+        title: '١) الكميات والمخزون', widths: ['8mm', '', '', '', '', '', '', '', '', '', ''],
+        columns: ['م', 'التاريخ', 'رقم الوثيقة', 'الوقود', 'المقرر (لتر)', 'المطلوب الإضافي (لتر)', 'ساعات العمل', 'المستهلك فعلياً (لتر)', 'الباقي بالخزان (لتر)', 'رصيد البطاقة (د.ت)', anyLeft ? 'ساعات المحركين (أيمن / أيسر)' : 'ساعات المحرك'],
+        rows: docs.map(function (d, i) {
+          var e = d.engines || {}, benz = d.fuelType === 'benzine';
+          return { kind: kindOf(d), cells: [i + 1, ldate(d.date), d.documentNumber || dash, { type: 'badge', text: benz ? 'بنزين' : 'غزوال', variant: benz ? 'warning' : 'info' },
+            d.quota != null ? fmt(d.quota, 1) : dash, fmt(d.docTotalLiters, 1), fmt(d.docTotalHours, 1),
+            d.actualConsumedLiters != null ? fmt(d.actualConsumedLiters, 1) : dash,
+            d.remainingTank != null ? fmt(d.remainingTank, 1) : dash, d.cardDinars != null ? fmt(d.cardDinars, 3) : dash,
+            e.left ? hrs(e.right) + ' / ' + hrs(e.left) : hrs(e.right)] };
+        })
+      };
+      if (n > 1) t1.rows.push({ kind: 'total', cells: ['', 'المجموع', '', '', fmt(Quota, 1), fmt(Req, 1), fmt(H, 1), fmt(Cons, 1), '', '', ''] });
 
-      var vname = vname0, cdocs = docs.slice(-16);
-      var printData = {
-        type: 'fuel',
-        title: 'كشف المحروقات',
-        subtitle: 'Fuel Consumption Statement',
-        sectionTitle: 'الوسيلة: ' + vname + '  ·  رقم الوسيلة: ' + vnum0 + '  ·  ' + periodLabel(docs) + '  ·  المعيار المعتمد: ' + (hasStd ? fmt(std, 2) + ' لتر/س' : 'قيد التعلّم') + '  ·  عدد الوثائق: ' + n,
-        stats: stats, columns: columns, rows: rows,
-        charts: [
+      // الجدول 2: التدقيق والمعيار والحكم
+      var cnt = { ok: 0, ok2: 0, bad: 0, warn: 0, neu: 0 }; docs.forEach(function (d) { var t = d._v.t; if (t === 'عادي') cnt.ok++; else if (t === 'مقبول') cnt.ok2++; else if (d._v.c === 'bad') cnt.bad++; else if (d._v.c === 'warn') cnt.warn++; else if (d._v.c === 'neu') cnt.neu++; });
+      var t2 = {
+        title: '٢) التدقيق ومعادلة الكميات والحكم', widths: ['8mm', '', '', '', '', '', '', '', '', '', '', '34mm'],
+        columns: ['م', 'التاريخ', 'المعدل (لتر/س)', 'نسبة المعيار', 'مُبالغ فيه (لتر)', 'المرحَّل (لتر)', 'المتوفر (لتر)', 'المحاسَب (لتر)', 'فرق المعادلة', 'درجة الخطر', 'الحكم', 'السبب'],
+        rows: docs.map(function (d, i) {
+          var rate = Number(d.totalActualRate) || 0, pctN = hasStd && rate > 0 ? rate / std * 100 : null, known = d._open && d._open.known;
+          var supply = (known ? d._open.liters : 0) + (Number(d.quota) || 0) + (Number(d.docTotalLiters) || 0);
+          var acc = (Number(d.actualConsumedLiters) || 0) + (Number(d.remainingTank) || 0) + cardL(d);
+          return { kind: kindOf(d), cells: [i + 1, ldate(d.date), rate > 0 ? rate.toFixed(2) : dash,
+            pctN == null ? dash : { text: Math.round(pctN) + '%', bold: true, color: pctN > 100 ? '#dc2626' : pctN > 85 ? '#b45309' : '#047857' },
+            d.excessLiters > 0 ? { text: fmt(d.excessLiters, 1), bold: true, color: '#dc2626' } : dash,
+            known ? fmt(d._open.liters, 1) : dash, fmt(supply, 1), fmt(acc, 1),
+            known && Math.abs(d._gap) > BAL_TOL ? { text: gapTxt(d), bold: true, color: '#dc2626' } : gapTxt(d),
+            d.riskScore != null && isFinite(Number(d.riskScore)) ? Math.round(d.riskScore) : dash,
+            { type: 'badge', text: d._v.t, variant: vclr[d._v.c] }, { text: d._v.w, align: 'right', small: true, color: vcol[d._v.c] }] };
+        }),
+        note: 'الحكم: عادي ≤ 85% من المعيار · مقبول 85–100% · مشبوه > 100% (أو شبهة من التدقيق) · فرق غير مفسَّر: وقود لا تفسّره المعادلة (مرحَّل + مقرر + إضافي = مستهلك + خزان + بطاقة).' +
+          (n > 1 ? '   |   الإجمالي: عادي ' + cnt.ok + ' · مقبول ' + cnt.ok2 + ' · مشبوه ' + cnt.bad + ' · فرق غير مفسَّر ' + cnt.warn + ' · قيد التعلّم ' + cnt.neu : '')
+      };
+      var tables = [t1, t2];
+
+      var vname = vname0, cdocs = docs.slice(-16), charts;
+      if (onlyId) {
+        var d0 = docs[0], v0 = d0._v;
+        stats[3] = { value: avg ? avg.toFixed(2) : dash, label: '📈 المعدل (لتر/س)' };
+        stats[4] = { value: v0.t, label: '🧾 الحكم · ' + (v0.w || '') };
+        var known0 = d0._open && d0._open.known, op0 = known0 ? d0._open.liters : 0;
+        var S0 = op0 + (Number(d0.quota) || 0) + (Number(d0.docTotalLiters) || 0), A0 = (Number(d0.actualConsumedLiters) || 0) + (Number(d0.remainingTank) || 0) + cardL(d0);
+        tables.push({
+          title: '٣) تفصيل المعادلة المحاسبية', widths: ['', '28mm', '', '28mm'],
+          columns: ['الكميات المتوفرة', 'لتر', 'الكميات المحاسَب عليها', 'لتر'],
+          rows: [
+            ['المرحَّل من الوثيقة السابقة', known0 ? fmt(op0, 1) : 'لا يوجد', 'المستهلك فعلياً', fmt(d0.actualConsumedLiters, 1)],
+            ['المقرر (المرصود)', fmt(d0.quota, 1), 'الباقي بالخزان', fmt(d0.remainingTank, 1)],
+            ['المطلوب الإضافي', fmt(d0.docTotalLiters, 1), 'رصيد البطاقة (' + fmt(d0.cardDinars, 3) + ' د.ت)', fmt(cardL(d0), 1)],
+            { kind: 'total', cells: ['مجموع المتوفر', fmt(S0, 1), 'مجموع المحاسَب عليه', fmt(A0, 1)] },
+            { kind: known0 && Math.abs(d0._gap) > BAL_TOL ? 'warn' : '', cells: ['الفرق غير المفسَّر', known0 ? (Math.abs(d0._gap) <= BAL_TOL ? '0 ✓' : (d0._gap > 0 ? '+' : '') + fmt(d0._gap, 1)) : 'أول وثيقة', 'الاستنتاج', { text: v0.t, bold: true, color: vcol[v0.c] }] }
+          ]
+        });
+        charts = [{ title: 'معادلة الكميات: المتوفر = المحاسَب', svg: svgEquationOne(d0) }, { title: 'المعدل الفعلي مقابل المعيار', svg: svgRateGauge(d0, std) }];
+      } else {
+        charts = [
           { title: 'الاستهلاك والمعدل مقابل المعيار' + (cdocs.length < n ? ' (آخر ' + cdocs.length + ' وثيقة)' : ''), svg: svgConsumption(cdocs, std) },
           { title: 'تفسير الكميات: المتوفر = المحاسَب' + (cdocs.length < n ? ' (آخر ' + cdocs.length + ' وثيقة)' : ''), svg: svgBalance(cdocs) }
-        ],
+        ];
+      }
+      var printData = {
+        type: 'fuel',
+        title: onlyId ? 'بطاقة وثيقة تموين بالمحروقات' : 'كشف المحروقات',
+        subtitle: 'Fuel Consumption Statement',
+        sectionTitle: 'الوسيلة: ' + vname + '  ·  رقم الوسيلة: ' + vnum0 + '  ·  ' + (onlyId ? 'وثيقة بتاريخ ' + ldate(docs[0].date) + (docs[0].documentNumber ? ' · رقم ' + docs[0].documentNumber : '') : periodLabel(docs)) + '  ·  المعيار المعتمد: ' + (hasStd ? fmt(std, 2) + ' لتر/س' : 'قيد التعلّم') + '  ·  عدد الوثائق: ' + n,
+        stats: stats, tables: tables, charts: charts,
         signatures: ['رأي رئيس قسم التجهيز', 'رأي رئيس إدارة', 'رأي مدير إدارة']
       };
       localStorage.setItem('print_data', JSON.stringify(printData));
@@ -1381,7 +1468,7 @@ td.d{color:var(--t1)}
     applyEngineMode(); window.liveAudit();
   };
   document.querySelectorAll('.eng-opt').forEach(function (b) { b.addEventListener('click', function () { window.setEngines(parseInt(b.getAttribute('data-n'), 10)); }); });
-  $('printBtn').addEventListener('click', printFuel);
+  $('printBtn').addEventListener('click', function () { printFuel(); });
   $('setupEditBtn').addEventListener('click', function () { openSetupEdit(false); });
   $('setupCancelBtn').addEventListener('click', closeSetupEdit);
   $('setupSaveBtn').addEventListener('click', window.saveEngineSetup);
