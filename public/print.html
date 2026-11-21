@@ -620,6 +620,41 @@ body.exporting .snapshot-body { width: 1600px !important; }
             `<div style="padding:0 4mm 3mm;">${buildFooter()}</div>`;
     }
 
+    // جدول مبسّط واضح: عناوين كبيرة، صفوف مظللة حسب الحكم، خلايا نصية طويلة، سطر مجاميع، وملاحظة تحت الجدول
+    function simpleTable(tb) {
+        const cols = tb.columns || [], widths = tb.widths || [];
+        const kinds = { bad: '#fef2f2', warn: '#fffbeb', total: '#e6edf7', ok: '' };
+        const variants = { success: ['#059669', '#047857'], danger: ['#dc2626', '#b91c1c'], warning: ['#d97706', '#b45309'], info: ['#2563eb', '#1e40af'], neutral: ['#64748b', '#334155'] };
+        const tdB = 'border-bottom:1px solid #dbe3ee;border-left:1px solid #e2e8f0;';
+        let h = '<div style="margin:5mm 4mm 0;' + ((tb.rows || []).length <= 8 ? 'break-inside:avoid;page-break-inside:avoid;' : '') + '"><div style="padding:2.2mm 5mm;' + fill('#0f2744') + 'color:#fff;font-size:10.5pt;font-weight:800;border-bottom:2.5px solid #c9a227;border-radius:2mm 2mm 0 0;break-after:avoid;">' + esc(tb.title || '') + '</div>';
+        h += '<div style="border:1px solid #cbd5e1;border-top:none;"><table class="print-table" style="width:100%;border-collapse:collapse;table-layout:auto;">';
+        h += '<colgroup>' + cols.map((c, i) => '<col' + (widths[i] ? ' style="width:' + widths[i] + '"' : '') + '>').join('') + '</colgroup><thead><tr>';
+        cols.forEach(c => { h += '<th style="padding:2.2mm 1mm;' + fill('#1e3a5f') + 'color:#fff;font-weight:800;font-size:8.6pt;text-align:center;border-left:1px solid #34527a;border-bottom:2px solid #c9a227;">' + esc(c) + '</th>'; });
+        h += '</tr></thead><tbody>';
+        (tb.rows || []).forEach((row, ri) => {
+            const cells = Array.isArray(row) ? row : (row.cells || []), kind = Array.isArray(row) ? '' : (row.kind || '');
+            const bg = kinds[kind] || (ri % 2 ? '#f8fafc' : '#ffffff');
+            h += '<tr style="break-inside:avoid;">';
+            cells.forEach(cell => {
+                const st = 'padding:1.9mm 1.2mm;vertical-align:middle;' + fill(bg) + tdB;
+                if (cell && typeof cell === 'object' && cell.type === 'badge') {
+                    const v = variants[cell.variant] || variants.neutral;
+                    h += '<td style="' + st + 'text-align:center;"><span style="' + fill(v[0]) + 'color:#fff;border:1px solid ' + v[1] + ';padding:.7mm 3mm;border-radius:2.5mm;font-size:8pt;font-weight:800;white-space:nowrap;display:inline-block;">' + esc(cell.text) + '</span></td>';
+                } else if (cell && typeof cell === 'object') {
+                    h += '<td style="' + st + 'text-align:' + (cell.align || 'center') + ';font-size:' + (cell.small ? '7.8pt' : '9pt') + ';font-weight:' + (cell.bold ? 900 : 600) + ';color:' + (cell.color || '#1e293b') + ';white-space:normal!important;">' + esc(cell.text) + '</td>';
+                } else {
+                    const v = (cell === null || cell === undefined || cell === '') ? '—' : String(cell);
+                    const nw = /^[\d٠-٩\/\-.,:+%\s‎‏؜]{1,24}$/.test(v) ? 'white-space:nowrap!important;word-break:keep-all!important;' : '';
+                    h += '<td style="' + st + 'text-align:center;font-size:9pt;font-weight:' + (kind === 'total' ? 900 : 600) + ';color:' + (kind === 'total' ? '#0f2744' : '#1e293b') + ';' + nw + '">' + esc(v) + '</td>';
+                }
+            });
+            h += '</tr>';
+        });
+        h += '</tbody></table></div>';
+        if (tb.note) h += '<div style="padding:1.8mm 4mm;font-size:7.8pt;color:#475569;font-weight:700;' + fill('#f8fafc') + 'border:1px solid #e2e8f0;border-top:none;border-radius:0 0 2mm 2mm;">' + esc(tb.note) + '</div>';
+        return h + '</div>';
+    }
+
     function buildFromData(data) {
         const section = data.sectionTitle || 'السجل التفصيلي';
         const stats = data.stats || [];
@@ -663,6 +698,8 @@ body.exporting .snapshot-body { width: 1600px !important; }
             html += '</section>';
         }
 
+        const hasTables = Array.isArray(data.tables) && data.tables.length;
+        if (!hasTables) {
         html += `<div style="padding:2.5mm 5mm;${fill('#0f2744')}color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2.5px solid #c9a227;margin:0 12mm;break-after:avoid;">${esc(section)}</div>`;
 
         html += '<div style="margin:0 4mm 4mm;border:1px solid #cbd5e1;border-top:none;">';
@@ -714,6 +751,8 @@ body.exporting .snapshot-body { width: 1600px !important; }
             html += '</tr>';
         });
         html += '</tbody></table></div>';
+        }
+        if (hasTables) html += data.tables.map(simpleTable).join('');
         if (Array.isArray(data.charts) && data.charts.length) {
             const okSvg = c => typeof c.svg === 'string' && c.svg.trim().startsWith('<svg') && !/<script|on\w+\s*=/i.test(c.svg);
             html += '<div style="padding:5mm 4mm 0;page-break-inside:avoid;break-inside:avoid;"><div style="display:flex;gap:5mm;">' +
@@ -1002,7 +1041,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
             const charts = cleanSnapshot(tmp);
             root.innerHTML = wrapSnapshot(tmp.innerHTML, title, charts);
             unpinElements(root);
-        } else if (data.rows && data.rows.length > 0) {
+        } else if (((data.rows && data.rows.length > 0) || (Array.isArray(data.tables) && data.tables.length > 0))) {
             root.innerHTML = buildFromData(data);
         } else {
             root.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
