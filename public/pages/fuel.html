@@ -219,6 +219,7 @@ td.d{color:var(--t1)}
   <section class="card" id="setupCard">
     <div class="card-title"><i class="fas fa-cogs"></i> <span id="setupTitle">إعدادات المركب</span>
       <button type="button" class="btn btn-line btn-sm" id="setupEditBtn" style="margin-inline-start:auto" hidden><i class="fas fa-pen"></i> تعديل الإعدادات</button>
+      <button type="button" class="btn btn-line btn-sm" id="reauditBtn" title="إعادة حساب أحكام كل الوثائق بالمعادلة الجديدة" hidden><i class="fas fa-rotate"></i> إعادة التدقيق</button>
     </div>
     <div class="notice" id="setupNotice" hidden><i class="fas fa-circle-info"></i><span>هذا المركب غير مهيأ بعد. أكمل الإعدادات التالية لتفعيل تسجيل وثائق التموين.</span></div>
     <div class="sum" id="setupView" style="margin-top:0"></div>
@@ -290,7 +291,8 @@ td.d{color:var(--t1)}
       </div>
       <div class="pane-box">
         <h4 style="color:var(--gold-d)"><i class="fas fa-credit-card"></i> البطاقة الذكية</h4>
-        <div class="fg"><label for="fCardDinars">الباقي بالبطاقة <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-coins"></i><input type="number" id="fCardDinars" class="fc" oninput="liveAudit()" placeholder="2000" min="0" step="0.001" inputmode="decimal"><span class="unit">د.ت</span></div></div>
+        <div class="fg"><label for="fCardDinars">الباقي بالبطاقة بالدينار <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-coins"></i><input type="number" id="fCardDinars" class="fc" oninput="cardSync('d')" placeholder="2000" min="0" step="0.001" inputmode="decimal"><span class="unit">د.ت</span></div></div>
+        <div class="fg" style="margin-top:10px"><label for="fCardLiters">الباقي بالبطاقة باللتر <small style="color:var(--t3);font-weight:700">(أدخل أحدهما والآخر يُحسب تلقائياً)</small></label><div class="field has-unit"><i class="fas fa-gas-pump"></i><input type="number" id="fCardLiters" class="fc" oninput="cardSync('l')" placeholder="0" min="0" step="0.01" inputmode="decimal"><span class="unit">لتر</span></div></div>
         <div class="fg" style="margin-top:10px"><label for="fIncomingDinars">المبلغ الوارد (شحن البطاقة)</label><div class="field has-unit"><i class="fas fa-arrow-down"></i><input type="number" id="fIncomingDinars" class="fc" oninput="liveAudit()" placeholder="0" min="0" step="0.001" inputmode="decimal"><span class="unit">د.ت</span></div></div>
         <div class="conv"><span>البطاقة تعادل</span><b id="cardLiters">0</b><span>لتر</span><span>· الوارد يعادل</span><b id="incomingLiters">0</b><span>لتر</span><span>· سعر اللتر</span><b id="priceLbl">1.998</b><span>د.ت</span></div>
       </div>
@@ -517,7 +519,7 @@ td.d{color:var(--t1)}
   function renderSetup(ready) {
     var view = $('setupView');
     $('setupNotice').hidden = ready;
-    $('setupEditBtn').hidden = !ready;
+    $('setupEditBtn').hidden = !ready; $('reauditBtn').hidden = !ready;
     $('setupTitle').textContent = ready ? 'إعدادات المركب' : 'إعداد المركب (مرة واحدة)';
     if (!ready) { view.hidden = true; openSetupEdit(true); return; }
     $('setupForm').hidden = true; view.hidden = false;
@@ -542,7 +544,7 @@ td.d{color:var(--t1)}
     $('setupEngineLeft').value = v.engineLeft || '';
     window.toggleSetupEngineFields();
     $('setupView').hidden = true; $('setupForm').hidden = false;
-    $('setupEditBtn').hidden = true;
+    $('setupEditBtn').hidden = true; $('reauditBtn').hidden = true;
     $('setupCancelBtn').hidden = !!firstTime;
     $('setupNotice').hidden = !firstTime;
     $('setupEditBtn').setAttribute('aria-expanded', 'true');
@@ -598,7 +600,7 @@ td.d{color:var(--t1)}
     if (pct != null && pct > 100) return { t: 'مشبوه', c: 'bad', w: 'المعدل ' + pct.toFixed(0) + '% من المعيار' + (d.excessLiters > 0 ? ' · زيادة ≈ ' + fmt(d.excessLiters, 1) + ' ل' : '') };
     if (serverOther && pct == null) return { t: 'مشبوه', c: 'bad', w: notes[0] || 'حسب قواعد التدقيق' };
     if (serverOther) return { t: 'مشبوه', c: 'bad', w: notes[0] || 'حسب قواعد التدقيق' };
-    if (gapBad) return { t: 'فرق غير مفسَّر', c: 'warn', w: (gap > 0 ? 'يوجد ' : 'ينقص ') + fmt(Math.abs(gap), 1) + ' لتر عن المرحَّل + المقرر + الإضافي' };
+    if (gapBad) return { t: 'فرق غير مفسَّر', c: 'warn', w: (gap > 0 ? 'يوجد ' : 'ينقص ') + fmt(Math.abs(gap), 1) + ' لتر عن المرحَّل + المقرر' };
     if (pct == null) return { t: 'قيد التعلّم', c: 'neu', w: hasStd ? 'لا معدل' : 'المعيار لم يُعتمد بعد' };
     if (pct < 40) return { t: 'منخفض — راجع', c: 'acc', w: pct.toFixed(0) + '% من المعيار: تحقق من الساعات' };
     if (pct <= 85) return { t: 'عادي', c: 'ok', w: pct.toFixed(0) + '% من المعيار' };
@@ -609,13 +611,16 @@ td.d{color:var(--t1)}
     var std = Number(standards.standardRate) || 0, prev = null;
     sortedAsc().forEach(function (d) {
       d._open = prev ? { known: true, liters: carryOf(prev) } : { known: false, liters: 0 };
-      var supply = d._open.liters + (Number(d.quota) || 0) + (Number(d.docTotalLiters) || 0);
+      var supply = d._open.liters + (Number(d.quota) || 0);
       var accounted = (Number(d.actualConsumedLiters) || 0) + (Number(d.remainingTank) || 0) + (Number(d.cardLiters) || 0);
       d._gap = d._open.known ? accounted - supply : 0;
       prev = d;
     });
     allDocs.forEach(function (d) { d._v = verdictOf(d, std); });
   }
+
+  var cardSrc = 'd';   // آخر حقل أدخله المستخدم: d دينار / l لتر
+  window.cardSync = function (src) { cardSrc = src; window.liveAudit(); };
 
   function calc() {
     var L = num('fDocTotalLiters'), H = num('fDocTotalHours');
@@ -631,13 +636,14 @@ td.d{color:var(--t1)}
     var excessLiters = (std > 0 && isFinite(actualRate) && actualRate > std && H > 0) ? (actualRate - std) * H : 0;
     var excessDinars = excessLiters * p;
 
-    var cardL = isFinite(C) ? C / p : NaN;
+    var CLin = num('fCardLiters'), cardL;
+    if (cardSrc === 'l' && isFinite(CLin)) { cardL = CLin; C = CLin * p; } else { cardL = isFinite(C) ? C / p : NaN; }
     var incomingL = isFinite(IncomingD) ? IncomingD / p : 0;
 
     // توازن المعادلة
     var balanceLeft = (isFinite(cardL) ? cardL : 0) + (isFinite(T) ? T : 0) + (isFinite(Actual) ? Actual : 0);
     var op = openingFor($('fDate').value || new Date().toISOString().slice(0, 10), editingId);
-    var balanceRight = op.liters + (isFinite(Q) ? Q : 0) + Extra;
+    var balanceRight = op.liters + (isFinite(Q) ? Q : 0);   // المسلَّم = المرحَّل + المقرر (الإضافي لا يدخل المعادلة)
     var balanceDiff = op.known ? balanceLeft - balanceRight : 0;
     var balanceOk = !op.known || Math.abs(balanceDiff) <= BAL_TOL;
 
@@ -666,10 +672,10 @@ td.d{color:var(--t1)}
     var act = num('fActualConsumedLiters');
     if (!isFinite(act) || act <= 0) return bad('fActualConsumedLiters', 'الكمية المستهلكة إجبارية ويجب أن تكون أكبر من صفر');
     if (!isFinite(h) || h <= 0) return bad('fDocTotalHours', 'ساعات العمل يجب أن تكون رقماً أكبر من صفر');
-    var t = num('fRemainingTank'), c = num('fCardDinars');
+    var t = num('fRemainingTank'), c = calc().C;
     if (!isFinite(t) || t < 0) return bad('fRemainingTank', 'أدخل الباقي بالخزان (صفر أو أكثر)');
     if (cap && t > cap) return bad('fRemainingTank', 'الباقي بالخزان يتجاوز سعته (' + cap + ' لتر)');
-    if (!isFinite(c) || c < 0) return bad('fCardDinars', 'أدخل رصيد البطاقة بالدينار (صفر أو أكثر)');
+    if (!isFinite(c) || c < 0) return bad('fCardDinars', 'أدخل رصيد البطاقة بالدينار أو باللتر (صفر أو أكثر)');
     var pairs = [['fStartR', 'fEndR', isTwin ? 'الأيمن' : '']];
     if (isTwin) pairs.push(['fStartL', 'fEndL', 'الأيسر']);
     for (var i = 0; i < pairs.length; i++) {
@@ -691,6 +697,8 @@ td.d{color:var(--t1)}
   window.liveAudit = function () {
     var c = calc(), msgs = [], hrs = [];
     $('cardLiters').textContent = isFinite(c.cardL) ? fmt(c.cardL, 1) : '0';
+    if (cardSrc === 'l') { if (document.activeElement !== $('fCardDinars')) $('fCardDinars').value = isFinite(c.C) ? +c.C.toFixed(3) : ''; }
+    else if (document.activeElement !== $('fCardLiters')) $('fCardLiters').value = isFinite(c.cardL) ? +c.cardL.toFixed(2) : '';
     $('incomingLiters').textContent = isFinite(c.incomingL) ? fmt(c.incomingL, 1) : '0';
     $('priceLbl').textContent = c.p.toFixed(3);
     $('usedR').textContent = isFinite(c.hR) && c.hR >= 0 ? fmt(c.hR, 1) + ' ساعة' : '—';
@@ -710,7 +718,7 @@ td.d{color:var(--t1)}
 
     // توازن المعادلة (تنبيه إداري — ليس سرقة)
     if (!c.balanceOk) {
-      msgs.push('⚠️ فرق غير مفسَّر: الموجود والمستهلك (البطاقة ' + fmt(c.cardL || 0, 1) + ' + الخزان ' + fmt(c.T || 0, 1) + ' + المستهلكة ' + fmt(c.Actual || 0, 1) + ') = ' + fmt(c.balanceLeft, 1) + ' لتر، بينما المتوفر (المرحَّل ' + fmt(c.open.liters, 1) + ' + المقرر ' + fmt(c.Q || 0) + ' + الإضافي ' + fmt(c.Extra) + ') = ' + fmt(c.balanceRight, 1) + ' لتر — الفرق ' + fmt(c.balanceDiff, 1) + ' لتر.');
+      msgs.push('⚠️ فرق غير مفسَّر: (البطاقة ' + fmt(c.cardL || 0, 1) + ' + الخزان ' + fmt(c.T || 0, 1) + ' + المستهلكة ' + fmt(c.Actual || 0, 1) + ') = ' + fmt(c.balanceLeft, 1) + ' لتر، بينما المسلَّم (المرحَّل ' + fmt(c.open.liters, 1) + ' + المقرر ' + fmt(c.Q || 0) + ') = ' + fmt(c.balanceRight, 1) + ' لتر — الفرق ' + fmt(c.balanceDiff, 1) + ' لتر. (الكمية الإضافية المطلوبة لا تدخل في هذه المعادلة)');
     }
 
     // السرقة: تجاوز المعيار فقط
@@ -775,7 +783,8 @@ td.d{color:var(--t1)}
   };
 
   window.clearForm = function () {
-    ['fDocNumber', 'fQuota', 'fDocTotalLiters', 'fActualConsumedLiters', 'fDocTotalHours', 'fRemainingTank', 'fCardDinars', 'fIncomingDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL'].forEach(function (id) { $(id).value = ''; });
+    cardSrc = 'd';
+    ['fDocNumber', 'fQuota', 'fDocTotalLiters', 'fActualConsumedLiters', 'fDocTotalHours', 'fRemainingTank', 'fCardDinars', 'fCardLiters', 'fIncomingDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL'].forEach(function (id) { $(id).value = ''; });
     $('fDate').value = today();
     $('fFuelType').value = 'gasoil';
     standards.fuelPrice = 1.998;
@@ -801,7 +810,7 @@ td.d{color:var(--t1)}
       docTotalLiters: num('fDocTotalLiters'),
       actualConsumedLiters: num('fActualConsumedLiters'),
       docTotalHours: num('fDocTotalHours'),
-      remainingTank: num('fRemainingTank'), cardDinars: num('fCardDinars'),
+      remainingTank: num('fRemainingTank'), cardDinars: +(calc().C).toFixed(3), cardLiters: +(calc().cardL).toFixed(2),
       engines: {
         right: { startHours: num('fStartR'), endHours: num('fEndR') },
         left: isTwin ? { startHours: num('fStartL'), endHours: num('fEndL') } : null
@@ -967,7 +976,9 @@ td.d{color:var(--t1)}
     $('fActualConsumedLiters').value = d.actualConsumedLiters != null ? d.actualConsumedLiters : '';
     $('fDocTotalHours').value = d.docTotalHours != null ? d.docTotalHours : '';
     $('fRemainingTank').value = d.remainingTank != null ? d.remainingTank : '';
+    cardSrc = 'd';
     $('fCardDinars').value = d.cardDinars != null ? d.cardDinars : '';
+    $('fCardLiters').value = d.cardLiters != null ? d.cardLiters : '';
     $('fStartR').value = r.startHours != null ? r.startHours : '';
     $('fEndR').value = r.endHours != null ? r.endHours : '';
     if (isTwin) { $('fStartL').value = l.startHours != null ? l.startHours : ''; $('fEndL').value = l.endHours != null ? l.endHours : ''; }
@@ -1274,7 +1285,7 @@ td.d{color:var(--t1)}
   // الرسم 2: تفسير الكميات: المتوفر مقابل المحاسَب
   function svgBalance(docs) {
     var W = 600, H = 260, l = 46, r = 14, t = 56, b = 38, n = docs.length, slot = (W - l - r) / n;
-    var vals = docs.map(function (d) { var op = d._open && d._open.known ? d._open.liters : 0; return Math.max(op + (Number(d.quota) || 0) + (Number(d.docTotalLiters) || 0), carryOf(d) + (Number(d.actualConsumedLiters) || 0)); });
+    var vals = docs.map(function (d) { var op = d._open && d._open.known ? d._open.liters : 0; return Math.max(op + (Number(d.quota) || 0), carryOf(d) + (Number(d.actualConsumedLiters) || 0)); });
     var max = niceMax(Math.max.apply(null, vals) * 1.1), yV = function (v) { return t + (H - t - b) * (1 - v / max); };
     var o = svgOpen(W, H) + '<rect width="' + W + '" height="' + H + '" fill="#fff"/>' + gridSvg(W, H, l, r, t, b, max, function (v) { return fmt(v, 0); }, 'left') +
       '<text x="' + (l - 6) + '" y="' + (t - 10) + '" text-anchor="end" font-size="9.5" fill="#64748b" font-weight="800">لتر</text>';
@@ -1282,13 +1293,13 @@ td.d{color:var(--t1)}
     function stack(x, parts) { var acc = 0, out = ''; parts.forEach(function (q) { if (q[0] > 0) { out += '<rect x="' + x + '" y="' + yV(acc + q[0]) + '" width="' + bw + '" height="' + Math.max(0, yV(acc) - yV(acc + q[0])) + '" fill="' + q[1] + '"/>'; acc += q[0]; } }); return out; }
     docs.forEach(function (d, i) {
       var cx = W - r - slot * (i + 0.5), known = d._open && d._open.known, op = known ? d._open.liters : 0;
-      o += stack(cx + 1, [[op, '#94a3b8'], [Number(d.quota) || 0, '#1e3a5f'], [Number(d.docTotalLiters) || 0, '#c9a227']]) +
+      o += stack(cx + 1, [[op, '#94a3b8'], [Number(d.quota) || 0, '#1e3a5f']]) +
            stack(cx - bw - 1, [[Number(d.actualConsumedLiters) || 0, '#0d9488'], [Number(d.remainingTank) || 0, '#2563eb'], [Number(d.cardLiters) || 0, '#8b5cf6']]);
       var top = Math.min(yV(vals[i]), H) - 5, ok = !known || Math.abs(d._gap) <= BAL_TOL;
       o += '<text x="' + cx + '" y="' + top + '" text-anchor="middle" font-size="9.5" font-weight="800" fill="' + (!known ? '#64748b' : ok ? '#059669' : '#dc2626') + '">' + (!known ? 'بداية' : ok ? '✓ 0' : (d._gap > 0 ? '+' : '') + fmt(d._gap, 1)) + '</text>' +
            '<text x="' + cx + '" y="' + (H - b + 14) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569">' + shortDate(d.date) + '</text>';
     });
-    o += legendSvg([['lbl', 'المتوفر (العمود الأيمن):'], ['#94a3b8', 'المرحَّل'], ['#1e3a5f', 'المقرر'], ['#c9a227', 'الإضافي']], W, 14) + legendSvg([['lbl', 'المحاسَب (العمود الأيسر):'], ['#0d9488', 'المستهلك'], ['#2563eb', 'الباقي بالخزان'], ['#8b5cf6', 'رصيد البطاقة']], W, 32);
+    o += legendSvg([['lbl', 'المسلَّم (العمود الأيمن):'], ['#94a3b8', 'المرحَّل'], ['#1e3a5f', 'المقرر']], W, 14) + legendSvg([['lbl', 'المحاسَب (العمود الأيسر):'], ['#0d9488', 'المستهلك'], ['#2563eb', 'الباقي بالخزان'], ['#8b5cf6', 'رصيد البطاقة']], W, 32);
     return o + '</svg>';
   }
 
@@ -1298,7 +1309,7 @@ td.d{color:var(--t1)}
     var W = 600, H = 250, l = 14, r = 14, top = 34, bw = W - l - r;
     var op = d._open && d._open.known ? d._open.liters : 0, q = Number(d.quota) || 0, ex = Number(d.docTotalLiters) || 0;
     var cons = Number(d.actualConsumedLiters) || 0, tk = Number(d.remainingTank) || 0, cd = Number(d.cardLiters) || 0;
-    var S = op + q + ex, A = cons + tk + cd, max = Math.max(S, A, 1);
+    var S = op + q, A = cons + tk + cd, max = Math.max(S, A, 1);
     var o = svgOpen(W, H) + '<rect width="' + W + '" height="' + H + '" fill="#fff"/>';
     function bar(y, label, parts, total) {
       var x = W - r, out = '<text x="' + (W - r) + '" y="' + (y - 8) + '" text-anchor="end" font-size="12" font-weight="900" fill="#0f2744">' + sx(label) + ' = ' + fmt(total, 1) + ' لتر</text>';
@@ -1309,11 +1320,11 @@ td.d{color:var(--t1)}
       });
       return out;
     }
-    o += bar(top + 14, 'المتوفر', [[op, '#94a3b8'], [q, '#1e3a5f'], [ex, '#c9a227']], S);
+    o += bar(top + 14, 'المسلَّم', [[op, '#94a3b8'], [q, '#1e3a5f']], S);
     o += bar(top + 98, 'المحاسَب', [[cons, '#0d9488'], [tk, '#2563eb'], [cd, '#8b5cf6']], A);
     var known = d._open && d._open.known, ok = !known || Math.abs(d._gap) <= BAL_TOL;
     o += '<text x="' + (W / 2) + '" y="' + (top + 170) + '" text-anchor="middle" font-size="14" font-weight="900" fill="' + (!known ? '#64748b' : ok ? '#059669' : '#dc2626') + '">' + (!known ? 'أول وثيقة في السجل — لا مرحَّل سابق للمقارنة' : ok ? '✓ كل كمية مفسَّرة — الفرق 0' : 'فرق غير مفسَّر: ' + (d._gap > 0 ? '+' : '') + fmt(d._gap, 1) + ' لتر') + '</text>';
-    o += legendSvg([['#94a3b8', 'المرحَّل'], ['#1e3a5f', 'المقرر'], ['#c9a227', 'الإضافي'], ['#0d9488', 'المستهلك'], ['#2563eb', 'الخزان'], ['#8b5cf6', 'البطاقة']], W, H - 14);
+    o += legendSvg([['#94a3b8', 'المرحَّل'], ['#1e3a5f', 'المقرر'], ['#0d9488', 'المستهلك'], ['#2563eb', 'الخزان'], ['#8b5cf6', 'البطاقة']], W, H - 14);
     return o + '</svg>';
   }
   // وثيقة واحدة: مقياس المعدل مقابل المعيار
@@ -1377,27 +1388,27 @@ td.d{color:var(--t1)}
 
       // الجدول 1: الكميات والمخزون
       var t1 = {
-        title: '١) الكميات والمخزون', widths: ['8mm', '', '', '', '', '', '', '', '', '', ''],
-        columns: ['م', 'التاريخ', 'رقم الوثيقة', 'الوقود', 'المقرر (لتر)', 'المطلوب الإضافي (لتر)', 'ساعات العمل', 'المستهلك فعلياً (لتر)', 'الباقي بالخزان (لتر)', 'رصيد البطاقة (د.ت)', anyLeft ? 'ساعات المحركين (أيمن / أيسر)' : 'ساعات المحرك'],
+        title: '١) الكميات والمخزون', widths: ['8mm', '', '', '', '', '', '', '', '', '', '', ''],
+        columns: ['م', 'التاريخ', 'رقم الوثيقة', 'الوقود', 'المقرر (لتر)', 'المطلوب الإضافي (لتر)', 'ساعات العمل', 'المستهلك فعلياً (لتر)', 'الباقي بالخزان (لتر)', 'البطاقة (د.ت)', 'البطاقة (لتر)', anyLeft ? 'ساعات المحركين (أيمن / أيسر)' : 'ساعات المحرك'],
         rows: docs.map(function (d, i) {
           var e = d.engines || {}, benz = d.fuelType === 'benzine';
           return { kind: kindOf(d), cells: [i + 1, ldate(d.date), d.documentNumber || dash, { type: 'badge', text: benz ? 'بنزين' : 'غزوال', variant: benz ? 'warning' : 'info' },
             d.quota != null ? fmt(d.quota, 1) : dash, fmt(d.docTotalLiters, 1), fmt(d.docTotalHours, 1),
             d.actualConsumedLiters != null ? fmt(d.actualConsumedLiters, 1) : dash,
-            d.remainingTank != null ? fmt(d.remainingTank, 1) : dash, d.cardDinars != null ? fmt(d.cardDinars, 3) : dash,
+            d.remainingTank != null ? fmt(d.remainingTank, 1) : dash, d.cardDinars != null ? fmt(d.cardDinars, 3) : dash, fmt(cardL(d), 1),
             e.left ? hrs(e.right) + ' / ' + hrs(e.left) : hrs(e.right)] };
         })
       };
-      if (n > 1) t1.rows.push({ kind: 'total', cells: ['', 'المجموع', '', '', fmt(Quota, 1), fmt(Req, 1), fmt(H, 1), fmt(Cons, 1), '', '', ''] });
+      if (n > 1) t1.rows.push({ kind: 'total', cells: ['', 'المجموع', '', '', fmt(Quota, 1), fmt(Req, 1), fmt(H, 1), fmt(Cons, 1), '', '', '', ''] });
 
       // الجدول 2: التدقيق والمعيار والحكم
       var cnt = { ok: 0, ok2: 0, bad: 0, warn: 0, neu: 0 }; docs.forEach(function (d) { var t = d._v.t; if (t === 'عادي') cnt.ok++; else if (t === 'مقبول') cnt.ok2++; else if (d._v.c === 'bad') cnt.bad++; else if (d._v.c === 'warn') cnt.warn++; else if (d._v.c === 'neu') cnt.neu++; });
       var t2 = {
         title: '٢) التدقيق ومعادلة الكميات والحكم', widths: ['8mm', '', '', '', '', '', '', '', '', '', '', '34mm'],
-        columns: ['م', 'التاريخ', 'المعدل (لتر/س)', 'نسبة المعيار', 'مُبالغ فيه (لتر)', 'المرحَّل (لتر)', 'المتوفر (لتر)', 'المحاسَب (لتر)', 'فرق المعادلة', 'درجة الخطر', 'الحكم', 'السبب'],
+        columns: ['م', 'التاريخ', 'المعدل (لتر/س)', 'نسبة المعيار', 'مُبالغ فيه (لتر)', 'المرحَّل (لتر)', 'المسلَّم (لتر)', 'المحاسَب (لتر)', 'فرق المعادلة', 'درجة الخطر', 'الحكم', 'السبب'],
         rows: docs.map(function (d, i) {
           var rate = Number(d.totalActualRate) || 0, pctN = hasStd && rate > 0 ? rate / std * 100 : null, known = d._open && d._open.known;
-          var supply = (known ? d._open.liters : 0) + (Number(d.quota) || 0) + (Number(d.docTotalLiters) || 0);
+          var supply = (known ? d._open.liters : 0) + (Number(d.quota) || 0);
           var acc = (Number(d.actualConsumedLiters) || 0) + (Number(d.remainingTank) || 0) + cardL(d);
           return { kind: kindOf(d), cells: [i + 1, ldate(d.date), rate > 0 ? rate.toFixed(2) : dash,
             pctN == null ? dash : { text: Math.round(pctN) + '%', bold: true, color: pctN > 100 ? '#dc2626' : pctN > 85 ? '#b45309' : '#047857' },
@@ -1407,7 +1418,7 @@ td.d{color:var(--t1)}
             d.riskScore != null && isFinite(Number(d.riskScore)) ? Math.round(d.riskScore) : dash,
             { type: 'badge', text: d._v.t, variant: vclr[d._v.c] }, { text: d._v.w, align: 'right', small: true, color: vcol[d._v.c] }] };
         }),
-        note: 'الحكم: عادي ≤ 85% من المعيار · مقبول 85–100% · مشبوه > 100% (أو شبهة من التدقيق) · فرق غير مفسَّر: وقود لا تفسّره المعادلة (مرحَّل + مقرر + إضافي = مستهلك + خزان + بطاقة).' +
+        note: 'الحكم: عادي ≤ 85% من المعيار · مقبول 85–100% · مشبوه > 100% (أو شبهة من التدقيق) · فرق غير مفسَّر: وقود لا تفسّره المعادلة (مرحَّل + مقرر = مستهلك + خزان + بطاقة) — والكمية الإضافية المطلوبة لا تدخل المعادلة.' +
           (n > 1 ? '   |   الإجمالي: عادي ' + cnt.ok + ' · مقبول ' + cnt.ok2 + ' · مشبوه ' + cnt.bad + ' · فرق غير مفسَّر ' + cnt.warn + ' · قيد التعلّم ' + cnt.neu : '')
       };
       var tables = [t1, t2];
@@ -1418,23 +1429,23 @@ td.d{color:var(--t1)}
         stats[3] = { value: avg ? avg.toFixed(2) : dash, label: '📈 المعدل (لتر/س)' };
         stats[4] = { value: v0.t, label: '🧾 الحكم · ' + (v0.w || '') };
         var known0 = d0._open && d0._open.known, op0 = known0 ? d0._open.liters : 0;
-        var S0 = op0 + (Number(d0.quota) || 0) + (Number(d0.docTotalLiters) || 0), A0 = (Number(d0.actualConsumedLiters) || 0) + (Number(d0.remainingTank) || 0) + cardL(d0);
+        var S0 = op0 + (Number(d0.quota) || 0), A0 = (Number(d0.actualConsumedLiters) || 0) + (Number(d0.remainingTank) || 0) + cardL(d0);
         tables.push({
           title: '٣) تفصيل المعادلة المحاسبية', widths: ['', '28mm', '', '28mm'],
-          columns: ['الكميات المتوفرة', 'لتر', 'الكميات المحاسَب عليها', 'لتر'],
+          columns: ['الكميات المسلَّمة', 'لتر', 'الكميات المحاسَب عليها', 'لتر'],
           rows: [
             ['المرحَّل من الوثيقة السابقة', known0 ? fmt(op0, 1) : 'لا يوجد', 'المستهلك فعلياً', fmt(d0.actualConsumedLiters, 1)],
             ['المقرر (المرصود)', fmt(d0.quota, 1), 'الباقي بالخزان', fmt(d0.remainingTank, 1)],
-            ['المطلوب الإضافي', fmt(d0.docTotalLiters, 1), 'رصيد البطاقة (' + fmt(d0.cardDinars, 3) + ' د.ت)', fmt(cardL(d0), 1)],
-            { kind: 'total', cells: ['مجموع المتوفر', fmt(S0, 1), 'مجموع المحاسَب عليه', fmt(A0, 1)] },
+            ['للعلم: المطلوب الإضافي (خارج المعادلة)', fmt(d0.docTotalLiters, 1), 'رصيد البطاقة (' + fmt(d0.cardDinars, 3) + ' د.ت)', fmt(cardL(d0), 1)],
+            { kind: 'total', cells: ['مجموع المسلَّم', fmt(S0, 1), 'مجموع المحاسَب عليه', fmt(A0, 1)] },
             { kind: known0 && Math.abs(d0._gap) > BAL_TOL ? 'warn' : '', cells: ['الفرق غير المفسَّر', known0 ? (Math.abs(d0._gap) <= BAL_TOL ? '0 ✓' : (d0._gap > 0 ? '+' : '') + fmt(d0._gap, 1)) : 'أول وثيقة', 'الاستنتاج', { text: v0.t, bold: true, color: vcol[v0.c] }] }
           ]
         });
-        charts = [{ title: 'معادلة الكميات: المتوفر = المحاسَب', svg: svgEquationOne(d0) }, { title: 'المعدل الفعلي مقابل المعيار', svg: svgRateGauge(d0, std) }];
+        charts = [{ title: 'معادلة الكميات: المسلَّم = المحاسَب', svg: svgEquationOne(d0) }, { title: 'المعدل الفعلي مقابل المعيار', svg: svgRateGauge(d0, std) }];
       } else {
         charts = [
           { title: 'الاستهلاك والمعدل مقابل المعيار' + (cdocs.length < n ? ' (آخر ' + cdocs.length + ' وثيقة)' : ''), svg: svgConsumption(cdocs, std) },
-          { title: 'تفسير الكميات: المتوفر = المحاسَب' + (cdocs.length < n ? ' (آخر ' + cdocs.length + ' وثيقة)' : ''), svg: svgBalance(cdocs) }
+          { title: 'تفسير الكميات: المسلَّم = المحاسَب' + (cdocs.length < n ? ' (آخر ' + cdocs.length + ' وثيقة)' : ''), svg: svgBalance(cdocs) }
         ];
       }
       var printData = {
@@ -1470,6 +1481,16 @@ td.d{color:var(--t1)}
   document.querySelectorAll('.eng-opt').forEach(function (b) { b.addEventListener('click', function () { window.setEngines(parseInt(b.getAttribute('data-n'), 10)); }); });
   $('printBtn').addEventListener('click', function () { printFuel(); });
   $('setupEditBtn').addEventListener('click', function () { openSetupEdit(false); });
+  $('reauditBtn').addEventListener('click', async function () {
+    if (!confirm('إعادة تدقيق كل وثائق هذه الوسيلة بالمعادلة الحالية؟ (لا يغيّر أي رقم أدخلته، فقط الأحكام والمعيار المتعلَّم)')) return;
+    var btn = this; btn.disabled = true;
+    try {
+      var r = await fetch('/api/fuel/reaudit/' + encodeURIComponent(boatId), { method: 'POST', headers: Object.assign({ 'X-CSRF-Token': getCsrf() }, auth()) });
+      var j = await r.json().catch(function () { return {}; });
+      if (!r.ok) throw new Error(j.error || 'تعذّرت إعادة التدقيق');
+      toast('تمت إعادة التدقيق', 'success'); setTimeout(function () { location.reload(); }, 700);
+    } catch (e) { toast(e.message, 'error'); btn.disabled = false; }
+  });
   $('setupCancelBtn').addEventListener('click', closeSetupEdit);
   $('setupSaveBtn').addEventListener('click', window.saveEngineSetup);
 
