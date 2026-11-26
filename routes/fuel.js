@@ -1,9 +1,11 @@
 /**
- * routes/fuel.js v7 — محرك التدقيق لوثائق تموين المحروقات
+ * routes/fuel.js v8 — محرك التدقيق لوثائق تموين المحروقات
  * - دعم المحرك الواحد والمحركين.
  * - المعيار: لا يُعتمد إلا بعد 3 وثائق سليمة (وسيط Median).
  * - السرقة: تجاوز المعيار المعتمد فقط (وليس Actual > L).
- * - توازن المعادلة: (بطاقة لتر + خزان + مستهلكة) = (مقرر + إضافي).
+ * - توازن المعادلة: (بطاقة لتر + خزان + مستهلكة) = (المرحَّل من الوثيقة السابقة + المقرر) — الإضافي لا يدخل المعادلة.
+ * - البطاقة تُدخل بالدينار أو باللتر.
+ * - اختلال المعادلة وحده لا يمنع تعلّم المعيار ولا يجعل الوثيقة مشبوهة.
  */
 const express = require('express');
 const router = express.Router();
@@ -26,7 +28,7 @@ const WARN_THRESHOLD = 30;
 
 const LEARN_MIN_OWN = 3;
 const LEARN_MIN_CATEGORY = 3;
-const BALANCE_TOLERANCE = 1;
+const BALANCE_TOLERANCE = 2;
 
 const WEIGHTS = {
   METER_ROLLBACK: 70, TANK_OVERFLOW: 70, PHANTOM_TRIP: 65, TANK_BALANCE: 55,
@@ -73,9 +75,9 @@ async function cleanRates(ids, excludeId) {
   const q = {
     boatId: { $in: ids },
     isFraud: false,
-    riskScore: { $lt: WARN_THRESHOLD },
     totalActualRate: { $gt: 0, $lt: MAX_SENSIBLE_RATE },
-    balanceOk: { $ne: false }
+    // وثيقة سليمة: خطرها منخفض، أو لم تخالف إلا معادلة التوازن (تنبيه إداري لا يمنع التعلّم)
+    $or: [{ riskScore: { $lt: WARN_THRESHOLD } }, { violations: { $size: 1, $all: ['BALANCE_MISMATCH'] } }]
   };
   if (excludeId) q._id = { $ne: excludeId };
   const docs = await FuelDocument.find(q).select('totalActualRate').limit(500).lean();
@@ -100,18 +102,24 @@ async function effectiveStandard(v, req, excludeId) {
   return { rate: 0, source: 'learning', basedOn: own.length, minRequired: LEARN_MIN_OWN };
 }
 
-function checkBalance(d) {
-  const price = Number(d.price) || 0;
-  const cardL = price > 0 ? (Number(d.cardDinars) || 0) / price : 0;
+const cardLitersOf = d => {
+  const price = Number(d.price || d.fuelPrice) || 0;
+  if (d.cardLiters != null && Number.isFinite(Number(d.cardLiters))) return Number(d.cardLiters);
+  return price > 0 ? (Number(d.cardDinars) || 0) / price : 0;
+};
+
+// المعادلة: بطاقة(لتر) + خزان + مستهلك = المرحَّل + المقرر   (الإضافي لا يدخل)
+// opening = null عند أول وثيقة (لا مرحَّل معروف) فلا يُفحص التوازن
+function checkBalance(d, opening) {
+  const cardL = cardLitersOf(d);
   const tank = Number(d.remainingTank) || 0;
   const actual = Number(d.actualConsumedLiters) || 0;
   const quota = Number(d.quota) || 0;
-  const extra = Number(d.extraLiters) || 0;
-
+  const known = opening != null;
   const left = r2(cardL + tank + actual);
-  const right = r2(quota + extra);
-  const diff = r2(left - right);
-  return { left, right, diff, ok: Math.abs(diff) <= BALANCE_TOLERANCE };
+  const right = r2((known ? opening : 0) + quota);
+  const diff = known ? r2(left - right) : 0;
+  return { left, right, diff, known, opening: known ? r2(opening) : null, ok: !known || Math.abs(diff) <= BALANCE_TOLERANCE };
 }
 
 function readEngine(e, label) {
@@ -143,7 +151,11 @@ function parseDoc(b, v) {
   if (!(IncomingD >= 0 && IncomingD <= 1e7)) return { err: 'المبلغ الوارد غير صالح' };
   const IncomingL = r2(IncomingD / price);
 
-  const L = n(b.docTotalLiters), H = n(b.docTotalHours), T = n(b.remainingTank), C = n(b.cardDinars);
+  const L = n(b.docTotalLiters), H = n(b.docTotalHours), T = n(b.remainingTank);
+  let C = n(b.cardDinars);
+  const CL = n(b.cardLiters);
+  if (!(C >= 0) && CL >= 0) C = r3(CL * price);          // أُدخلت باللتر فقط
+  const cardLiters = CL >= 0 ? r2(CL) : (C >= 0 && price > 0 ? r2(C / price) : 0);
   const Actual = n(b.actualConsumedLiters);
 
   if (!(L > 0 && L <= 1e6)) return { err: 'الكمية المطلوبة غير صالحة' };
@@ -166,7 +178,7 @@ function parseDoc(b, v) {
       date, fuelType, quota: Q, extraLiters: Extra,
       incomingDinars: IncomingD, incomingLiters: IncomingL,
       actualConsumedLiters: Actual, docTotalHours: H, docTotalLiters: L,
-      remainingTank: T, cardDinars: C, price, documentNumber,
+      remainingTank: T, cardDinars: C, cardLiters, price, documentNumber,
       engines: { right, left }, twin
     }
   };
@@ -212,15 +224,7 @@ async function runAudit(vessel, d, opts = {}) {
   const L = d.docTotalLiters, Actual = d.actualConsumedLiters, H = d.docTotalHours;
   const T = d.remainingTank, C = d.cardDinars, price = d.price;
   const rate = H > 0 ? Actual / H : 0;
-  const cardL = price > 0 ? C / price : 0;
-
-  const balance = checkBalance(d);
-  if (!balance.ok) {
-    add('BALANCE_MISMATCH',
-      'عدم توازن: (بطاقة ' + r2(cardL) + ' + خزان ' + T + ' + مستهلكة ' + Actual + ') = ' + balance.left +
-      ' لتر، بينما (مقرر ' + d.quota + ' + إضافي ' + d.extraLiters + ') = ' + balance.right +
-      ' لتر — الفرق ' + balance.diff + ' لتر');
-  }
+  const cardL = cardLitersOf(d);
 
   const used = [d.engines.right, d.engines.left].filter(Boolean).map(e => e.usedHours);
   const maxUsed = used.length ? Math.max(...used) : 0;
@@ -249,6 +253,16 @@ async function runAudit(vessel, d, opts = {}) {
     FuelDocument.findOne(Object.assign({}, base, { date: { $lt: d.date } })).sort({ date: -1 }).lean(),
     FuelDocument.findOne(Object.assign({}, base, { date: { $gt: d.date } })).sort({ date: 1 }).lean()
   ]);
+
+  // معادلة التوازن مع المرحَّل من الوثيقة السابقة (خزان + بطاقة)
+  const opening = prev ? (Number(prev.remainingTank) || 0) + cardLitersOf(prev) : null;
+  const balance = checkBalance(d, opening);
+  if (!balance.ok) {
+    add('BALANCE_MISMATCH',
+      'فرق غير مفسَّر: (بطاقة ' + r2(cardL) + ' + خزان ' + T + ' + مستهلكة ' + Actual + ') = ' + balance.left +
+      ' لتر، بينما (مرحَّل ' + balance.opening + ' + مقرر ' + d.quota + ') = ' + balance.right +
+      ' لتر — الفرق ' + balance.diff + ' لتر');
+  }
   [['right', 'الأيمن'], ['left', 'الأيسر']].forEach(([side, label]) => {
     const cur = d.engines[side]; if (!cur) return;
     const pEnd = endOf(prev && prev.engines && prev.engines[side]);
@@ -307,7 +321,7 @@ async function reauditFrom(v, req, fromDate) {
         incomingLiters: d.incomingLiters || 0,
         actualConsumedLiters: d.actualConsumedLiters || d.docTotalLiters,
         docTotalHours: d.docTotalHours, docTotalLiters: d.docTotalLiters,
-        remainingTank: d.remainingTank, cardDinars: d.cardDinars,
+        remainingTank: d.remainingTank, cardDinars: d.cardDinars, cardLiters: d.cardLiters,
         price: d.fuelPrice || PRICES[d.fuelType || 'gasoil'],
         documentNumber: d.documentNumber || '',
         engines: { right: e.right, left: e.left || null },
@@ -357,6 +371,7 @@ router.get('/standards/:boatId', async (req, res) => {
       standardRate: sd.rate,
       standardSource: sd.source, standardBasedOn: sd.basedOn,
       standardMinRequired: sd.minRequired,
+      vesselName: v.name || '', vesselNum: v.num || '',
       basedOn: sd.basedOn, source: sd.source,
       manualRate: Number(v.standardRate) || 0, fuelPrice: PRICES.gasoil
     });
@@ -435,6 +450,18 @@ router.get('/documents/:boatId', async (req, res) => {
     }
     res.json(await FuelDocument.find(q).select('-history').sort({ date: -1 }).limit(1000).lean());
   } catch (e) { fail(res, e, 'list'); }
+});
+
+// إعادة تدقيق كل وثائق المركب (بعد تغيير المعادلة) — للمسؤول والمدير. تُشغَّل مرتين ليستقر المعيار المتعلَّم
+router.post('/reaudit/:boatId', csrf, async (req, res) => {
+  try {
+    if (!isPrivileged(req)) return res.status(403).json({ error: 'للمسؤول والمدير فقط' });
+    const v = await loadVessel(req, res); if (!v) return;
+    await reauditFrom(v, req, new Date('2000-01-01'));
+    await reauditFrom(v, req, new Date('2000-01-01'));
+    const sd = await effectiveStandard(v, req);
+    res.json({ ok: true, standardRate: sd.rate, standardSource: sd.source, standardBasedOn: sd.basedOn });
+  } catch (e) { fail(res, e, 'reaudit'); }
 });
 
 router.get('/audit-report/:boatId', async (req, res) => {
