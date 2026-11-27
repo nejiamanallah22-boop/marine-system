@@ -36,9 +36,11 @@ const fuelDocumentSchema = new mongoose.Schema({
     fuelPrice: { type: Number, default: null, min: 0 },
     tankAfter: { type: Number, default: null, min: 0 },
 
-    engineCount: { type: Number, default: 1, enum: [1, 2] },
+    // ✅ v8: حتى ثلاثة محركات (أيمن · أوسط · أيسر)
+    engineCount: { type: Number, default: 1, enum: [1, 2, 3] },
     engines: {
         right: { type: meterSchema, default: null },
+        center: { type: meterSchema, default: null },
         left: { type: meterSchema, default: null }
     },
 
