@@ -894,8 +894,15 @@ td.d{color:var(--t1)}
       if (out.riskScore > 60) toast('🚨 سرقة/تلاعب (خطر ' + out.riskScore + '): ' + (out.fraudReason || ''), 'error');
       else if (out.riskScore >= 30) toast('⚠️ الوثيقة تحتاج مراجعة (خطر ' + out.riskScore + ')', 'info');
       else toast(editingId ? 'تم تعديل الوثيقة' : 'تم حفظ الوثيقة بنجاح', 'success');
+      var savedId = String(out.id || editingId || ''), sentN = engN;
       if (editingId) { editingId = null; $('editBar').hidden = true; $('entryTitle').textContent = 'تسجيل وثيقة تموين جديدة'; }
-      window.clearForm(); loadDocs(); loadOtherVesselCompare();
+      window.clearForm(); await loadDocs(); loadOtherVesselCompare();
+      // تحقق: هل حفظ السيرفر كل المحركات المُدخلة؟
+      var sd = allDocs.filter(function (d) { return String(d._id) === savedId; })[0];
+      if (sd && sentN >= 2) {
+        var have = ['right', 'center', 'left'].filter(function (k) { return sd.engines && sd.engines[k]; }).length;
+        if (have < sentN) toast('⚠️ أدخلت ' + sentN + ' محركات لكن السيرفر حفظ ' + have + ' فقط. حدّث routes/fuel.js (النسخة v8) وموديل FuelDocument (enum [1,2,3] وحقل engines.center) ثم أعد حفظ الوثيقة.', 'error');
+      }
     } catch (e) { toast(e.message, 'error'); }
     finally { saving = false; btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> ' + (editingId ? 'حفظ التعديلات' : 'حفظ الوثيقة'); }
   };
