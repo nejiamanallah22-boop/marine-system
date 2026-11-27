@@ -349,7 +349,7 @@ td.d{color:var(--t1)}
         <div class="track"><span class="fill" id="pctFill"></span></div>
         <span class="lbl" id="pctLbl">—</span>
       </div>
-      <div class="hint" id="pctHint">المعدل العام = الكمية المستهلكة ÷ ساعات العمل · النسبة = (المعدل الفعلي ÷ المعيار) × 100</div>
+      <div class="hint" id="pctHint">المعدل = الكمية المستهلكة ÷ ساعات العمل (مجموع ساعات المحركات إن وُجد أكثر من محرك) · النسبة = (المعدل الفعلي ÷ المعيار) × 100</div>
     </div>
 
     <div class="sum" id="liveSum"></div>
@@ -410,7 +410,7 @@ td.d{color:var(--t1)}
           <th>التاريخ</th><th>رقم الوثيقة</th><th>نوع الوقود</th><th>المقرر</th>
           <th>ساعات العمل</th><th>المطلوب (الإضافي)</th><th>المستهلك</th><th>الباقي بالخزان</th><th>رصيد البطاقة</th>
           <th id="thEngR">ساعات المحرك الأيمن</th><th id="thEngC" hidden>ساعات المحرك الأوسط</th><th id="thEngL">ساعات المحرك الأيسر</th>
-          <th>المعدل العام (لتر/س)</th><th id="thEngRate" hidden>معدل المحرك الواحد (لتر/س)</th><th>نسبة المعيار %</th><th>الوقود المُبالغ فيه</th><th>درجة الخطر</th><th>الحالة</th><th>فرق المعادلة</th><th>ملاحظة</th><th class="colAct">إجراءات</th>
+          <th id="thRate">المعدل الفعلي (لتر/س)</th><th id="thEngRate" hidden>المعدل العام للمركب (لتر/س)</th><th>نسبة المعيار %</th><th>الوقود المُبالغ فيه</th><th>درجة الخطر</th><th>الحالة</th><th>فرق المعادلة</th><th>ملاحظة</th><th class="colAct">إجراءات</th>
         </tr></thead>
         <tbody id="fuelTableBody"></tbody>
       </table>
@@ -646,7 +646,13 @@ td.d{color:var(--t1)}
     ['right', 'center', 'left'].forEach(function (k) { if (e[k]) { t += Number(e[k].usedHours != null ? e[k].usedHours : e[k].totalHours) || 0; n++; } });
     return { hours: t, n: n };
   }
-  function perEngineRate(d) { var x = engSumOf(d), a = Number(d.actualConsumedLiters) || 0; return x.n > 1 && x.hours > 0 && a > 0 ? a / x.hours : null; }
+  // المعدل العام للمركب = المستهلك ÷ أكبر عدّاد (ساعات تشغيل المركب). معدل المحرك الواحد (المقارَن بالمعيار) = المستهلك ÷ مجموع ساعات المحركات = totalActualRate
+  function generalRate(d) {
+    var e = d.engines || {}, mx = 0, n = 0, a = Number(d.actualConsumedLiters) || 0;
+    ['right', 'center', 'left'].forEach(function (k) { if (e[k]) { n++; mx = Math.max(mx, Number(e[k].usedHours != null ? e[k].usedHours : e[k].totalHours) || 0); } });
+    return n > 1 && mx > 0 && a > 0 ? a / mx : null;
+  }
+  var hAuto = true;   // ساعات العمل تُملأ تلقائياً بمجموع عدّادات المحركات (محركان فأكثر) ما لم يكتبها المستخدم
   var cardSrc = 'd';   // آخر حقل أدخله المستخدم: d دينار / l لتر
   window.cardSync = function (src) { cardSrc = src; window.liveAudit(); };
 
@@ -659,6 +665,11 @@ td.d{color:var(--t1)}
     var p = price(), cap = Number(standards.tankCapacity) || 0, std = Number(standards.standardRate) || 0;
     var sR = num('fStartR'), eR = num('fEndR'), sL = isTwin ? num('fStartL') : NaN, eL = isTwin ? num('fEndL') : NaN, sC = engN === 3 ? num('fStartC') : NaN, eC = engN === 3 ? num('fEndC') : NaN;
 
+    var engSum = [eR - sR, eC - sC, eL - sL].filter(function (x) { return isFinite(x) && x >= 0; });
+    if (engN >= 2 && hAuto && engSum.length === engN) {
+      H = engSum.reduce(function (a, b) { return a + b; }, 0);
+      var hf = $('fDocTotalHours'); if (hf && document.activeElement !== hf) hf.value = +H.toFixed(2);
+    }
     var actualRate = (H > 0 && isFinite(Actual)) ? (Actual / H) : NaN;
     var ratePct = (std > 0 && std < 100 && isFinite(actualRate)) ? (actualRate / std) * 100 : NaN;
     var excessLiters = (std > 0 && isFinite(actualRate) && actualRate > std && H > 0) ? (actualRate - std) * H : 0;
@@ -759,14 +770,17 @@ td.d{color:var(--t1)}
     if (c.std > 0 && c.std < 100 && isFinite(c.ratePct) && c.ratePct > 100) {
       msgs.push('🚨 سرقة: المعدل ' + c.rate.toFixed(2) + ' لتر/س يتجاوز المعيار ' + c.std.toFixed(2) + ' بنسبة ' + (c.ratePct - 100).toFixed(0) + '% — وقود مُبالغ فيه ≈ ' + c.excessLiters.toFixed(1) + ' لتر (' + c.excessDinars.toFixed(3) + ' د.ت).');
     }
-    if (hrs.length && isFinite(c.H) && Math.abs(Math.max.apply(null, hrs) - c.H) > 0.5) msgs.push('ساعات العمل (' + c.H + ') لا تطابق ساعات العدّاد (' + fmt(Math.max.apply(null, hrs), 1) + ').');
+    if (hrs.length) {
+      var multiE = engN >= 2, refH = multiE ? hrs.reduce(function (x, y) { return x + y; }, 0) : Math.max.apply(null, hrs);
+      if (isFinite(c.H) && Math.abs(refH - c.H) > 0.5) msgs.push('ساعات العمل (' + c.H + ') لا تطابق ' + (multiE ? 'مجموع ساعات عدّادات المحركات (' : 'ساعات العدّاد (') + fmt(refH, 1) + ').');
+    }
 
     var re = $('rateEng');
     if (engN >= 2 && isFinite(c.Actual) && c.Actual > 0 && c.engUsed > 1 && c.engHours > 0) {
-      var pe = c.Actual / c.engHours;
+      var mxH = Math.max.apply(null, [c.hR, engN === 3 ? c.hC : NaN, c.hL].filter(function (x) { return isFinite(x) && x >= 0; })), ge = mxH > 0 ? c.Actual / mxH : NaN;
       re.hidden = false;
-      re.innerHTML = '<div class="re main">المعدل العام للمركب <small>(المستهلك ÷ ساعات العمل ' + fmt(c.H || 0, 1) + ')</small><b>' + (isFinite(c.rate) ? c.rate.toFixed(2) : '—') + ' لتر/س</b></div>' +
-        '<div class="re">معدل المحرك الواحد <small>(المستهلك ÷ مجموع ساعات ' + c.engUsed + ' محركات ' + fmt(c.engHours, 1) + ')</small><b>' + pe.toFixed(2) + ' لتر/س</b></div>' +
+      re.innerHTML = '<div class="re main">معدل المحرك الواحد <small>(المقارَن بالمعيار: المستهلك ÷ مجموع ساعات المحركات ' + fmt(c.H || 0, 1) + ')</small><b>' + (isFinite(c.rate) ? c.rate.toFixed(2) : '—') + ' لتر/س</b></div>' +
+        '<div class="re">المعدل العام للمركب <small>(المستهلك ÷ أكبر عدّاد ' + fmt(mxH, 1) + ')</small><b>' + (isFinite(ge) ? ge.toFixed(2) : '—') + ' لتر/س</b></div>' +
         '<div class="re">ساعات كل محرك<b style="font-size:14px">' + [['الأيمن', c.hR], engN === 3 ? ['الأوسط', c.hC] : null, ['الأيسر', c.hL]].filter(Boolean).map(function (x) { return x[0] + ' ' + (isFinite(x[1]) && x[1] >= 0 ? fmt(x[1], 1) : '—'); }).join(' · ') + '</b></div>';
     } else { re.hidden = true; re.innerHTML = ''; }
     var arNum = $('actualRateNum'), arCmp = $('rateCmp');
@@ -825,7 +839,7 @@ td.d{color:var(--t1)}
   };
 
   window.clearForm = function () {
-    cardSrc = 'd';
+    cardSrc = 'd'; hAuto = true;
     ['fDocNumber', 'fQuota', 'fDocTotalLiters', 'fActualConsumedLiters', 'fDocTotalHours', 'fRemainingTank', 'fCardDinars', 'fCardLiters', 'fIncomingDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL', 'fStartC', 'fEndC'].forEach(function (id) { $(id).value = ''; });
     $('fDate').value = today();
     $('fFuelType').value = 'gasoil';
@@ -879,8 +893,8 @@ td.d{color:var(--t1)}
 
   function showLeftCol() { return allDocs.some(function (d) { return d.engines && d.engines.left; }); }
   function showCenterCol() { return allDocs.some(function (d) { return d.engines && d.engines.center; }); }
-  function showPerEngine() { return allDocs.some(function (d) { return perEngineRate(d) != null; }); }
-  function cols() { return 18 + (showLeftCol() ? 1 : 0) + (showCenterCol() ? 1 : 0) + (showPerEngine() ? 1 : 0); }
+  function showGeneral() { return allDocs.some(function (d) { return generalRate(d) != null; }); }
+  function cols() { return 18 + (showLeftCol() ? 1 : 0) + (showCenterCol() ? 1 : 0) + (showGeneral() ? 1 : 0); }
   function showSkeleton() {
     var row = '<tr class="skel">' + new Array(cols() + 1).join('<td><span></span></td>') + '</tr>';
     $('fuelTableBody').innerHTML = row + row + row;
@@ -921,8 +935,8 @@ td.d{color:var(--t1)}
     h += row('المطلوب (الإضافي)', fmt(d.docTotalLiters) + ' لتر');
     if (d.incomingDinars > 0) h += row('المبلغ الوارد', fmt(d.incomingDinars, 3) + ' د.ت');
     if (d.actualConsumedLiters != null) h += row('المستهلك فعلياً', fmt(d.actualConsumedLiters) + ' لتر');
-    h += row('المعدل العام', d.totalActualRate ? fmt(d.totalActualRate, 2) + ' لتر/س' : '—');
-    if (perEngineRate(d) != null) h += row('معدل المحرك الواحد', fmt(perEngineRate(d), 2) + ' لتر/س (÷ ' + fmt(engSumOf(d).hours, 1) + ' س)');
+    h += row(generalRate(d) != null ? 'معدل المحرك الواحد (للمعيار)' : 'المعدل الفعلي', d.totalActualRate ? fmt(d.totalActualRate, 2) + ' لتر/س' : '—');
+    if (generalRate(d) != null) h += row('المعدل العام للمركب', fmt(generalRate(d), 2) + ' لتر/س (÷ أكبر عدّاد)');
     h += row('المعيار', (standards.standardRate > 0 && standards.standardRate < 100) ? fmt(standards.standardRate, 2) + ' لتر/س' : 'غير مسجل');
     if (typeof d.riskScore === 'number') h += row('درجة الخطر', d.riskScore + ' / 100');
     if (d.documentNumber) h += row('رقم الوثيقة', esc(d.documentNumber));
@@ -943,7 +957,7 @@ td.d{color:var(--t1)}
     var tb = $('fuelTableBody');
     $('tableCount').textContent = allDocs.length;
     var left = showLeftCol();
-    $('thEngL').hidden = !left; var cent = showCenterCol(); $('thEngC').hidden = !cent; var multi = showPerEngine(); $('thEngRate').hidden = !multi;
+    $('thEngL').hidden = !left; var cent = showCenterCol(); $('thEngC').hidden = !cent; var multi = showGeneral(); $('thEngRate').hidden = !multi; $('thRate').textContent = multi ? 'معدل المحرك الواحد (لتر/س)' : 'المعدل الفعلي (لتر/س)';
     $('thEngR').textContent = (left || cent) ? 'ساعات المحرك الأيمن' : 'ساعات المحرك';
     if (!allDocs.length) {
       tb.innerHTML = '<tr><td colspan="' + cols() + '" class="st-empty"><div class="empty"><i class="fas fa-folder-open"></i><b>لا توجد وثائق مسجلة</b><span>ابدأ بتسجيل أول وثيقة تموين.</span></div></td></tr>';
@@ -971,8 +985,8 @@ td.d{color:var(--t1)}
         engCell(d.engines && d.engines.right, (left || cent) ? 'المحرك الأيمن' : 'المحرك') +
         (cent ? engCell(d.engines && d.engines.center, 'المحرك الأوسط') : '') +
         (left ? engCell(d.engines && d.engines.left, 'المحرك الأيسر') : '') +
-        '<td data-label="المعدل العام">' + (rate > 0 ? rate.toFixed(2) + ' ل/س' : '—') + '</td>' +
-        (multi ? '<td data-label="معدل المحرك الواحد">' + (perEngineRate(d) != null ? '<b>' + perEngineRate(d).toFixed(2) + '</b> ل/س <small style="color:var(--t3)">(' + fmt(engSumOf(d).hours, 1) + ' س)</small>' : '—') + '</td>' : '') +
+        '<td data-label="المعدل">' + (rate > 0 ? rate.toFixed(2) + ' ل/س' : '—') + '</td>' +
+        (multi ? '<td data-label="المعدل العام للمركب">' + (generalRate(d) != null ? '<b>' + generalRate(d).toFixed(2) + '</b> ل/س' : '—') + '</td>' : '') +
         '<td data-label="نسبة المعيار">' + (pctVal != null ? '<span class="risk ' + pctCls + '" style="--w:' + Math.min(100, pctVal) + '%"><i></i>' + pctVal.toFixed(0) + '%</span>' : '—') + '</td>' +
         '<td data-label="الوقود المُبالغ فيه">' + (d.excessLiters > 0 ? '<span class="badge bad"><i class="fas fa-triangle-exclamation"></i>' + fmt(d.excessLiters, 1) + ' لتر</span>' : '—') + '</td>' +
         '<td data-label="درجة الخطر">' + riskBadge(d.riskScore) + '</td>' +
@@ -1023,7 +1037,7 @@ td.d{color:var(--t1)}
     $('fDocNumber').value = d.documentNumber || '';
     $('fDocTotalLiters').value = d.docTotalLiters != null ? d.docTotalLiters : '';
     $('fActualConsumedLiters').value = d.actualConsumedLiters != null ? d.actualConsumedLiters : '';
-    $('fDocTotalHours').value = d.docTotalHours != null ? d.docTotalHours : '';
+    $('fDocTotalHours').value = d.docTotalHours != null ? d.docTotalHours : ''; hAuto = false;
     $('fRemainingTank').value = d.remainingTank != null ? d.remainingTank : '';
     cardSrc = 'd';
     $('fCardDinars').value = d.cardDinars != null ? d.cardDinars : '';
@@ -1426,7 +1440,7 @@ td.d{color:var(--t1)}
         { value: fmt(H, 1), label: '⏱️ ساعات العمل' },
         { value: fmt(Cons, 1), label: '🔥 المستهلك فعلياً (لتر)' },
         { value: fmt(Req, 1), label: '⛽ المطلوب الإضافي (لتر)' },
-        { value: avg ? avg.toFixed(2) : dash, label: '📈 المعدل العام (لتر/س)' },
+        { value: avg ? avg.toFixed(2) : dash, label: '📈 ' + (docs.some(function (d) { return generalRate(d) != null; }) ? 'معدل المحرك الواحد' : 'المعدل العام') + ' (لتر/س)' },
         { value: flagged + ' / ' + n, label: '🚨 الوثائق المشبوهة' }
       ];
 
@@ -1451,17 +1465,17 @@ td.d{color:var(--t1)}
       };
       if (n > 1) t1.rows.push({ kind: 'total', cells: ['', 'المجموع', '', '', fmt(Quota, 1), fmt(Req, 1), fmt(H, 1), fmt(Cons, 1), '', '', '', ''] });
 
-      var anyMulti = docs.some(function (d) { return perEngineRate(d) != null; });
+      var anyMulti = docs.some(function (d) { return generalRate(d) != null; });
       // الجدول 2: التدقيق والمعيار والحكم
       var cnt = { ok: 0, ok2: 0, bad: 0, warn: 0, neu: 0 }; docs.forEach(function (d) { var t = d._v.t; if (t === 'عادي') cnt.ok++; else if (t === 'مقبول') cnt.ok2++; else if (d._v.c === 'bad') cnt.bad++; else if (d._v.c === 'warn') cnt.warn++; else if (d._v.c === 'neu') cnt.neu++; });
       var t2 = {
         title: '٢) التدقيق ومعادلة الكميات والحكم', widths: ['8mm', '', ''].concat(anyMulti ? [''] : [], ['', '', '', '', '', '', '', '', '34mm']),
-        columns: ['م', 'التاريخ', anyMulti ? 'المعدل العام (لتر/س)' : 'المعدل (لتر/س)'].concat(anyMulti ? ['معدل المحرك الواحد (لتر/س)'] : [], ['نسبة المعيار', 'مُبالغ فيه (لتر)', 'المرحَّل (لتر)', 'المسلَّم (لتر)', 'المحاسَب (لتر)', 'فرق المعادلة', 'درجة الخطر', 'الحكم', 'السبب']),
+        columns: ['م', 'التاريخ', anyMulti ? 'معدل المحرك الواحد (لتر/س)' : 'المعدل (لتر/س)'].concat(anyMulti ? ['المعدل العام للمركب (لتر/س)'] : [], ['نسبة المعيار', 'مُبالغ فيه (لتر)', 'المرحَّل (لتر)', 'المسلَّم (لتر)', 'المحاسَب (لتر)', 'فرق المعادلة', 'درجة الخطر', 'الحكم', 'السبب']),
         rows: docs.map(function (d, i) {
           var rate = Number(d.totalActualRate) || 0, pctN = hasStd && rate > 0 ? rate / std * 100 : null, known = d._open && d._open.known;
           var supply = (known ? d._open.liters : 0) + (Number(d.quota) || 0);
           var acc = (Number(d.actualConsumedLiters) || 0) + (Number(d.remainingTank) || 0) + cardL(d);
-          return { kind: kindOf(d), cells: [i + 1, ldate(d.date), rate > 0 ? rate.toFixed(2) : dash].concat(anyMulti ? [perEngineRate(d) != null ? perEngineRate(d).toFixed(2) : dash] : [], [
+          return { kind: kindOf(d), cells: [i + 1, ldate(d.date), rate > 0 ? rate.toFixed(2) : dash].concat(anyMulti ? [generalRate(d) != null ? generalRate(d).toFixed(2) : dash] : [], [
             pctN == null ? dash : { text: Math.round(pctN) + '%', bold: true, color: pctN > 100 ? '#dc2626' : pctN > 85 ? '#b45309' : '#047857' },
             d.excessLiters > 0 ? { text: fmt(d.excessLiters, 1), bold: true, color: '#dc2626' } : dash,
             known ? fmt(d._open.liters, 1) : dash, fmt(supply, 1), fmt(acc, 1),
@@ -1469,7 +1483,7 @@ td.d{color:var(--t1)}
             d.riskScore != null && isFinite(Number(d.riskScore)) ? Math.round(d.riskScore) : dash,
             { type: 'badge', text: d._v.t, variant: vclr[d._v.c] }, { text: d._v.w, align: 'right', small: true, color: vcol[d._v.c] }]) };
         }),
-        note: 'المعدل العام = المستهلك ÷ ساعات العمل (وهو المقارَن بالمعيار) · معدل المحرك الواحد = المستهلك ÷ مجموع ساعات المحركات. الحكم: عادي ≤ 85% من المعيار · مقبول 85–100% · مشبوه > 100% (أو شبهة من التدقيق) · فرق غير مفسَّر: وقود لا تفسّره المعادلة (مرحَّل + مقرر = مستهلك + خزان + بطاقة) — والكمية الإضافية المطلوبة لا تدخل المعادلة.' +
+        note: (anyMulti ? 'معدل المحرك الواحد = المستهلك ÷ مجموع ساعات المحركات (وهو المقارَن بالمعيار) · المعدل العام للمركب = المستهلك ÷ أكبر عدّاد. ' : '') + 'الحكم: عادي ≤ 85% من المعيار · مقبول 85–100% · مشبوه > 100% (أو شبهة من التدقيق) · فرق غير مفسَّر: وقود لا تفسّره المعادلة (مرحَّل + مقرر = مستهلك + خزان + بطاقة) — والكمية الإضافية المطلوبة لا تدخل المعادلة.' +
           (n > 1 ? '   |   الإجمالي: عادي ' + cnt.ok + ' · مقبول ' + cnt.ok2 + ' · مشبوه ' + cnt.bad + ' · فرق غير مفسَّر ' + cnt.warn + ' · قيد التعلّم ' + cnt.neu : '')
       };
       var tables = [t1, t2];
@@ -1526,11 +1540,12 @@ td.d{color:var(--t1)}
     });
   }
   window.setEngines = function (n) {
-    engN = Math.min(3, Math.max(1, n)); isTwin = engN >= 2;
+    engN = Math.min(3, Math.max(1, n)); isTwin = engN >= 2; hAuto = true;
     if (!isTwin) { $('fStartL').value = ''; $('fEndL').value = ''; }
     if (engN !== 3) { $('fStartC').value = ''; $('fEndC').value = ''; }
     applyEngineMode(); window.liveAudit();
   };
+  $('fDocTotalHours').addEventListener('input', function () { hAuto = false; });
   document.querySelectorAll('.eng-opt').forEach(function (b) { b.addEventListener('click', function () { window.setEngines(parseInt(b.getAttribute('data-n'), 10)); }); });
   $('printBtn').addEventListener('click', function () { printFuel(); });
   $('setupEditBtn').addEventListener('click', function () { openSetupEdit(false); });
