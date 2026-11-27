@@ -131,6 +131,10 @@ select.fc{cursor:pointer}
 .rate-display .num{font-size:28px;font-weight:900;color:var(--navy)}
 .rate-display .unit{font-size:13px;font-weight:700;color:var(--t3)}
 .rate-display .rcmp{margin-inline-start:auto;font-size:12px;font-weight:800;padding:3px 10px;border-radius:99px}
+.rate-eng{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
+.rate-eng .re{background:#f4f8fc;border:1.5px solid var(--line);border-radius:12px;padding:9px 12px;font-size:12px;color:var(--t2);font-weight:700}
+.rate-eng .re b{display:block;font-size:19px;color:var(--navy);font-weight:900;margin-top:2px}
+.rate-eng .re.main{background:var(--gold-bg);border-color:var(--gold)}
 .rate-display .rcmp.ok{background:var(--ok-bg);color:var(--ok)}
 .rate-display .rcmp.mid{background:#fff3cd;color:#a67c00}
 .rate-display .rcmp.high{background:var(--bad-bg);color:var(--bad)}
@@ -340,11 +344,12 @@ td.d{color:var(--t1)}
         <span class="unit">لتر/ساعة</span>
         <span class="rcmp" id="rateCmp" hidden></span>
       </div>
+      <div class="rate-eng" id="rateEng" hidden></div>
       <div class="pct-bar">
         <div class="track"><span class="fill" id="pctFill"></span></div>
         <span class="lbl" id="pctLbl">—</span>
       </div>
-      <div class="hint" id="pctHint">المعدل = الكمية المستهلكة ÷ ساعات العمل · النسبة = (المعدل الفعلي ÷ المعيار) × 100</div>
+      <div class="hint" id="pctHint">المعدل العام = الكمية المستهلكة ÷ ساعات العمل · النسبة = (المعدل الفعلي ÷ المعيار) × 100</div>
     </div>
 
     <div class="sum" id="liveSum"></div>
@@ -405,7 +410,7 @@ td.d{color:var(--t1)}
           <th>التاريخ</th><th>رقم الوثيقة</th><th>نوع الوقود</th><th>المقرر</th>
           <th>ساعات العمل</th><th>المطلوب (الإضافي)</th><th>المستهلك</th><th>الباقي بالخزان</th><th>رصيد البطاقة</th>
           <th id="thEngR">ساعات المحرك الأيمن</th><th id="thEngC" hidden>ساعات المحرك الأوسط</th><th id="thEngL">ساعات المحرك الأيسر</th>
-          <th>المعدل الفعلي (لتر/س)</th><th>نسبة المعيار %</th><th>الوقود المُبالغ فيه</th><th>درجة الخطر</th><th>الحالة</th><th>فرق المعادلة</th><th>ملاحظة</th><th class="colAct">إجراءات</th>
+          <th>المعدل العام (لتر/س)</th><th id="thEngRate" hidden>معدل المحرك الواحد (لتر/س)</th><th>نسبة المعيار %</th><th>الوقود المُبالغ فيه</th><th>درجة الخطر</th><th>الحالة</th><th>فرق المعادلة</th><th>ملاحظة</th><th class="colAct">إجراءات</th>
         </tr></thead>
         <tbody id="fuelTableBody"></tbody>
       </table>
@@ -635,6 +640,13 @@ td.d{color:var(--t1)}
     allDocs.forEach(function (d) { d._v = verdictOf(d, std); });
   }
 
+  // مجموع ساعات كل المحركات في وثيقة، ومعدل المحرك الواحد = المستهلك ÷ مجموع ساعات المحركات
+  function engSumOf(d) {
+    var e = d.engines || {}, t = 0, n = 0;
+    ['right', 'center', 'left'].forEach(function (k) { if (e[k]) { t += Number(e[k].usedHours != null ? e[k].usedHours : e[k].totalHours) || 0; n++; } });
+    return { hours: t, n: n };
+  }
+  function perEngineRate(d) { var x = engSumOf(d), a = Number(d.actualConsumedLiters) || 0; return x.n > 1 && x.hours > 0 && a > 0 ? a / x.hours : null; }
   var cardSrc = 'd';   // آخر حقل أدخله المستخدم: d دينار / l لتر
   window.cardSync = function (src) { cardSrc = src; window.liveAudit(); };
 
@@ -670,6 +682,8 @@ td.d{color:var(--t1)}
       free: isFinite(T) && cap ? cap - T : NaN,
       after: isFinite(T) && isFinite(L) ? T + L : NaN,
       hR: eR - sR, hL: eL - sL, hC: eC - sC,
+      engHours: [eR - sR, eC - sC, eL - sL].filter(function (x) { return isFinite(x) && x >= 0; }).reduce(function (a, b) { return a + b; }, 0),
+      engUsed: [eR - sR, eC - sC, eL - sL].filter(function (x) { return isFinite(x) && x >= 0; }).length,
       rate: actualRate, ratePct: ratePct,
       excessLiters: excessLiters, excessDinars: excessDinars,
       cost: isFinite(L) ? L * p : NaN,
@@ -747,6 +761,14 @@ td.d{color:var(--t1)}
     }
     if (hrs.length && isFinite(c.H) && Math.abs(Math.max.apply(null, hrs) - c.H) > 0.5) msgs.push('ساعات العمل (' + c.H + ') لا تطابق ساعات العدّاد (' + fmt(Math.max.apply(null, hrs), 1) + ').');
 
+    var re = $('rateEng');
+    if (engN >= 2 && isFinite(c.Actual) && c.Actual > 0 && c.engUsed > 1 && c.engHours > 0) {
+      var pe = c.Actual / c.engHours;
+      re.hidden = false;
+      re.innerHTML = '<div class="re main">المعدل العام للمركب <small>(المستهلك ÷ ساعات العمل ' + fmt(c.H || 0, 1) + ')</small><b>' + (isFinite(c.rate) ? c.rate.toFixed(2) : '—') + ' لتر/س</b></div>' +
+        '<div class="re">معدل المحرك الواحد <small>(المستهلك ÷ مجموع ساعات ' + c.engUsed + ' محركات ' + fmt(c.engHours, 1) + ')</small><b>' + pe.toFixed(2) + ' لتر/س</b></div>' +
+        '<div class="re">ساعات كل محرك<b style="font-size:14px">' + [['الأيمن', c.hR], engN === 3 ? ['الأوسط', c.hC] : null, ['الأيسر', c.hL]].filter(Boolean).map(function (x) { return x[0] + ' ' + (isFinite(x[1]) && x[1] >= 0 ? fmt(x[1], 1) : '—'); }).join(' · ') + '</b></div>';
+    } else { re.hidden = true; re.innerHTML = ''; }
     var arNum = $('actualRateNum'), arCmp = $('rateCmp');
     if (isFinite(c.rate)) {
       arNum.textContent = c.rate.toFixed(2);
@@ -857,7 +879,8 @@ td.d{color:var(--t1)}
 
   function showLeftCol() { return allDocs.some(function (d) { return d.engines && d.engines.left; }); }
   function showCenterCol() { return allDocs.some(function (d) { return d.engines && d.engines.center; }); }
-  function cols() { return 18 + (showLeftCol() ? 1 : 0) + (showCenterCol() ? 1 : 0); }
+  function showPerEngine() { return allDocs.some(function (d) { return perEngineRate(d) != null; }); }
+  function cols() { return 18 + (showLeftCol() ? 1 : 0) + (showCenterCol() ? 1 : 0) + (showPerEngine() ? 1 : 0); }
   function showSkeleton() {
     var row = '<tr class="skel">' + new Array(cols() + 1).join('<td><span></span></td>') + '</tr>';
     $('fuelTableBody').innerHTML = row + row + row;
@@ -898,7 +921,8 @@ td.d{color:var(--t1)}
     h += row('المطلوب (الإضافي)', fmt(d.docTotalLiters) + ' لتر');
     if (d.incomingDinars > 0) h += row('المبلغ الوارد', fmt(d.incomingDinars, 3) + ' د.ت');
     if (d.actualConsumedLiters != null) h += row('المستهلك فعلياً', fmt(d.actualConsumedLiters) + ' لتر');
-    h += row('المعدل الفعلي', d.totalActualRate ? fmt(d.totalActualRate, 2) + ' لتر/س' : '—');
+    h += row('المعدل العام', d.totalActualRate ? fmt(d.totalActualRate, 2) + ' لتر/س' : '—');
+    if (perEngineRate(d) != null) h += row('معدل المحرك الواحد', fmt(perEngineRate(d), 2) + ' لتر/س (÷ ' + fmt(engSumOf(d).hours, 1) + ' س)');
     h += row('المعيار', (standards.standardRate > 0 && standards.standardRate < 100) ? fmt(standards.standardRate, 2) + ' لتر/س' : 'غير مسجل');
     if (typeof d.riskScore === 'number') h += row('درجة الخطر', d.riskScore + ' / 100');
     if (d.documentNumber) h += row('رقم الوثيقة', esc(d.documentNumber));
@@ -919,7 +943,7 @@ td.d{color:var(--t1)}
     var tb = $('fuelTableBody');
     $('tableCount').textContent = allDocs.length;
     var left = showLeftCol();
-    $('thEngL').hidden = !left; var cent = showCenterCol(); $('thEngC').hidden = !cent;
+    $('thEngL').hidden = !left; var cent = showCenterCol(); $('thEngC').hidden = !cent; var multi = showPerEngine(); $('thEngRate').hidden = !multi;
     $('thEngR').textContent = (left || cent) ? 'ساعات المحرك الأيمن' : 'ساعات المحرك';
     if (!allDocs.length) {
       tb.innerHTML = '<tr><td colspan="' + cols() + '" class="st-empty"><div class="empty"><i class="fas fa-folder-open"></i><b>لا توجد وثائق مسجلة</b><span>ابدأ بتسجيل أول وثيقة تموين.</span></div></td></tr>';
@@ -947,7 +971,8 @@ td.d{color:var(--t1)}
         engCell(d.engines && d.engines.right, (left || cent) ? 'المحرك الأيمن' : 'المحرك') +
         (cent ? engCell(d.engines && d.engines.center, 'المحرك الأوسط') : '') +
         (left ? engCell(d.engines && d.engines.left, 'المحرك الأيسر') : '') +
-        '<td data-label="المعدل الفعلي">' + (rate > 0 ? rate.toFixed(2) + ' ل/س' : '—') + '</td>' +
+        '<td data-label="المعدل العام">' + (rate > 0 ? rate.toFixed(2) + ' ل/س' : '—') + '</td>' +
+        (multi ? '<td data-label="معدل المحرك الواحد">' + (perEngineRate(d) != null ? '<b>' + perEngineRate(d).toFixed(2) + '</b> ل/س <small style="color:var(--t3)">(' + fmt(engSumOf(d).hours, 1) + ' س)</small>' : '—') + '</td>' : '') +
         '<td data-label="نسبة المعيار">' + (pctVal != null ? '<span class="risk ' + pctCls + '" style="--w:' + Math.min(100, pctVal) + '%"><i></i>' + pctVal.toFixed(0) + '%</span>' : '—') + '</td>' +
         '<td data-label="الوقود المُبالغ فيه">' + (d.excessLiters > 0 ? '<span class="badge bad"><i class="fas fa-triangle-exclamation"></i>' + fmt(d.excessLiters, 1) + ' لتر</span>' : '—') + '</td>' +
         '<td data-label="درجة الخطر">' + riskBadge(d.riskScore) + '</td>' +
@@ -1426,24 +1451,25 @@ td.d{color:var(--t1)}
       };
       if (n > 1) t1.rows.push({ kind: 'total', cells: ['', 'المجموع', '', '', fmt(Quota, 1), fmt(Req, 1), fmt(H, 1), fmt(Cons, 1), '', '', '', ''] });
 
+      var anyMulti = docs.some(function (d) { return perEngineRate(d) != null; });
       // الجدول 2: التدقيق والمعيار والحكم
       var cnt = { ok: 0, ok2: 0, bad: 0, warn: 0, neu: 0 }; docs.forEach(function (d) { var t = d._v.t; if (t === 'عادي') cnt.ok++; else if (t === 'مقبول') cnt.ok2++; else if (d._v.c === 'bad') cnt.bad++; else if (d._v.c === 'warn') cnt.warn++; else if (d._v.c === 'neu') cnt.neu++; });
       var t2 = {
-        title: '٢) التدقيق ومعادلة الكميات والحكم', widths: ['8mm', '', '', '', '', '', '', '', '', '', '', '34mm'],
-        columns: ['م', 'التاريخ', 'المعدل (لتر/س)', 'نسبة المعيار', 'مُبالغ فيه (لتر)', 'المرحَّل (لتر)', 'المسلَّم (لتر)', 'المحاسَب (لتر)', 'فرق المعادلة', 'درجة الخطر', 'الحكم', 'السبب'],
+        title: '٢) التدقيق ومعادلة الكميات والحكم', widths: ['8mm', '', ''].concat(anyMulti ? [''] : [], ['', '', '', '', '', '', '', '', '34mm']),
+        columns: ['م', 'التاريخ', anyMulti ? 'المعدل العام (لتر/س)' : 'المعدل (لتر/س)'].concat(anyMulti ? ['معدل المحرك الواحد (لتر/س)'] : [], ['نسبة المعيار', 'مُبالغ فيه (لتر)', 'المرحَّل (لتر)', 'المسلَّم (لتر)', 'المحاسَب (لتر)', 'فرق المعادلة', 'درجة الخطر', 'الحكم', 'السبب']),
         rows: docs.map(function (d, i) {
           var rate = Number(d.totalActualRate) || 0, pctN = hasStd && rate > 0 ? rate / std * 100 : null, known = d._open && d._open.known;
           var supply = (known ? d._open.liters : 0) + (Number(d.quota) || 0);
           var acc = (Number(d.actualConsumedLiters) || 0) + (Number(d.remainingTank) || 0) + cardL(d);
-          return { kind: kindOf(d), cells: [i + 1, ldate(d.date), rate > 0 ? rate.toFixed(2) : dash,
+          return { kind: kindOf(d), cells: [i + 1, ldate(d.date), rate > 0 ? rate.toFixed(2) : dash].concat(anyMulti ? [perEngineRate(d) != null ? perEngineRate(d).toFixed(2) : dash] : [], [
             pctN == null ? dash : { text: Math.round(pctN) + '%', bold: true, color: pctN > 100 ? '#dc2626' : pctN > 85 ? '#b45309' : '#047857' },
             d.excessLiters > 0 ? { text: fmt(d.excessLiters, 1), bold: true, color: '#dc2626' } : dash,
             known ? fmt(d._open.liters, 1) : dash, fmt(supply, 1), fmt(acc, 1),
             known && Math.abs(d._gap) > BAL_TOL ? { text: gapTxt(d), bold: true, color: '#dc2626' } : gapTxt(d),
             d.riskScore != null && isFinite(Number(d.riskScore)) ? Math.round(d.riskScore) : dash,
-            { type: 'badge', text: d._v.t, variant: vclr[d._v.c] }, { text: d._v.w, align: 'right', small: true, color: vcol[d._v.c] }] };
+            { type: 'badge', text: d._v.t, variant: vclr[d._v.c] }, { text: d._v.w, align: 'right', small: true, color: vcol[d._v.c] }]) };
         }),
-        note: 'الحكم: عادي ≤ 85% من المعيار · مقبول 85–100% · مشبوه > 100% (أو شبهة من التدقيق) · فرق غير مفسَّر: وقود لا تفسّره المعادلة (مرحَّل + مقرر = مستهلك + خزان + بطاقة) — والكمية الإضافية المطلوبة لا تدخل المعادلة.' +
+        note: 'المعدل العام = المستهلك ÷ ساعات العمل (وهو المقارَن بالمعيار) · معدل المحرك الواحد = المستهلك ÷ مجموع ساعات المحركات. الحكم: عادي ≤ 85% من المعيار · مقبول 85–100% · مشبوه > 100% (أو شبهة من التدقيق) · فرق غير مفسَّر: وقود لا تفسّره المعادلة (مرحَّل + مقرر = مستهلك + خزان + بطاقة) — والكمية الإضافية المطلوبة لا تدخل المعادلة.' +
           (n > 1 ? '   |   الإجمالي: عادي ' + cnt.ok + ' · مقبول ' + cnt.ok2 + ' · مشبوه ' + cnt.bad + ' · فرق غير مفسَّر ' + cnt.warn + ' · قيد التعلّم ' + cnt.neu : '')
       };
       var tables = [t1, t2];
