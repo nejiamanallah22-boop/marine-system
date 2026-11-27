@@ -114,6 +114,8 @@ select.fc{cursor:pointer}
 .tmeter span.full{background:var(--bad)}
 .mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 .mgrid.one{grid-template-columns:minmax(0,560px)}
+.mgrid.three{grid-template-columns:repeat(3,1fr)}
+.pane-box.e3{border-top:3px solid #0d9488}
 .used{margin-top:12px;font-size:13px;font-weight:800;color:var(--t2)}.used b{color:var(--navy);font-size:15px}
 
 /* شريط نسبة المعيار */
@@ -226,12 +228,13 @@ td.d{color:var(--t1)}
     <div id="setupForm" hidden>
       <div class="edit-note"><i class="fas fa-pen-to-square"></i> عدّل القيمة الخاطئة ثم اضغط «حفظ الإعدادات». الوثائق المسجلة سابقاً لا تتغير، والوثائق الجديدة تُفحص بالقيم الجديدة.</div>
       <div class="grid g3">
-        <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc" onchange="toggleSetupEngineFields()"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option></select></div></div>
+        <div class="fg"><label for="setupEngineCount">عدد المحركات</label><div class="field"><i class="fas fa-cog"></i><select id="setupEngineCount" class="fc" onchange="toggleSetupEngineFields()"><option value="1">محرك واحد</option><option value="2">محركان (يمين ويسار)</option><option value="3">ثلاثة محركات (يمين · وسط · يسار)</option></select></div></div>
         <div class="fg"><label for="setupTankCapacity">سعة الخزان</label><div class="field has-unit"><i class="fas fa-oil-can"></i><input type="number" id="setupTankCapacity" class="fc" placeholder="سعة الخزان" min="1" step="any" inputmode="decimal"><span class="unit">لتر</span></div></div>
         <div class="fg"><label for="setupStandardRate">الاستهلاك المعياري <small style="color:var(--t3);font-weight:700">(اختياري — اتركه فارغاً للتعلّم التلقائي)</small></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="setupStandardRate" class="fc" placeholder="اتركه فارغاً" step="0.01" min="0" inputmode="decimal"><span class="unit">لتر/س</span></div></div>
       </div>
       <div class="grid g2" id="setupEngineDetails" style="margin-top:16px" hidden>
         <div class="fg"><label for="setupEngineRight">المحرك الأيمن</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineRight" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
+        <div class="fg" id="setupEngineCenterWrap" hidden><label for="setupEngineCenter">المحرك الأوسط</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineCenter" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
         <div class="fg"><label for="setupEngineLeft">المحرك الأيسر</label><div class="field"><i class="fas fa-hashtag"></i><input type="text" id="setupEngineLeft" class="fc" placeholder="اسم / رقم" maxlength="40"></div></div>
       </div>
       <div class="nav"><button class="btn btn-gold" id="setupSaveBtn" type="button"><i class="fas fa-save"></i> حفظ الإعدادات</button><button class="btn btn-line" id="setupCancelBtn" type="button" hidden><i class="fas fa-xmark"></i> إلغاء</button></div>
@@ -301,6 +304,7 @@ td.d{color:var(--t1)}
     <div class="eng-pick" role="radiogroup" aria-label="عدد محركات المركب">
       <button type="button" class="eng-opt" data-n="1" role="radio"><i class="fas fa-cog"></i> محرك واحد</button>
       <button type="button" class="eng-opt" data-n="2" role="radio"><i class="fas fa-cogs"></i> محركان (أيمن وأيسر)</button>
+      <button type="button" class="eng-opt" data-n="3" role="radio"><i class="fas fa-gears"></i> ثلاثة محركات (أيمن · أوسط · أيسر)</button>
     </div>
     <div class="mgrid" id="metersGrid" style="margin-bottom:18px">
       <div class="pane-box e1">
@@ -310,6 +314,14 @@ td.d{color:var(--t1)}
           <div class="fg"><label for="fEndR">آخر الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="fEndR" class="fc" oninput="liveAudit()" placeholder="250" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
         </div>
         <div class="used">ساعات العمل المحتسبة: <b id="usedR">—</b></div>
+      </div>
+      <div class="pane-box e3" id="centerEngineBox" hidden>
+        <h4 style="color:#0d9488"><i class="fas fa-cog"></i> المحرك الأوسط — عداد الساعات</h4>
+        <div class="grid g2">
+          <div class="fg"><label for="fStartC">أول الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge"></i><input type="number" id="fStartC" class="fc" oninput="liveAudit()" placeholder="100" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+          <div class="fg"><label for="fEndC">آخر الشهر <span class="req">*</span></label><div class="field has-unit"><i class="fas fa-gauge-high"></i><input type="number" id="fEndC" class="fc" oninput="liveAudit()" placeholder="250" min="0" step="any" inputmode="decimal"><span class="unit">ساعة</span></div></div>
+        </div>
+        <div class="used">ساعات العمل المحتسبة: <b id="usedC">—</b></div>
       </div>
       <div class="pane-box e2" id="leftEngineBox" hidden>
         <h4 style="color:var(--navy-3)"><i class="fas fa-cog"></i> المحرك الأيسر — عداد الساعات</h4>
@@ -392,7 +404,7 @@ td.d{color:var(--t1)}
         <thead><tr>
           <th>التاريخ</th><th>رقم الوثيقة</th><th>نوع الوقود</th><th>المقرر</th>
           <th>ساعات العمل</th><th>المطلوب (الإضافي)</th><th>المستهلك</th><th>الباقي بالخزان</th><th>رصيد البطاقة</th>
-          <th id="thEngR">ساعات المحرك الأيمن</th><th id="thEngL">ساعات المحرك الأيسر</th>
+          <th id="thEngR">ساعات المحرك الأيمن</th><th id="thEngC" hidden>ساعات المحرك الأوسط</th><th id="thEngL">ساعات المحرك الأيسر</th>
           <th>المعدل الفعلي (لتر/س)</th><th>نسبة المعيار %</th><th>الوقود المُبالغ فيه</th><th>درجة الخطر</th><th>الحالة</th><th>فرق المعادلة</th><th>ملاحظة</th><th class="colAct">إجراءات</th>
         </tr></thead>
         <tbody id="fuelTableBody"></tbody>
@@ -406,7 +418,7 @@ td.d{color:var(--t1)}
 (function () {
   'use strict';
   var boatId = new URLSearchParams(window.location.search).get('id');
-  var isTwin = false, saving = false, vesselTitle = '', vesselData = null, setupWasReady = false;
+  var isTwin = false, engN = 1, saving = false, vesselTitle = '', vesselData = null, setupWasReady = false;
   var curRange = { start: '', end: '' };
   var standards = { standardRate: 0, tankCapacity: 0, engineCount: 1, fuelPrice: 1.998, basedOn: 0, source: 'learning', minRequired: 3 };
   var myChart = null, allDocs = [];
@@ -473,7 +485,7 @@ td.d{color:var(--t1)}
         vesselTitle = v.name || '';
         vesselData = v;
         ready = !!(v.engineCount && v.tankCapacity);
-        isTwin = v.engineCount === 2;
+        engN = Math.min(3, Math.max(1, Number(v.engineCount) || 1)); isTwin = engN >= 2;
       } else { $('vesselName').textContent = 'المركب غير موجود'; ready = false; }
     } catch (e) { $('vesselName').textContent = 'تعذّر تحميل بيانات المركب'; }
     if (!vesselData || !pickNum(vesselData) || !(vesselData.name || vesselData.vesselName || vesselData.title)) {
@@ -489,7 +501,7 @@ td.d{color:var(--t1)}
       if (r0.ok) {
         standards = await r0.json();
         ready = Number(standards.tankCapacity) > 0;
-        isTwin = Number(standards.engineCount) === 2;
+        engN = Math.min(3, Math.max(1, Number(standards.engineCount) || 1)); isTwin = engN >= 2;
         standards.basedOn = Number(standards.standardBasedOn || standards.basedOn) || 0;
         standards.source = standards.standardSource || standards.source || 'learning';
         standards.minRequired = Number(standards.standardMinRequired || standards.minRequired) || 3;
@@ -515,7 +527,8 @@ td.d{color:var(--t1)}
   }
 
   /* ══ إعدادات المركب: عرض دائم + زر تعديل ══ */
-  function engCountNow() { return Number(standards.engineCount) === 2 ? 2 : 1; }
+  function engCountNow() { var n = Number(standards.engineCount) || 1; return n >= 3 ? 3 : n === 2 ? 2 : 1; }
+  var ENG_NAMES = { 1: 'محرك واحد', 2: 'محركان (أيمن وأيسر)', 3: 'ثلاثة محركات (أيمن · أوسط · أيسر)' };
   function renderSetup(ready) {
     var view = $('setupView');
     $('setupNotice').hidden = ready;
@@ -525,14 +538,15 @@ td.d{color:var(--t1)}
     $('setupForm').hidden = true; view.hidden = false;
     var std = Number(standards.standardRate) || 0, v = vesselData || {};
     var chips = [
-      ['عدد المحركات', engCountNow() === 2 ? 'محركان (أيمن وأيسر)' : 'محرك واحد'],
+      ['عدد المحركات', ENG_NAMES[engCountNow()]],
       ['سعة الخزان', fmt(standards.tankCapacity, 1) + ' لتر'],
       ['سعر اللتر (غزوال / بنزين)', '1.998 / 2.525 د.ت'],
       ['الاستهلاك المعياري', std > 0 && std < 100 ? fmt(std, 2) + ' لتر/س' : 'قيد التعلّم (' + (standards.basedOn || 0) + ' / ' + (standards.minRequired || 3) + ' وثائق)']
     ];
     chips.unshift(['الوسيلة', (vesselNameNow() || '—') + (vesselNumNow() ? ' · رقم ' + vesselNumNow() : ' · الرقم غير مسجَّل')]);
-    if (v.engineRight) chips.push([engCountNow() === 2 ? 'المحرك الأيمن' : 'المحرك', String(v.engineRight)]);
-    if (engCountNow() === 2 && v.engineLeft) chips.push(['المحرك الأيسر', String(v.engineLeft)]);
+    if (v.engineRight) chips.push([engCountNow() >= 2 ? 'المحرك الأيمن' : 'المحرك', String(v.engineRight)]);
+    if (engCountNow() === 3 && v.engineCenter) chips.push(['المحرك الأوسط', String(v.engineCenter)]);
+    if (engCountNow() >= 2 && v.engineLeft) chips.push(['المحرك الأيسر', String(v.engineLeft)]);
     view.innerHTML = chips.map(function (c) { return '<div class="sm"><span>' + esc(c[0]) + '</span><b>' + esc(c[1]) + '</b></div>'; }).join('');
   }
   function openSetupEdit(firstTime) {
@@ -542,6 +556,7 @@ td.d{color:var(--t1)}
     $('setupStandardRate').value = '';
     $('setupEngineRight').value = v.engineRight || '';
     $('setupEngineLeft').value = v.engineLeft || '';
+    $('setupEngineCenter').value = v.engineCenter || '';
     window.toggleSetupEngineFields();
     $('setupView').hidden = true; $('setupForm').hidden = false;
     $('setupEditBtn').hidden = true; $('reauditBtn').hidden = true;
@@ -551,18 +566,19 @@ td.d{color:var(--t1)}
     if (!firstTime) { $('setupTankCapacity').focus(); $('setupCard').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   }
   function closeSetupEdit() { renderSetup(true); }
-  window.toggleSetupEngineFields = function () { $('setupEngineDetails').hidden = $('setupEngineCount').value !== '2'; };
+  window.toggleSetupEngineFields = function () { var k = Number($('setupEngineCount').value); $('setupEngineDetails').hidden = k < 2; $('setupEngineCenterWrap').hidden = k !== 3; };
   window.saveEngineSetup = async function () {
     var tank = num('setupTankCapacity'), rate = num('setupStandardRate');
     if (!isFinite(tank) || tank <= 0) { $('setupTankCapacity').focus(); return toast('سعة الخزان يجب أن تكون أكبر من صفر', 'error'); }
     if (!isFinite(rate) || rate < 0) rate = 0;
-    var n = Number($('setupEngineCount').value) === 2 ? 2 : 1;
-    var right = $('setupEngineRight').value.trim().slice(0, 40), left = $('setupEngineLeft').value.trim().slice(0, 40);
+    var n = Math.min(3, Math.max(1, Number($('setupEngineCount').value) || 1));
+    var right = $('setupEngineRight').value.trim().slice(0, 40), left = $('setupEngineLeft').value.trim().slice(0, 40), center = $('setupEngineCenter').value.trim().slice(0, 40);
     var payload = { engineCount: n, tankCapacity: tank };
     if (!setupWasReady) payload.standardRate = rate;          // أول إعداد: كما كان
     else if (rate > 0) payload.standardRate = rate;           // تعديل: لا نمسح المعيار المتعلَّم إلا إن كتب المستخدم قيمة
     if (right) payload.engineRight = right;
-    if (n === 2 && left) payload.engineLeft = left;
+    if (n >= 2 && left) payload.engineLeft = left;
+    if (n === 3 && center) payload.engineCenter = center;
     var btn = $('setupSaveBtn'); btn.disabled = true;
     try {
       var res = await fetch('/api/vessels/' + boatId, {
@@ -573,8 +589,8 @@ td.d{color:var(--t1)}
       if (!setupWasReady) return setTimeout(function () { location.reload(); }, 800);
       standards.tankCapacity = tank; standards.engineCount = n;
       if (payload.standardRate > 0) { standards.standardRate = payload.standardRate; standards.basedOn = Math.max(standards.basedOn || 0, standards.minRequired || 3); }
-      vesselData = Object.assign({}, vesselData || {}, { engineCount: n, tankCapacity: tank, engineRight: right || (vesselData && vesselData.engineRight) || '', engineLeft: n === 2 ? (left || (vesselData && vesselData.engineLeft) || '') : '' });
-      isTwin = n === 2; applyEngineMode();
+      vesselData = Object.assign({}, vesselData || {}, { engineCount: n, tankCapacity: tank, engineRight: right || (vesselData && vesselData.engineRight) || '', engineLeft: n >= 2 ? (left || (vesselData && vesselData.engineLeft) || '') : '', engineCenter: n === 3 ? (center || (vesselData && vesselData.engineCenter) || '') : '' });
+      engN = n; isTwin = n >= 2; applyEngineMode();
       renderSetup(true); window.liveAudit(); renderTable(); renderChart(); loadAudit();
     } catch (e) { toast(e.message, 'error'); }
     finally { btn.disabled = false; }
@@ -629,7 +645,7 @@ td.d{color:var(--t1)}
     var Q = num('fQuota'), Extra = isFinite(L) ? L : 0; // الإضافي = المطلوب (شيء واحد)
     var IncomingD = num('fIncomingDinars') || 0;
     var p = price(), cap = Number(standards.tankCapacity) || 0, std = Number(standards.standardRate) || 0;
-    var sR = num('fStartR'), eR = num('fEndR'), sL = isTwin ? num('fStartL') : NaN, eL = isTwin ? num('fEndL') : NaN;
+    var sR = num('fStartR'), eR = num('fEndR'), sL = isTwin ? num('fStartL') : NaN, eL = isTwin ? num('fEndL') : NaN, sC = engN === 3 ? num('fStartC') : NaN, eC = engN === 3 ? num('fEndC') : NaN;
 
     var actualRate = (H > 0 && isFinite(Actual)) ? (Actual / H) : NaN;
     var ratePct = (std > 0 && std < 100 && isFinite(actualRate)) ? (actualRate / std) * 100 : NaN;
@@ -653,7 +669,7 @@ td.d{color:var(--t1)}
       cardL: cardL,
       free: isFinite(T) && cap ? cap - T : NaN,
       after: isFinite(T) && isFinite(L) ? T + L : NaN,
-      hR: eR - sR, hL: eL - sL,
+      hR: eR - sR, hL: eL - sL, hC: eC - sC,
       rate: actualRate, ratePct: ratePct,
       excessLiters: excessLiters, excessDinars: excessDinars,
       cost: isFinite(L) ? L * p : NaN,
@@ -677,6 +693,7 @@ td.d{color:var(--t1)}
     if (cap && t > cap) return bad('fRemainingTank', 'الباقي بالخزان يتجاوز سعته (' + cap + ' لتر)');
     if (!isFinite(c) || c < 0) return bad('fCardDinars', 'أدخل رصيد البطاقة بالدينار أو باللتر (صفر أو أكثر)');
     var pairs = [['fStartR', 'fEndR', isTwin ? 'الأيمن' : '']];
+    if (engN === 3) pairs.push(['fStartC', 'fEndC', 'الأوسط']);
     if (isTwin) pairs.push(['fStartL', 'fEndL', 'الأيسر']);
     for (var i = 0; i < pairs.length; i++) {
       var pr = pairs[i], s = num(pr[0]), e = num(pr[1]), nm = 'المحرك' + (pr[2] ? ' ' + pr[2] : '');
@@ -703,6 +720,7 @@ td.d{color:var(--t1)}
     $('priceLbl').textContent = c.p.toFixed(3);
     $('usedR').textContent = isFinite(c.hR) && c.hR >= 0 ? fmt(c.hR, 1) + ' ساعة' : '—';
     if (isTwin) $('usedL').textContent = isFinite(c.hL) && c.hL >= 0 ? fmt(c.hL, 1) + ' ساعة' : '—';
+    if (engN === 3) $('usedC').textContent = isFinite(c.hC) && c.hC >= 0 ? fmt(c.hC, 1) + ' ساعة' : '—';
 
     var pct = c.cap && isFinite(c.T) ? Math.max(0, Math.min(100, c.T / c.cap * 100)) : 0;
     var tm = $('tankMeter'); tm.style.width = pct + '%'; tm.className = c.cap && c.T > c.cap ? 'full' : '';
@@ -710,8 +728,10 @@ td.d{color:var(--t1)}
 
     if (isFinite(c.hR) && c.hR >= 0) hrs.push(c.hR);
     if (isTwin && isFinite(c.hL) && c.hL >= 0) hrs.push(c.hL);
+    if (engN === 3 && isFinite(c.hC) && c.hC >= 0) hrs.push(c.hC);
     if (isFinite(c.hR) && c.hR < 0) msgs.push('عداد نهاية المحرك ' + (isTwin ? 'الأيمن ' : '') + 'أقل من بدايته.');
     if (isTwin && isFinite(c.hL) && c.hL < 0) msgs.push('عداد نهاية المحرك الأيسر أقل من بدايته.');
+    if (engN === 3 && isFinite(c.hC) && c.hC < 0) msgs.push('عداد نهاية المحرك الأوسط أقل من بدايته.');
     if (c.cap && c.T > c.cap) msgs.push('الباقي بالخزان (' + c.T + ') أكبر من سعته (' + c.cap + ').');
     else if (c.cap && isFinite(c.after) && c.after > c.cap + 1) msgs.push('تجاوز الخزان: الباقي + المطلوب = ' + fmt(c.after, 1) + ' لتر والسعة ' + c.cap + '.');
     if (isFinite(c.L) && isFinite(c.C) && c.L * c.p > c.C + c.p) msgs.push('رصيد البطاقة لا يكفي: ' + fmt(c.L) + ' لتر = ' + fmt(c.L * c.p, 3) + ' د.ت، والرصيد ' + fmt(c.C, 3) + ' د.ت.');
@@ -784,7 +804,7 @@ td.d{color:var(--t1)}
 
   window.clearForm = function () {
     cardSrc = 'd';
-    ['fDocNumber', 'fQuota', 'fDocTotalLiters', 'fActualConsumedLiters', 'fDocTotalHours', 'fRemainingTank', 'fCardDinars', 'fCardLiters', 'fIncomingDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL'].forEach(function (id) { $(id).value = ''; });
+    ['fDocNumber', 'fQuota', 'fDocTotalLiters', 'fActualConsumedLiters', 'fDocTotalHours', 'fRemainingTank', 'fCardDinars', 'fCardLiters', 'fIncomingDinars', 'fStartR', 'fEndR', 'fStartL', 'fEndL', 'fStartC', 'fEndC'].forEach(function (id) { $(id).value = ''; });
     $('fDate').value = today();
     $('fFuelType').value = 'gasoil';
     standards.fuelPrice = 1.998;
@@ -804,7 +824,7 @@ td.d{color:var(--t1)}
       fuelType: $('fFuelType').value,
       quota: num('fQuota'),
       extraLiters: num('fDocTotalLiters') || 0, // الإضافي = المطلوب (للتوافق مع الخادم)
-      engineCount: isTwin ? 2 : 1,
+      engineCount: engN,
       incomingDinars: num('fIncomingDinars') || 0,
       documentNumber: $('fDocNumber').value.replace(/[<>]/g, '').trim().slice(0, 40) || undefined,
       docTotalLiters: num('fDocTotalLiters'),
@@ -813,6 +833,7 @@ td.d{color:var(--t1)}
       remainingTank: num('fRemainingTank'), cardDinars: +(calc().C).toFixed(3), cardLiters: +(calc().cardL).toFixed(2),
       engines: {
         right: { startHours: num('fStartR'), endHours: num('fEndR') },
+        center: engN === 3 ? { startHours: num('fStartC'), endHours: num('fEndC') } : null,
         left: isTwin ? { startHours: num('fStartL'), endHours: num('fEndL') } : null
       }
     };
@@ -835,7 +856,8 @@ td.d{color:var(--t1)}
   };
 
   function showLeftCol() { return allDocs.some(function (d) { return d.engines && d.engines.left; }); }
-  function cols() { return showLeftCol() ? 19 : 18; }
+  function showCenterCol() { return allDocs.some(function (d) { return d.engines && d.engines.center; }); }
+  function cols() { return 18 + (showLeftCol() ? 1 : 0) + (showCenterCol() ? 1 : 0); }
   function showSkeleton() {
     var row = '<tr class="skel">' + new Array(cols() + 1).join('<td><span></span></td>') + '</tr>';
     $('fuelTableBody').innerHTML = row + row + row;
@@ -868,7 +890,7 @@ td.d{color:var(--t1)}
     return esc(x.usedHours || 0) + ' س';
   }
   function tipHtml(d) {
-    var e = d.engines || {}, r = e.right, l = e.left, notes = [];
+    var e = d.engines || {}, r = e.right, l = e.left, ce = e.center, notes = [];
     var row = function (a, b) { return '<div class="r"><span>' + a + '</span><b>' + b + '</b></div>'; };
     var h = '<h5>' + (d.isFraud ? '🚨 وثيقة مشبوهة' : '✅ وثيقة سليمة') + ' — ' + ldate(d.date) + '</h5>';
     h += row('نوع الوقود', d.fuelType === 'benzine' ? 'بنزين' : 'غزوال');
@@ -885,7 +907,8 @@ td.d{color:var(--t1)}
     if (d.cardDinars != null) h += row('رصيد البطاقة', fmt(d.cardDinars, 3) + ' د.ت ≈ ' + fmt(d.cardLiters, 1) + ' لتر');
     if (d._open) { h += row('المرحَّل قبلها', d._open.known ? fmt(d._open.liters, 1) + ' لتر' : 'لا يوجد'); h += row('توازن المعادلة', !d._open.known ? 'بداية السجل' : Math.abs(d._gap) <= BAL_TOL ? '✅ مفسَّرة بالكامل' : '⚠️ فرق ' + fmt(d._gap, 1) + ' لتر'); }
     if (d.excessLiters > 0) h += row('🚨 الوقود المُبالغ فيه', fmt(d.excessLiters, 1) + ' لتر (' + fmt(d.excessDinars, 3) + ' د.ت)');
-    if (r) h += row(l ? 'الأيمن' : 'المحرك', engTxt(r));
+    if (r) h += row(l || ce ? 'الأيمن' : 'المحرك', engTxt(r));
+    if (ce) h += row('الأوسط', engTxt(ce));
     if (l) h += row('الأيسر', engTxt(l));
     if (d.fraudReason) notes = String(d.fraudReason).split(' | ');
     if (notes.length) h += notes.map(function (x) { return '<div class="w">• ' + esc(x) + '</div>'; }).join('');
@@ -896,8 +919,8 @@ td.d{color:var(--t1)}
     var tb = $('fuelTableBody');
     $('tableCount').textContent = allDocs.length;
     var left = showLeftCol();
-    $('thEngL').hidden = !left;
-    $('thEngR').textContent = left ? 'ساعات المحرك الأيمن' : 'ساعات المحرك';
+    $('thEngL').hidden = !left; var cent = showCenterCol(); $('thEngC').hidden = !cent;
+    $('thEngR').textContent = (left || cent) ? 'ساعات المحرك الأيمن' : 'ساعات المحرك';
     if (!allDocs.length) {
       tb.innerHTML = '<tr><td colspan="' + cols() + '" class="st-empty"><div class="empty"><i class="fas fa-folder-open"></i><b>لا توجد وثائق مسجلة</b><span>ابدأ بتسجيل أول وثيقة تموين.</span></div></td></tr>';
       return;
@@ -921,7 +944,8 @@ td.d{color:var(--t1)}
         '<td data-label="المستهلك"><b style="color:var(--info)">' + (d.actualConsumedLiters != null ? fmt(d.actualConsumedLiters, 1) + ' لتر' : '—') + '</b></td>' +
         '<td data-label="الباقي بالخزان">' + (d.remainingTank != null ? fmt(d.remainingTank, 1) + ' لتر' : '—') + '</td>' +
         '<td data-label="رصيد البطاقة">' + (d.cardDinars != null ? fmt(d.cardDinars, 3) + ' د.ت <small style="color:var(--t3)">(' + fmt(d.cardLiters, 0) + ' ل)</small>' : '—') + '</td>' +
-        engCell(d.engines && d.engines.right, left ? 'المحرك الأيمن' : 'المحرك') +
+        engCell(d.engines && d.engines.right, (left || cent) ? 'المحرك الأيمن' : 'المحرك') +
+        (cent ? engCell(d.engines && d.engines.center, 'المحرك الأوسط') : '') +
         (left ? engCell(d.engines && d.engines.left, 'المحرك الأيسر') : '') +
         '<td data-label="المعدل الفعلي">' + (rate > 0 ? rate.toFixed(2) + ' ل/س' : '—') + '</td>' +
         '<td data-label="نسبة المعيار">' + (pctVal != null ? '<span class="risk ' + pctCls + '" style="--w:' + Math.min(100, pctVal) + '%"><i></i>' + pctVal.toFixed(0) + '%</span>' : '—') + '</td>' +
@@ -960,9 +984,9 @@ td.d{color:var(--t1)}
   window.startEdit = function (id) {
     var d = byId(id); if (!d) return;
     if ($('entryCard').hidden) return toast('أكمل إعداد المركب أولاً', 'error');
-    var e = d.engines || {}, r = e.right || {}, l = e.left || {};
+    var e = d.engines || {}, r = e.right || {}, l = e.left || {}, ce = e.center || {};
     editingId = id;
-    isTwin = !!e.left || d.engineCount === 2;
+    engN = e.center || d.engineCount === 3 ? 3 : (e.left || d.engineCount === 2 ? 2 : 1); isTwin = engN >= 2;
     applyEngineMode();
     $('fDate').value = new Date(d.date).toISOString().slice(0, 10);
     $('fFuelType').value = d.fuelType || 'gasoil';
@@ -982,6 +1006,7 @@ td.d{color:var(--t1)}
     $('fStartR').value = r.startHours != null ? r.startHours : '';
     $('fEndR').value = r.endHours != null ? r.endHours : '';
     if (isTwin) { $('fStartL').value = l.startHours != null ? l.startHours : ''; $('fEndL').value = l.endHours != null ? l.endHours : ''; }
+    if (engN === 3) { $('fStartC').value = ce.startHours != null ? ce.startHours : ''; $('fEndC').value = ce.endHours != null ? ce.endHours : ''; }
     $('entryTitle').textContent = 'تعديل وثيقة تموين';
     $('editBarTxt').textContent = 'أنت تعدّل الوثيقة بتاريخ ' + ldate(d.date) + (d.documentNumber ? ' · رقم ' + d.documentNumber : '') + '. سيُعاد تدقيق الوثائق اللاحقة تلقائياً.';
     $('editBar').hidden = false; setBtnSave('حفظ التعديلات');
@@ -1369,7 +1394,7 @@ td.d{color:var(--t1)}
       });
       var std = Number(standards.standardRate) || 0, hasStd = std > 0 && std < 100;
       var avg = H > 0 && Cons > 0 ? Cons / H : 0;
-      var dash = '—', anyLeft = docs.some(function (d) { return d.engines && d.engines.left; });
+      var dash = '—', anyLeft = docs.some(function (d) { return d.engines && (d.engines.left || d.engines.center); });
       var hrs = function (m) { return m ? fmt(m.usedHours != null ? m.usedHours : m.totalHours, 1) : dash; };
 
       var stats = [
@@ -1389,14 +1414,14 @@ td.d{color:var(--t1)}
       // الجدول 1: الكميات والمخزون
       var t1 = {
         title: '١) الكميات والمخزون', widths: ['8mm', '', '', '', '', '', '', '', '', '', '', ''],
-        columns: ['م', 'التاريخ', 'رقم الوثيقة', 'الوقود', 'المقرر (لتر)', 'المطلوب الإضافي (لتر)', 'ساعات العمل', 'المستهلك فعلياً (لتر)', 'الباقي بالخزان (لتر)', 'البطاقة (د.ت)', 'البطاقة (لتر)', anyLeft ? 'ساعات المحركين (أيمن / أيسر)' : 'ساعات المحرك'],
+        columns: ['م', 'التاريخ', 'رقم الوثيقة', 'الوقود', 'المقرر (لتر)', 'المطلوب الإضافي (لتر)', 'ساعات العمل', 'المستهلك فعلياً (لتر)', 'الباقي بالخزان (لتر)', 'البطاقة (د.ت)', 'البطاقة (لتر)', anyLeft ? 'ساعات المحركات (أيمن / أوسط / أيسر)' : 'ساعات المحرك'],
         rows: docs.map(function (d, i) {
           var e = d.engines || {}, benz = d.fuelType === 'benzine';
           return { kind: kindOf(d), cells: [i + 1, ldate(d.date), d.documentNumber || dash, { type: 'badge', text: benz ? 'بنزين' : 'غزوال', variant: benz ? 'warning' : 'info' },
             d.quota != null ? fmt(d.quota, 1) : dash, fmt(d.docTotalLiters, 1), fmt(d.docTotalHours, 1),
             d.actualConsumedLiters != null ? fmt(d.actualConsumedLiters, 1) : dash,
             d.remainingTank != null ? fmt(d.remainingTank, 1) : dash, d.cardDinars != null ? fmt(d.cardDinars, 3) : dash, fmt(cardL(d), 1),
-            e.left ? hrs(e.right) + ' / ' + hrs(e.left) : hrs(e.right)] };
+            (e.left || e.center) ? [e.right, e.center, e.left].filter(Boolean).map(hrs).join(' / ') : hrs(e.right)] };
         })
       };
       if (n > 1) t1.rows.push({ kind: 'total', cells: ['', 'المجموع', '', '', fmt(Quota, 1), fmt(Req, 1), fmt(H, 1), fmt(Cons, 1), '', '', '', ''] });
@@ -1465,17 +1490,19 @@ td.d{color:var(--t1)}
   }
 
   function applyEngineMode() {
-    $('rightEngineLabel').textContent = isTwin ? 'المحرك الأيمن' : 'المحرك';
-    $('leftEngineBox').hidden = !isTwin;
-    $('metersGrid').className = isTwin ? 'mgrid' : 'mgrid one';
+    $('rightEngineLabel').textContent = engN >= 2 ? 'المحرك الأيمن' : 'المحرك';
+    $('centerEngineBox').hidden = engN !== 3;
+    $('leftEngineBox').hidden = engN < 2;
+    $('metersGrid').className = engN === 3 ? 'mgrid three' : engN === 2 ? 'mgrid' : 'mgrid one';
     document.querySelectorAll('.eng-opt').forEach(function (b) {
-      var on = (b.getAttribute('data-n') === '2') === isTwin;
+      var on = Number(b.getAttribute('data-n')) === engN;
       b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false');
     });
   }
   window.setEngines = function (n) {
-    isTwin = n === 2;
+    engN = Math.min(3, Math.max(1, n)); isTwin = engN >= 2;
     if (!isTwin) { $('fStartL').value = ''; $('fEndL').value = ''; }
+    if (engN !== 3) { $('fStartC').value = ''; $('fEndC').value = ''; }
     applyEngineMode(); window.liveAudit();
   };
   document.querySelectorAll('.eng-opt').forEach(function (b) { b.addEventListener('click', function () { window.setEngines(parseInt(b.getAttribute('data-n'), 10)); }); });
