@@ -1,6 +1,6 @@
 /**
  * routes/fuel.js v8 — محرك التدقيق لوثائق تموين المحروقات
- * - دعم المحرك الواحد والمحركين.
+ * - دعم المحرك الواحد والمحركين والثلاثة محركات (أيمن · أوسط · أيسر).
  * - المعيار: لا يُعتمد إلا بعد 3 وثائق سليمة (وسيط Median).
  * - السرقة: تجاوز المعيار المعتمد فقط (وليس Actual > L).
  * - توازن المعادلة: (بطاقة لتر + خزان + مستهلكة) = (المرحَّل من الوثيقة السابقة + المقرر) — الإضافي لا يدخل المعادلة.
@@ -164,10 +164,13 @@ function parseDoc(b, v) {
   if (!(T >= 0 && T <= v.tankCapacity)) return { err: 'الباقي بالخزان غير صالح (من 0 إلى سعة الخزان)' };
   if (!(C >= 0 && C <= 1e7)) return { err: 'رصيد البطاقة غير صالح' };
 
-  const twin = v.engineCount === 2;
+  const nEng = [1, 2, 3].includes(Number(v.engineCount)) ? Number(v.engineCount) : 1;
+  const twin = nEng >= 2;
   const right = readEngine(b.engines && b.engines.right, twin ? 'الأيمن' : '');
   if (right.err) return { err: right.err };
 
+  let center = null;
+  if (nEng === 3) { center = readEngine(b.engines && b.engines.center, 'الأوسط'); if (center.err) return { err: center.err }; }
   let left = null;
   if (twin) { left = readEngine(b.engines && b.engines.left, 'الأيسر'); if (left.err) return { err: left.err }; }
 
@@ -179,7 +182,7 @@ function parseDoc(b, v) {
       incomingDinars: IncomingD, incomingLiters: IncomingL,
       actualConsumedLiters: Actual, docTotalHours: H, docTotalLiters: L,
       remainingTank: T, cardDinars: C, cardLiters, price, documentNumber,
-      engines: { right, left }, twin
+      engines: { right, center, left }, twin, engineCount: nEng
     }
   };
 }
@@ -192,8 +195,8 @@ const docFields = (d, a) => ({
   docTotalLiters: d.docTotalLiters, docTotalHours: d.docTotalHours,
   remainingTank: r2(d.remainingTank), cardDinars: r3(d.cardDinars),
   cardLiters: r2(a.cardL), fuelPrice: d.price, tankAfter: r2(d.remainingTank + d.docTotalLiters),
-  engineCount: d.twin ? 2 : 1,
-  engines: { right: d.engines.right, left: d.engines.left || null },
+  engineCount: d.engineCount || (d.twin ? 2 : 1),
+  engines: { right: d.engines.right, center: d.engines.center || null, left: d.engines.left || null },
   totalActualRate: r2(a.rate), actualConsumption: a.consumed,
   riskScore: a.score, isFraud: a.isFraud, fraudReason: a.reason, violations: a.rules,
   balanceLeft: a.balance.left, balanceRight: a.balance.right,
@@ -226,7 +229,7 @@ async function runAudit(vessel, d, opts = {}) {
   const rate = H > 0 ? Actual / H : 0;
   const cardL = cardLitersOf(d);
 
-  const used = [d.engines.right, d.engines.left].filter(Boolean).map(e => e.usedHours);
+  const used = [d.engines.right, d.engines.center, d.engines.left].filter(Boolean).map(e => e.usedHours);
   const maxUsed = used.length ? Math.max(...used) : 0;
   if (Math.abs(maxUsed - H) > 0.5) add('HOURS_MISMATCH', 'ساعات العمل (' + H + ') لا تطابق ساعات العدّاد (' + maxUsed + ')');
 
@@ -263,11 +266,11 @@ async function runAudit(vessel, d, opts = {}) {
       ' لتر، بينما (مرحَّل ' + balance.opening + ' + مقرر ' + d.quota + ') = ' + balance.right +
       ' لتر — الفرق ' + balance.diff + ' لتر');
   }
-  [['right', 'الأيمن'], ['left', 'الأيسر']].forEach(([side, label]) => {
+  [['right', 'الأيمن'], ['center', 'الأوسط'], ['left', 'الأيسر']].forEach(([side, label]) => {
     const cur = d.engines[side]; if (!cur) return;
     const pEnd = endOf(prev && prev.engines && prev.engines[side]);
     const qStart = startOf(next && next.engines && next.engines[side]);
-    const tagE = d.engines.left ? ' (' + label + ')' : '';
+    const tagE = (d.engines.left || d.engines.center) ? ' (' + label + ')' : '';
     if (pEnd != null) {
       if (cur.startHours < pEnd - 0.5) add('METER_ROLLBACK', 'بداية العداد' + tagE + ' ' + cur.startHours + ' أقل من نهاية الوثيقة السابقة ' + pEnd);
       else if (cur.startHours > pEnd + 0.5) add('METER_GAP', r2(cur.startHours - pEnd) + ' ساعة غير موثقة منذ الوثيقة السابقة' + tagE);
@@ -324,8 +327,8 @@ async function reauditFrom(v, req, fromDate) {
         remainingTank: d.remainingTank, cardDinars: d.cardDinars, cardLiters: d.cardLiters,
         price: d.fuelPrice || PRICES[d.fuelType || 'gasoil'],
         documentNumber: d.documentNumber || '',
-        engines: { right: e.right, left: e.left || null },
-        twin: d.engineCount === 2
+        engines: { right: e.right, center: e.center || null, left: e.left || null },
+        twin: (d.engineCount || 1) >= 2, engineCount: d.engineCount || 1
       };
       const a = await runAudit(v, input, { std: std.rate, excludeId: d._id });
       await FuelDocument.updateOne({ _id: d._id }, { $set: {
