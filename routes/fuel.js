@@ -164,7 +164,8 @@ function parseDoc(b, v) {
   if (!(T >= 0 && T <= v.tankCapacity)) return { err: 'الباقي بالخزان غير صالح (من 0 إلى سعة الخزان)' };
   if (!(C >= 0 && C <= 1e7)) return { err: 'رصيد البطاقة غير صالح' };
 
-  const nEng = [1, 2, 3].includes(Number(v.engineCount)) ? Number(v.engineCount) : 1;
+  // عدد المحركات يُحدَّد لكل وثيقة (من النموذج)، وإلا يؤخذ من إعدادات المركب
+  const nEng = [1, 2, 3].includes(Number(b.engineCount)) ? Number(b.engineCount) : ([1, 2, 3].includes(Number(v.engineCount)) ? Number(v.engineCount) : 1);
   const twin = nEng >= 2;
   const right = readEngine(b.engines && b.engines.right, twin ? 'الأيمن' : '');
   if (right.err) return { err: right.err };
