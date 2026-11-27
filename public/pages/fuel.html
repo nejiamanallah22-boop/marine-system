@@ -655,7 +655,8 @@ td.d{color:var(--t1)}
   function generalRate(d) {
     var e = d.engines || {}, mx = 0, n = 0, a = Number(d.actualConsumedLiters) || 0;
     ['right', 'center', 'left'].forEach(function (k) { if (e[k]) { n++; mx = Math.max(mx, Number(e[k].usedHours != null ? e[k].usedHours : e[k].totalHours) || 0); } });
-    return n > 1 && mx > 0 && a > 0 ? a / mx : null;
+    var H = Number(d.docTotalHours) || 0;
+    return mx > 0 && a > 0 && (n > 1 || H - mx > 0.5) ? a / mx : null;   // محركان فأكثر، أو ساعات العمل أكبر من عدّاد المحرك المسجَّل (أي هي مجموع محركات)
   }
   var hAuto = true;   // ساعات العمل تُملأ تلقائياً بمجموع عدّادات المحركات (محركان فأكثر) ما لم يكتبها المستخدم
   var cardSrc = 'd';   // آخر حقل أدخله المستخدم: d دينار / l لتر
@@ -777,16 +778,19 @@ td.d{color:var(--t1)}
     }
     if (hrs.length) {
       var multiE = engN >= 2, refH = multiE ? hrs.reduce(function (x, y) { return x + y; }, 0) : Math.max.apply(null, hrs);
-      if (isFinite(c.H) && Math.abs(refH - c.H) > 0.5) msgs.push('ساعات العمل (' + c.H + ') لا تطابق ' + (multiE ? 'مجموع ساعات عدّادات المحركات (' : 'ساعات العدّاد (') + fmt(refH, 1) + ').');
+      if (isFinite(c.H) && Math.abs(refH - c.H) > 0.5) msgs.push('ساعات العمل (' + c.H + ') لا تطابق ' + (multiE ? 'مجموع ساعات عدّادات المحركات (' : 'ساعات العدّاد (') + fmt(refH, 1) + ').' + (!multiE && refH > 0 && c.H / refH > 1.85 ? ' إن كان للمركب أكثر من محرك فاختر عدد المحركات الصحيح وأدخل عدّاد كل محرك.' : ''));
     }
 
     var re = $('rateEng');
-    if (engN >= 2 && isFinite(c.Actual) && c.Actual > 0 && c.engUsed > 1 && c.engHours > 0) {
-      var mxH = Math.max.apply(null, [c.hR, engN === 3 ? c.hC : NaN, c.hL].filter(function (x) { return isFinite(x) && x >= 0; })), ge = mxH > 0 ? c.Actual / mxH : NaN;
+    var cnts = [c.hR, engN >= 3 ? c.hC : NaN, engN >= 2 ? c.hL : NaN].filter(function (x) { return isFinite(x) && x >= 0; });
+    var mxH = cnts.length ? Math.max.apply(null, cnts) : 0;
+    if (isFinite(c.Actual) && c.Actual > 0 && mxH > 0 && c.H > 0 && (cnts.length > 1 || c.H - mxH > 0.5)) {
+      var ge = c.Actual / mxH, k = c.H / mxH, kr = Math.round(k);
       re.hidden = false;
-      re.innerHTML = '<div class="re main">معدل المحرك الواحد <small>(المقارَن بالمعيار: المستهلك ÷ مجموع ساعات المحركات ' + fmt(c.H || 0, 1) + ')</small><b>' + (isFinite(c.rate) ? c.rate.toFixed(2) : '—') + ' لتر/س</b></div>' +
-        '<div class="re">المعدل العام للمركب <small>(المستهلك ÷ أكبر عدّاد ' + fmt(mxH, 1) + ')</small><b>' + (isFinite(ge) ? ge.toFixed(2) : '—') + ' لتر/س</b></div>' +
-        '<div class="re">ساعات كل محرك<b style="font-size:14px">' + [['الأيمن', c.hR], engN === 3 ? ['الأوسط', c.hC] : null, ['الأيسر', c.hL]].filter(Boolean).map(function (x) { return x[0] + ' ' + (isFinite(x[1]) && x[1] >= 0 ? fmt(x[1], 1) : '—'); }).join(' · ') + '</b></div>';
+      re.innerHTML = '<div class="re main">معدل المحرك الواحد <small>(المقارَن بالمعيار: المستهلك ÷ ساعات العمل ' + fmt(c.H || 0, 1) + ')</small><b>' + (isFinite(c.rate) ? c.rate.toFixed(2) : '—') + ' لتر/س</b></div>' +
+        '<div class="re">المعدل العام للمركب <small>(المستهلك ÷ أكبر عدّاد ' + fmt(mxH, 1) + ')</small><b>' + ge.toFixed(2) + ' لتر/س</b></div>' +
+        (cnts.length > 1 ? '<div class="re">ساعات كل محرك<b style="font-size:14px">' + [['الأيمن', c.hR], engN === 3 ? ['الأوسط', c.hC] : null, ['الأيسر', c.hL]].filter(Boolean).map(function (x) { return x[0] + ' ' + (isFinite(x[1]) && x[1] >= 0 ? fmt(x[1], 1) : '—'); }).join(' · ') + '</b></div>'
+          : (kr >= 2 && kr <= 3 && Math.abs(k - kr) < 0.15 ? '<div class="re" style="background:#fff8e1;border-color:#f2c94c">💡 ساعات العمل ≈ ' + kr + ' × العدّاد: إن كان للمركب ' + kr + ' محركات فاختر «' + (kr === 3 ? 'ثلاثة محركات' : 'محركان') + '» أعلاه وأدخل عدّاد كل محرك<b style="font-size:12px">حتى يُحفظ كل محرك في الوثيقة</b></div>' : ''));
     } else { re.hidden = true; re.innerHTML = ''; }
     var arNum = $('actualRateNum'), arCmp = $('rateCmp');
     if (isFinite(c.rate)) {
