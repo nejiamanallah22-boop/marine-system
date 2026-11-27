@@ -616,7 +616,11 @@ td.d{color:var(--t1)}
     var rate = Number(d.totalActualRate) || 0, hasStd = std > 0 && std < 100;
     var pct = hasStd && rate > 0 ? rate / std * 100 : null;
     var notes = d.fraudReason ? String(d.fraudReason).split(' | ') : [];
-    var serverOther = d.isFraud && !(notes.length === 1 && SERVER_BAL_ONLY.test(notes[0]));
+    // أسباب السيرفر القديمة التي لم تعد شبهة: اختلال المعادلة، وعدم تطابق الساعات مع عدّاد واحد في المراكب متعددة المحركات
+    var es = engSumOf(d), hoursOk = es.n > 1 && Math.abs(es.hours - (Number(d.docTotalHours) || 0)) <= 0.5;
+    var ignorable = function (code) { return code === 'BALANCE_MISMATCH' || (code === 'HOURS_MISMATCH' && hoursOk); };
+    var serverOther = d.isFraud && (Array.isArray(d.violations) && d.violations.length ? d.violations.some(function (c) { return !ignorable(c); }) : !(notes.length === 1 && SERVER_BAL_ONLY.test(notes[0])));
+    notes = notes.filter(function (x) { return !(/عدم توازن|فرق غير مفسَّر/.test(x)) && !(hoursOk && /ساعات العمل/.test(x)); });
     var gap = d._gap, gapBad = d._open && d._open.known && Math.abs(gap) > BAL_TOL;
     if (pct != null && pct > 100) return { t: 'مشبوه', c: 'bad', w: 'المعدل ' + pct.toFixed(0) + '% من المعيار' + (d.excessLiters > 0 ? ' · زيادة ≈ ' + fmt(d.excessLiters, 1) + ' ل' : '') };
     if (serverOther && pct == null) return { t: 'مشبوه', c: 'bad', w: notes[0] || 'حسب قواعد التدقيق' };
@@ -628,6 +632,7 @@ td.d{color:var(--t1)}
     return { t: 'مقبول', c: 'ok', w: pct.toFixed(0) + '% من المعيار (قريب من الحد)' };
   }
   // يحسب المرحَّل والفرق لكل وثيقة بتسلسل التاريخ
+  function isBad(d) { return d._v ? d._v.c === 'bad' : !!d.isFraud; }
   function enrichDocs() {
     var std = Number(standards.standardRate) || 0, prev = null;
     sortedAsc().forEach(function (d) {
@@ -929,7 +934,7 @@ td.d{color:var(--t1)}
   function tipHtml(d) {
     var e = d.engines || {}, r = e.right, l = e.left, ce = e.center, notes = [];
     var row = function (a, b) { return '<div class="r"><span>' + a + '</span><b>' + b + '</b></div>'; };
-    var h = '<h5>' + (d.isFraud ? '🚨 وثيقة مشبوهة' : '✅ وثيقة سليمة') + ' — ' + ldate(d.date) + '</h5>';
+    var h = '<h5>' + (isBad(d) ? '🚨 وثيقة مشبوهة' : '✅ وثيقة سليمة') + ' — ' + ldate(d.date) + '</h5>';
     h += row('نوع الوقود', d.fuelType === 'benzine' ? 'بنزين' : 'غزوال');
     if (d.quota != null) h += row('المقرر', fmt(d.quota) + ' لتر');
     h += row('المطلوب (الإضافي)', fmt(d.docTotalLiters) + ' لتر');
@@ -948,9 +953,9 @@ td.d{color:var(--t1)}
     if (r) h += row(l || ce ? 'الأيمن' : 'المحرك', engTxt(r));
     if (ce) h += row('الأوسط', engTxt(ce));
     if (l) h += row('الأيسر', engTxt(l));
-    if (d.fraudReason) notes = String(d.fraudReason).split(' | ');
+    if (d._v && d._v.c === 'bad' && d._v.w) notes = [d._v.w]; else if (d.fraudReason && !d._v) notes = String(d.fraudReason).split(' | ');
     if (notes.length) h += notes.map(function (x) { return '<div class="w">• ' + esc(x) + '</div>'; }).join('');
-    else if (d.isFraud) h += '<div class="w">• صنّفها النظام كمشبوهة حسب قواعد التدقيق</div>';
+    else if (isBad(d)) h += '<div class="w">• صنّفها النظام كمشبوهة حسب قواعد التدقيق</div>';
     return h;
   }
   function renderTable() {
@@ -990,8 +995,8 @@ td.d{color:var(--t1)}
         '<td data-label="نسبة المعيار">' + (pctVal != null ? '<span class="risk ' + pctCls + '" style="--w:' + Math.min(100, pctVal) + '%"><i></i>' + pctVal.toFixed(0) + '%</span>' : '—') + '</td>' +
         '<td data-label="الوقود المُبالغ فيه">' + (d.excessLiters > 0 ? '<span class="badge bad"><i class="fas fa-triangle-exclamation"></i>' + fmt(d.excessLiters, 1) + ' لتر</span>' : '—') + '</td>' +
         '<td data-label="درجة الخطر">' + riskBadge(d.riskScore) + '</td>' +
-        '<td data-label="الحالة"><button type="button" class="badge ' + (d.isFraud ? 'bad' : 'ok') + '" data-i="' + i + '">' +
-          (d.isFraud ? '<i class="fas fa-triangle-exclamation"></i>مشبوه' : '<i class="fas fa-circle-check"></i>سليم') + '</button></td>' +
+        '<td data-label="الحالة"><button type="button" class="badge ' + (isBad(d) ? 'bad' : 'ok') + '" data-i="' + i + '">' +
+          (isBad(d) ? '<i class="fas fa-triangle-exclamation"></i>مشبوه' : '<i class="fas fa-circle-check"></i>سليم') + '</button></td>' +
         '<td data-label="فرق المعادلة">' + (d._open && d._open.known ? (Math.abs(d._gap) <= BAL_TOL ? '<span style="color:var(--ok);font-weight:800">0 ✓</span>' : '<b style="color:var(--bad)">' + (d._gap > 0 ? '+' : '') + fmt(d._gap, 1) + ' ل</b>') : '<small style="color:var(--t3)">بداية السجل</small>') + '</td>' +
         '<td data-label="ملاحظة"><span class="vd ' + d._v.c + '">' + esc(d._v.t) + '</span><span class="vwhy">' + esc(d._v.w) + '</span></td>' +
         '<td class="colAct" data-label="إجراءات"><div class="acts">' +
@@ -1126,6 +1131,7 @@ td.d{color:var(--t1)}
   }
 
   function renderChart() {
+    enrichDocs();
     var box = $('chartBox'), emptyEl = $('chartEmpty');
     if (myChart) { myChart.destroy(); myChart = null; }
     if (!allDocs.length) { box.hidden = true; emptyEl.hidden = false; return; }
@@ -1141,8 +1147,8 @@ td.d{color:var(--t1)}
         labels: s.map(function (d) { return ldate(d.date, { day: '2-digit', month: '2-digit' }); }),
         datasets: [
           { label: 'المعدل الفعلي (لتر/س)', data: rates, order: 1, borderRadius: 8, borderSkipped: false, maxBarThickness: 38,
-            backgroundColor: s.map(function (d) { return d.isFraud ? 'rgba(239,68,68,.92)' : C.navy; }),
-            hoverBackgroundColor: s.map(function (d) { return d.isFraud ? C.red : C.navyH; }) },
+            backgroundColor: s.map(function (d) { return isBad(d) ? 'rgba(239,68,68,.92)' : C.navy; }),
+            hoverBackgroundColor: s.map(function (d) { return isBad(d) ? C.red : C.navyH; }) },
           { label: 'المعيار (لتر/س)', data: s.map(function () { return (std > 0 && std < 100) ? std : null; }), type: 'line', order: 0, borderColor: C.gold, borderWidth: 2.5, borderDash: [6, 5], pointRadius: 0, pointHoverRadius: 0, fill: false }
         ]
       },
@@ -1164,7 +1170,7 @@ td.d{color:var(--t1)}
                 var d = s[it[0].dataIndex]; var arr = [];
                 if (std > 0 && std < 100 && d.totalActualRate) arr.push('نسبة المعيار: ' + (d.totalActualRate / std * 100).toFixed(0) + '%');
                 if (d.excessLiters > 0) arr.push('🚨 وقود مُبالغ فيه: ' + Number(d.excessLiters).toFixed(1) + ' لتر');
-                if (d.isFraud) arr.push('⚠️ وثيقة مشبوهة');
+                if (isBad(d)) arr.push('⚠️ وثيقة مشبوهة');
                 return arr;
               } } }
         },
@@ -1224,6 +1230,7 @@ td.d{color:var(--t1)}
       : '<span class="chip">لا توجد مخالفات مرصودة</span>';
   }
   function renderDash() {
+    enrichDocs();
     var t = auditData && auditData.totals, price = parseFloat($('fuelPrice').value);
     if (!t) { ['dHours', 'dLiters', 'dTank', 'dCardL', 'dVar', 'dRisk'].forEach(function (id) { $(id).textContent = 'غير متاح'; }); return; }
     var sd = t.standard || {};
@@ -1429,7 +1436,7 @@ td.d{color:var(--t1)}
       docs.forEach(function (d) {
         H += Number(d.docTotalHours) || 0; Cons += Number(d.actualConsumedLiters) || 0;
         Req += Number(d.docTotalLiters) || 0; Quota += Number(d.quota) || 0; exL += Number(d.excessLiters) || 0;
-        if (d.isFraud) flagged++;
+        if (isBad(d)) flagged++;
       });
       var std = Number(standards.standardRate) || 0, hasStd = std > 0 && std < 100;
       var avg = H > 0 && Cons > 0 ? Cons / H : 0;
