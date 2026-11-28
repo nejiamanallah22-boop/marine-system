@@ -1533,11 +1533,11 @@ td.d{color:var(--t1)}
       }
       var printData = {
         type: 'fuel',
-        title: onlyId ? 'بطاقة وثيقة تموين بالمحروقات' : 'كشف المحروقات',
+        title: onlyId ? 'بطاقة وثيقة التزود بالمحروقات' : 'كشف المحروقات',
         subtitle: 'Fuel Consumption Statement',
         sectionTitle: 'الوسيلة: ' + vname + '  ·  رقم الوسيلة: ' + vnum0 + '  ·  ' + (onlyId ? 'وثيقة بتاريخ ' + ldate(docs[0].date) + (docs[0].documentNumber ? ' · رقم ' + docs[0].documentNumber : '') : periodLabel(docs)) + '  ·  المعيار المعتمد: ' + (hasStd ? fmt(std, 2) + ' لتر/س' : 'قيد التعلّم') + '  ·  عدد الوثائق: ' + n,
         stats: stats, tables: tables, charts: charts,
-        signatures: ['رأي رئيس قسم التجهيز', 'رأي رئيس إدارة', 'رأي مدير إدارة']
+        signatures: ['  رأي رئيس قسم التجهيز', 'رأي رئيس إدارة الوسائل البحرية', 'رأي مدير إدارة اسناد الوحدات البحرية']
       };
       localStorage.setItem('print_data', JSON.stringify(printData));
       window.open('/print.html?type=fuel&key=print_data', '_blank');
